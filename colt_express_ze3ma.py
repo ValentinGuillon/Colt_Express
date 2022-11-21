@@ -1,5 +1,6 @@
 import random 
 from tkinter import *
+# from PIL import Image, ImageTk
 
 
 global NB_WAGONS
@@ -19,6 +20,7 @@ class Game(Tk):
         # self.geometry("720x480")
         self["bg"] = "orange"
 
+        
         #attention, il doit y avoir deux espaces, un pour le jeu (train, décor), et un pour le "menu"
         self.playSpace = Canvas(self, bg="blue")
         self.playSpace.pack(side="left")
@@ -52,7 +54,7 @@ class Game(Tk):
 
         #ajout du marshall
         self.train.wagons[0].marshall = True
-
+        
 
 
     # Pour le Marshall
@@ -93,20 +95,43 @@ class Train(Canvas):
     def __init__(self, fenetre:Tk, width, height):
         super().__init__(fenetre, width=width, height=height, bg='green')
         #Créer les cases
+        isLoco = True
         for x in range(2):
             for y in range(NB_WAGONS):
-                self.wagons.append(Wagon(self, x, y))
+                if isLoco:
+                    self.wagons.append(Wagon(self, x, y, 0))
+                    isLoco = False
+
+                self.wagons.append(Wagon(self, x, y, 1))
 
 
 
-
+#tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
 class Wagon(Canvas):
-    def __init__(self, Train:Canvas, x , y):
+    def __init__(self, Train:Canvas, x , y, tetewagonqueue):
         super().__init__(Train, width=100, height=100, highlightbackground='red')
         self.x = x
         self.y = y
         self.marshall = False
         self.grid(row=x, column=y, sticky= 'nsew')
+
+
+
+        #posage du png
+        if tetewagonqueue == 0:
+            #mette le png "locomotive"
+            pass
+        elif tetewagonqueue == 1:
+            #mette le png "wagon"
+            pass
+        elif tetewagonqueue == 2:
+            #mette le png "queue"
+            pass
+
+
+
+
+
 
 
 
