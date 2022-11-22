@@ -55,13 +55,6 @@ class Game(Tk):
         #ajout du marshall
         self.train.wagons[0].marshall = True
 
-
-        img = Image.open("png/wagon val.png")
-        img = img.resize((100, 100))
-        img = ImageTk.PhotoImage(img)
-
-        imgLb = Label(self, image=img, text="test")
-        imgLb.pack
         
 
 
