@@ -1,13 +1,13 @@
 import random 
 from tkinter import *
-# from PIL import Image, ImageTk
+from PIL import Image, ImageTk
 
 
 global NB_WAGONS
 global NB_ACTIONS 
 global NB_JOUEURS 
 global NB_BALLES
-NB_WAGONS = 6
+NB_WAGONS = 3
 NB_JOUEURS = NB_WAGONS
 
 
@@ -37,7 +37,7 @@ class Game(Tk):
         #création du train
         self.train = Train(self.playSpace, 500, 750)
         self.train["bg"] = "orange"
-        self.train.grid(row = 0, column = 0, sticky =  'nsew')
+        self.train.grid(row = 2, column = 0, sticky =  'nsew')
 
         # self.iconbitmap("./train.ico")
 
@@ -54,6 +54,14 @@ class Game(Tk):
 
         #ajout du marshall
         self.train.wagons[0].marshall = True
+
+
+        img = Image.open("png/wagon val.png")
+        img = img.resize((100, 100))
+        img = ImageTk.PhotoImage(img)
+
+        imgLb = Label(self, image=img, text="test")
+        imgLb.pack
         
 
 
@@ -94,42 +102,79 @@ class Train(Canvas):
     #Constructeur
     def __init__(self, fenetre:Tk, width, height):
         super().__init__(fenetre, width=width, height=height, bg='green')
-        #Créer les cases
-        isLoco = True
-        for x in range(2):
-            for y in range(NB_WAGONS):
-                if isLoco:
-                    self.wagons.append(Wagon(self, x, y, 0))
-                    isLoco = False
 
-                self.wagons.append(Wagon(self, x, y, 1))
+        # #Créer les cases
+        # for x in range(2):
+        #     for y in range(NB_WAGONS):
+        #         #loco
+        #         if x == 0 and y == 0:
+        #             self.wagons.append(Wagon(self, x, y, 0))
+        #             isLoco = False
+        #             continue
+        #         #queue
+        #         if x == 1 and y == NB_WAGONS - 1:
+        #             self.wagons.append(Wagon(self, x, y, 2))
+        #             continue
+
+        #         #wagon
+        #         self.wagons.append(Wagon(self, x, y, 1))
+        
+        #Créer les cases
+        for y in range(NB_WAGONS + 1):
+            #loco
+            if y == 0:
+                self.wagons.append(Wagon(self, 2, y, 0))
+                continue
+            #queue
+            if y == NB_WAGONS:
+                self.wagons.append(Wagon(self, 2, y, 2))
+                continue
+
+            #wagon
+            self.wagons.append(Wagon(self, 2, y, 1))
 
 
 
 #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
-class Wagon(Canvas):
+class Wagon(Label):
     def __init__(self, Train:Canvas, x , y, tetewagonqueue):
-        super().__init__(Train, width=100, height=100, highlightbackground='red')
+        super().__init__(Train, width=100, height=100, border=0)
         self.x = x
         self.y = y
         self.marshall = False
         self.grid(row=x, column=y, sticky= 'nsew')
 
+        self["bg"] = "brown"
+
 
 
         #posage du png
         if tetewagonqueue == 0:
-            #mette le png "locomotive"
-            pass
+            self.img = self.drawImage("png/locomotive val.png")
         elif tetewagonqueue == 1:
-            #mette le png "wagon"
-            pass
+            self.img = self.drawImage("png/wagon val.png")
         elif tetewagonqueue == 2:
-            #mette le png "queue"
-            pass
+            self.img = self.drawImage("png/queue val.png")
+
+        # imgLb = Label(self, image=self.img)
+        # imgLb.pack()
+        self["image"] = self.img
 
 
 
+    def drawImage(self, file):
+        #train
+        img = Image.open(file).convert('RGBA')
+        img = img.resize((100, 100))
+        
+        #background
+        background = Image.new('RGBA', img.size, (0, 0, 0, 0))
+
+        #addition des deux
+        newImg = Image.alpha_composite(background, img)
+
+
+        return ImageTk.PhotoImage(newImg)
 
 
 
