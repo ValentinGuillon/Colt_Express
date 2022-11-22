@@ -19,43 +19,72 @@ class Game(Tk):
         self.title("Colt Express")
         # self.geometry("720x480")
         self["bg"] = "orange"
+        # self.iconbitmap("./train.ico")
 
         
         #attention, il doit y avoir deux espaces, un pour le jeu (train, décor), et un pour le "menu"
         self.playSpace = Canvas(self, bg="blue")
         self.playSpace.pack(side="left")
 
-        self.menuSpace = Canvas(self, bg="green")
+        self.menuSpace = Canvas(self, bg="red")
         self.menuSpace.pack(side="left")
 
-        #le self sera donc remplacé par autre chose ici (qui sera un Canvas)
-        self.playSpace.columnconfigure(0, weight = 3)
-        self.playSpace.columnconfigure(1, weight = 1)
-        self.playSpace.rowconfigure(0, weight=3)
-        self.playSpace.rowconfigure(1, weight=1)
+
+        
+        #=== PLAY SPACE ====================================
+        # self.playSpace.columnconfigure(0, weight = 3)
+        # self.playSpace.columnconfigure(1, weight = 1)
+        # self.playSpace.rowconfigure(0, weight=3)
+        # self.playSpace.rowconfigure(1, weight=1)
+
+        #background décor
+        self.paysage = Image.open("png/paysage_2.png")
+        self.paysage = self.paysage.resize((100*(NB_WAGONS + 1), 100*4))
+        self.paysage = ImageTk.PhotoImage(self.paysage)
+
+        self.paysageLb = Label(self.playSpace, image=self.paysage, border=0)
+
+        self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1)
+
 
         #création du train
         self.train = Train(self.playSpace, 500, 750)
-        self.train["bg"] = "orange"
-        self.train.grid(row = 2, column = 0, sticky =  'nsew')
-
-        # self.iconbitmap("./train.ico")
-
+        self.train.grid(row = 1, column = 0, sticky =  'nsew')
+        self.train.config(bg= "green")
 
         for i in range(NB_JOUEURS):
             self.train.rowconfigure(i, weight=1)
             self.train.columnconfigure(i, weight=1)
 
+            
         #création des bandits
         self.bandits = []
         for i in range(NB_JOUEURS):
             name = "Bandit " + str(i + 1)
             self.bandits.append(Bandit(name))
 
+            
         #ajout du marshall
         self.train.wagons[0].marshall = True
 
+        #=== FIN PLAY SPACE ================================
+
         
+        #=== MENU SPACE ====================================
+        #grille de x = 3, y = 4+1+1+?
+        self.btnAction = Button(self.menuSpace, text="Action").grid(row=5, column=1, padx=5, pady=10, sticky="news")
+
+        self.btnRight = Button(self.menuSpace, text="->").grid(row=1, column=2, rowspan=2, sticky="news")
+        self.btnLeft = Button(self.menuSpace, text="<-").grid(row=1, column=0, rowspan=2, sticky="news")
+        self.btnUp = Button(self.menuSpace, text="Up").grid(row=0, column=1, sticky="news")
+        self.btnDown = Button(self.menuSpace, text="Down").grid(row=3, column=1, sticky="news")
+
+        self.btnShoot = Button(self.menuSpace, text="Shoot").grid(row=1, column=1, sticky="news")
+        self.btnSteal = Button(self.menuSpace, text="Steal").grid(row=2, column=1, sticky="news")
+
+        self.history = Label(self.menuSpace, text = "EMPTY\nHistory").grid(row=7, column=0, columnspan=3, sticky="news")
+
+        #=== FIN MENU SPACE ================================
 
 
     # Pour le Marshall
@@ -90,11 +119,52 @@ class Game(Tk):
 
 
 
+# class Train():
+#     wagons = []
+#     #Constructeur
+#     def __init__(self):
+#         # self.wm_attributes()
+
+#         # #Créer les cases
+#         # for x in range(2):
+#         #     for y in range(NB_WAGONS):
+#         #         #loco
+#         #         if x == 0 and y == 0:
+#         #             self.wagons.append(Wagon(self, x, y, 0))
+#         #             isLoco = False
+#         #             continue
+#         #         #queue
+#         #         if x == 1 and y == NB_WAGONS - 1:
+#         #             self.wagons.append(Wagon(self, x, y, 2))
+#         #             continue
+
+#         #         #wagon
+#         #         self.wagons.append(Wagon(self, x, y, 1))
+        
+#         #Créer les cases
+#         for y in range(NB_WAGONS + 1):
+#             #loco
+#             if y == 0:
+#                 self.wagons.append(Wagon(self, 2, y, 0))
+#                 continue
+#             #queue
+#             if y == NB_WAGONS:
+#                 self.wagons.append(Wagon(self, 2, y, 2))
+#                 continue
+
+#             #wagon
+#             self.wagons.append
+
+
 class Train(Canvas):
     wagons = []
     #Constructeur
     def __init__(self, fenetre:Tk, width, height):
-        super().__init__(fenetre, width=width, height=height, bg='green')
+        super().__init__(fenetre, width=width, height=height, bg='green', border=0)
+
+
+
+        # self.wm_attributes()
 
         # #Créer les cases
         # for x in range(2):
@@ -174,7 +244,7 @@ class Wagon(Label):
 
 
 
-class Bandit(Canvas):
+class Bandit(Label):
     def __init__(self, name):
         self.name = name
         self.position = (0, NB_WAGONS)
