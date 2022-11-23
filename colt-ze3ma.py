@@ -19,7 +19,7 @@ class Game(Tk):
         self.title("Colt Express")
         # self.geometry("720x480")
         self["bg"] = "orange"
-        # self.iconbitmap("png/train.ico")
+        self.iconbitmap("./train.ico")
 
         
         #attention, il doit y avoir deux espaces, un pour le jeu (train, décor), et un pour le "menu"
