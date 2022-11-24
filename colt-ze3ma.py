@@ -7,7 +7,7 @@ global NB_WAGONS
 global NB_ACTIONS 
 global NB_JOUEURS 
 global NB_BALLES
-NB_WAGONS = 3
+NB_WAGONS = 4
 NB_JOUEURS = NB_WAGONS
 
 
@@ -20,15 +20,26 @@ class Game(Tk):
         # self.geometry("720x480")
         self["bg"] = "orange"
         self.iconbitmap("./train.ico")
-
+        
+        self.columnconfigure(0, weight = 3) 
+        self.columnconfigure(1, weight = 1)
+        self.rowconfigure(0, weight=3)
+        self.rowconfigure(1, weight=1)
         
         #attention, il doit y avoir deux espaces, un pour le jeu (train, décor), et un pour le "menu"
         self.playSpace = Canvas(self, bg="blue")
-        self.playSpace.pack(side="left")
+        #self.playSpace.pack(side="left")
+        self.playSpace.grid(row = 0, column= 0, sticky='nsew')
 
+        
+
+        
         self.menuSpace = Canvas(self, bg="red")
-        self.menuSpace.pack(side="left")
-
+        #self.menuSpace.pack(side="left")
+        
+        self.menuSpace.grid(row = 0, column= 1, sticky='nsew')
+        self.menuSpace.rowconfigure(0, weight=1)
+        self.menuSpace.columnconfigure(0, weight=1)
 
         
         #=== PLAY SPACE ====================================
@@ -44,18 +55,24 @@ class Game(Tk):
 
         self.paysageLb = Label(self.playSpace, image=self.paysage, border=0)
 
-        self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1)
-
+        self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1, sticky='nsew')
+        """ self.paysageLb.rowconfigure(0, weight=1)
+        self.paysageLb.columnconfigure(0, weight=1) """
 
         #création du train
         self.train = Train(self.playSpace, 500, 750)
-        self.train.grid(row = 1, column = 0, sticky =  'nsew')
+        self.train.grid(row = 1, column = 0, sticky =  'nsew', columnspan=NB_WAGONS+1)
         self.train.config(bg= "green")
 
-        for i in range(NB_JOUEURS):
-            self.train.rowconfigure(i, weight=1)
+#oum : la condition d'arret pour la boucle est i = NB_WAGONS+1 
+#sinon la cellule du dernier wagon ne s'adaptera pas à la taille de la fenetre
+        for i in range(NB_WAGONS+1):
             self.train.columnconfigure(i, weight=1)
-
+#oum: On attribue un poids plus grand à la ligne qui contient le train
+#Si toutes les lignes ont le même poids elles auront la meme taille 
+#Et donc la ligne 2 ne pourra pas occuper plus d'espace que les autres lignes
+#afin d'afficher les wagons
+        self.train.rowconfigure(2, weight=3)
             
         #création des bandits
         self.bandits = []
@@ -72,21 +89,85 @@ class Game(Tk):
         
         #=== MENU SPACE ====================================
         #grille de x = 3, y = 4+1+1+?
-        self.btnAction = Button(self.menuSpace, text="Action").grid(row=5, column=1, padx=5, pady=10, sticky="news")
+        self.frame = Frame(self.menuSpace, width= 400, height= 100)
+        self.frame.grid(row=0,column=0,sticky='nsew')
+        
+        # self.btnAction = Button(self.menuSpace, text="Action").grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
-        self.btnRight = Button(self.menuSpace, text="->").grid(row=1, column=2, rowspan=2, sticky="news")
-        self.btnLeft = Button(self.menuSpace, text="<-").grid(row=1, column=0, rowspan=2, sticky="news")
-        self.btnUp = Button(self.menuSpace, text="Up").grid(row=0, column=1, sticky="news")
-        self.btnDown = Button(self.menuSpace, text="Down").grid(row=3, column=1, sticky="news")
+        # self.btnRight = Button(self.menuSpace, text="->").grid(row=1, column=2, rowspan=2, sticky="news")
+        # self.btnLeft = Button(self.menuSpace, text="<-").grid(row=1, column=0, rowspan=2, sticky="news")
+        # self.btnUp = Button(self.menuSpace, text="Up").grid(row=0, column=1, sticky="news")
+        # self.btnDown = Button(self.menuSpace, text="Down").grid(row=3, column=1, sticky="news")
 
-        self.btnShoot = Button(self.menuSpace, text="Shoot").grid(row=1, column=1, sticky="news")
-        self.btnSteal = Button(self.menuSpace, text="Steal").grid(row=2, column=1, sticky="news")
+        # self.btnShoot = Button(self.menuSpace, text="Shoot").grid(row=1, column=1, sticky="news")
+        # self.btnSteal = Button(self.menuSpace, text="Steal").grid(row=2, column=1, sticky="news")
+        
+        self.btnAction = Button(self.frame, text="Action").grid(row=5, column=1, padx=5, pady=10, sticky="news")
+
+        self.btnRight = Button(self.frame, text="->").grid(row=1, column=2, rowspan=2, sticky="news")
+        self.btnLeft = Button(self.frame, text="<-").grid(row=1, column=0, rowspan=2, sticky="news")
+        self.btnUp = Button(self.frame, text="Up").grid(row=0, column=1, sticky="news")
+        self.btnDown = Button(self.frame, text="Down").grid(row=3, column=1, sticky="news")
+
+        self.btnShoot = Button(self.frame, text="Shoot").grid(row=1, column=1, sticky="news")
+        self.btnSteal = Button(self.frame, text="Steal").grid(row=2, column=1, sticky="news")
 
         self.history = Label(self.menuSpace, text = "EMPTY\nHistory").grid(row=7, column=0, columnspan=3, sticky="news")
 
+        self.playSpace.bind('<Configure>', lambda e: self.resize_image())
         #=== FIN MENU SPACE ================================
 
-
+    def resize_image(self):
+            #oum: j'ai mis en commentaire cette ligne pk ça beug
+            #self.update()
+            
+            hauteur=self.playSpace.winfo_height()
+            largeur=self.playSpace.winfo_width()
+            
+            # self.playSpace.config(height= int(hauteur/4)*4, weight= int(largeur/4)*4)
+            # hauteur=self.playSpace.winfo_height()
+            # largeur=self.playSpace.winfo_width()
+            pay = Image.open("png/paysage_2.png").resize((largeur, hauteur))
+            pay = ImageTk.PhotoImage(pay)
+            
+            self.paysageLb.config(image = pay)
+            self.paysageLb.image = pay
+            
+            #print(f'Hauteur {hauteur}')
+            #print(f'Largeur {largeur}')
+            #self.train.config(width = largeur/(NB_WAGONS+1))
+            #self.train.config(height = hauteur/100)
+            
+            h = int(hauteur / 4)
+            print(h)
+            
+            loco = Image.open("png/locomotive val.png").resize((int(largeur/(NB_WAGONS+1)),h))
+            background = Image.new('RGBA', loco.size, (0, 0, 0, 0))
+            loco1 = Image.alpha_composite(background, loco)
+            loco1 = ImageTk.PhotoImage(loco1)
+            
+            wagon = Image.open("png/wagon val.png").resize((int(largeur/(NB_WAGONS+1)),h))
+            background = Image.new('RGBA', wagon.size, (0, 0, 0, 0))
+            wagon1 = Image.alpha_composite(background, wagon)
+            wagon1 =ImageTk.PhotoImage(wagon1)
+            
+            queue = Image.open("png/queue val.png").resize((int(largeur/(NB_WAGONS+1)),h))
+            background = Image.new('RGBA', queue.size, (0, 0, 0, 0))
+            queue1 = Image.alpha_composite(background, queue)
+            queue1 = ImageTk.PhotoImage(queue1)
+ 
+            
+            self.train.wagons[0].config(image = loco1)
+            self.train.wagons[0].image = loco1
+            
+            for i in range(1, NB_WAGONS):
+                self.train.wagons[i].config(image = wagon1)
+                self.train.wagons[i].image = wagon1
+            
+            self.train.wagons[NB_WAGONS].config(image = queue1)
+            self.train.wagons[NB_WAGONS].image = queue1
+        
+            
     # Pour le Marshall
     def deplacement(self):
         i = 0 #position du wagon où se trouve le Marshall
@@ -161,7 +242,9 @@ class Train(Canvas):
     #Constructeur
     def __init__(self, fenetre:Tk, width, height):
         super().__init__(fenetre, width=width, height=height, bg='green', border=0)
-
+        # self.rowconfigure(0,weight = 1)
+        # self.rowconfigure(1,weight = 1)
+        # self.rowconfigure(2,weight = 1)
 
 
         # self.wm_attributes()
@@ -227,6 +310,7 @@ class Wagon(Label):
 
     def drawImage(self, file):
         #train
+        
         img = Image.open(file).convert('RGBA')
         img = img.resize((100, 100))
         
