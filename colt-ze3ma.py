@@ -23,7 +23,7 @@ class Game(Tk):
         self.title("Colt Zeʁma")
         # self.geometry("720x480")
         self["bg"] = "orange"
-        # self.iconbitmap("./train.ico")
+        self.iconbitmap("./train.ico")
         
         self.columnconfigure(0, weight = 1)
         self.rowconfigure(0, weight=1)
