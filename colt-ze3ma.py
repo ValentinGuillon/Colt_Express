@@ -14,6 +14,10 @@ NB_JOUEURS = NB_WAGONS
 
 
 class Game(Tk):
+    imgsOnPlaySpace = []
+    wagons = []
+    bandits = []
+    
     def __init__(self):
         super().__init__()
         self.title("Colt Zeʁma")
@@ -21,14 +25,8 @@ class Game(Tk):
         self["bg"] = "orange"
         # self.iconbitmap("./train.ico")
         
-        # self.columnconfigure(0, weight = 3)
-        # self.columnconfigure(1, weight = 1)
-        # self.rowconfigure(0, weight=3)
-        # self.rowconfigure(1, weight=1)
         self.columnconfigure(0, weight = 1)
-        self.columnconfigure(1, weight = 1)
         self.rowconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
         
         
         
@@ -42,37 +40,51 @@ class Game(Tk):
         
 
         #=== PLAY SPACE ====================================
-        # self.playSpace.columnconfigure(0, weight = 3)
-        # self.playSpace.columnconfigure(1, weight = 1)
-        # self.playSpace.rowconfigure(0, weight=3)
+        # self.playSpace.rowconfigure(0, weight=1)
         # self.playSpace.rowconfigure(1, weight=1)
-        self.playSpace.rowconfigure(0, weight=1)
-        self.playSpace.rowconfigure(1, weight=1)
-        self.playSpace.rowconfigure(2, weight=1)
+        # self.playSpace.rowconfigure(2, weight=1)
 
         #le décor derrière le train
         self.paysage = Game.createImg(100*(NB_WAGONS + 1), 100*4, "png/paysage_2.png")
+        img = self.playSpace.create_image(0, 0, image=self.paysage, anchor="nw")
+        self.imgsOnPlaySpace.append(img)
+        
+        # self.paysageLb = Label(self.playSpace, image=self.paysage, border=0)
+        # self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1, sticky='nsew')
 
-        self.paysageLb = Label(self.playSpace, image=self.paysage, border=0)
-
-        self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1, sticky='nsew')
         # self.paysageLb.rowconfigure(0, weight=1)
         # self.paysageLb.columnconfigure(0, weight=1)
 
         #création du train
-        self.train = Train(self.playSpace, 500, 750)
-        self.train.grid(row = 1, column = 0, sticky =  'nsew', columnspan=NB_WAGONS+1)
-        self.train.config(bg= "green")
+        # self.train = Train(self.playSpace, 500, 750)
+        # self.train.grid(row = 1, column = 0, sticky =  'nsew', columnspan=NB_WAGONS+1)
+        # self.train.config(bg= "green")
 
-        #oum : la condition d'arret pour la boucle est i = NB_WAGONS+1 
-        #sinon la cellule du dernier wagon ne s'adaptera pas à la taille de la fenetre
-        for i in range(NB_WAGONS+1):
-            self.train.columnconfigure(i, weight=1)
-        #oum: On attribue un poids plus grand à la ligne qui contient le train
-        #Si toutes les lignes ont le même poids elles auront la meme taille 
-        #Et donc la ligne 2 ne pourra pas occuper plus d'espace que les autres lignes
-        #afin d'afficher les wagons
-        self.train.rowconfigure(2, weight=3)
+
+        #Créer les cases
+        for y in range(NB_WAGONS + 1):
+            #loco
+            if y == 0:
+                self.wagons.append(Wagon(self, self.playSpace, 2, y, 0))
+                continue
+            #queue
+            if y == NB_WAGONS:
+                self.wagons.append(Wagon(self, self.playSpace, 2, y, 2))
+                continue
+
+            #wagon
+            self.wagons.append(Wagon(self, self.playSpace, 2, y, 1))
+
+
+        # #oum : la condition d'arret pour la boucle est i = NB_WAGONS+1 
+        # #sinon la cellule du dernier wagon ne s'adaptera pas à la taille de la fenetre
+        # for i in range(NB_WAGONS+1):
+        #     self.train.columnconfigure(i, weight=1)
+        # #oum: On attribue un poids plus grand à la ligne qui contient le train
+        # #Si toutes les lignes ont le même poids elles auront la meme taille 
+        # #Et donc la ligne 2 ne pourra pas occuper plus d'espace que les autres lignes
+        # #afin d'afficher les wagons
+        # self.train.rowconfigure(2, weight=3)
             
 
         #=== FIN PLAY SPACE ================================
@@ -106,22 +118,22 @@ class Game(Tk):
         self.history = Label(self.menuSpace, text = "EMPTY\nHistory")
         self.history.grid(row=7, column=0, columnspan=3, sticky="news")
 
-        self.playSpace.bind('<Configure>', lambda e: self.resize_image())
         #=== FIN MENU SPACE ================================
 
         
 
-        #création des bandits
-        self.bandits = []
-        for i in range(NB_JOUEURS):
-            name = "Bandit " + str(i + 1)
-            self.bandits.append(Bandit(name))
+        # #création des bandits
+        # self.bandits = []
+        # for i in range(NB_JOUEURS):
+        #     name = "Bandit " + str(i + 1)
+        #     self.bandits.append(Bandit(name))
 
             
         #ajout du marshall
-        self.train.wagons[0].marshall = True
+        self.wagons[0].marshall = True
 
 
+        self.playSpace.bind('<Configure>', lambda e: self.resize_image())
 
 
 
@@ -129,33 +141,48 @@ class Game(Tk):
     def resize_image(self):
             #oum: j'ai mis en commentaire cette ligne pk ça beug
             #self.update()
+            print(self.imgsOnPlaySpace)
+            for img in self.imgsOnPlaySpace:
+                self.playSpace.delete(img)
+
+            self.imgsOnPlaySpace.clear()
             
             hauteur=self.playSpace.winfo_height()
             largeur=self.playSpace.winfo_width()
+
+
             
-            pay = Game.createImg(largeur, hauteur, "png/paysage_2.png")
-            
-            self.paysageLb.config(image = pay)
-            self.paysageLb.image = pay
-            
+            self.pay = Game.createImg(largeur, hauteur, "png/paysage_2.png")
+            img = self.playSpace.create_image(0, 0, image=self.pay, anchor="nw")
+            self.imgsOnPlaySpace.append(img)
+            # return
+
+
             w = int(largeur / (NB_WAGONS+1))
-            h = int(hauteur / 4)
+            h = int(hauteur / 3)
             # print(w, h)
             
-            loco = Game.createImg(w, h, "png/locomotive val.png")
-            wagon = Game.createImg(w, h, "png/wagon val.png")
-            queue = Game.createImg(w, h, "png/queue val.png")
+            self.loco = Game.createImg(w, h, "png/locomotive val.png")
+            self.wagon = Game.createImg(w, h, "png/wagon val.png")
+            self.queue = Game.createImg(w, h, "png/queue val.png")
  
             
-            self.train.wagons[0].config(image = loco)
-            self.train.wagons[0].image = loco
+            # self.train.wagons[0].config(image = loco)
+            # self.train.wagons[0].image = loco
+
+            img = self.playSpace.create_image(0, h+(h/3), image=self.loco, anchor="nw")
+            self.imgsOnPlaySpace.append(img)
             
             for i in range(1, NB_WAGONS):
-                self.train.wagons[i].config(image = wagon)
-                self.train.wagons[i].image = wagon
+                # self.train.wagons[i].config(image = wagon)
+                # self.train.wagons[i].image = wagon
+                img = self.playSpace.create_image(i*w, h+(h/3), image=self.wagon, anchor="nw")
+                self.imgsOnPlaySpace.append(img)
             
-            self.train.wagons[NB_WAGONS].config(image = queue)
-            self.train.wagons[NB_WAGONS].image = queue
+            # self.train.wagons[NB_WAGONS].config(image = queue)
+            # self.train.wagons[NB_WAGONS].image = queue
+            img = self.playSpace.create_image(NB_WAGONS*w, h+(h/3), image=self.queue, anchor="nw")
+            self.imgsOnPlaySpace.append(img)
 
 
     @classmethod
@@ -176,7 +203,7 @@ class Game(Tk):
     # Pour le Marshall
     def deplacement(self):
         i = 0 #position du wagon où se trouve le Marshall
-        for wagon in self.train:
+        for wagon in self.wagons:
             if wagon.marshall == True:
                 break
             i += 1
@@ -203,78 +230,31 @@ class Game(Tk):
     def marshallMoveRight():
         pass
 
-
-
     
 
 
-class Train(Canvas):
-    wagons = []
-    #Constructeur
-    def __init__(self, fenetre:Tk, width, height):
-        super().__init__(fenetre, width=width, height=height, bg='green', border=0)
-        # self.rowconfigure(0,weight = 1)
-        # self.rowconfigure(1,weight = 1)
-        # self.rowconfigure(2,weight = 1)
-
-
-        #Créer les cases
-        for y in range(NB_WAGONS + 1):
-            #loco
-            if y == 0:
-                self.wagons.append(Wagon(self, 2, y, 0))
-                continue
-            #queue
-            if y == NB_WAGONS:
-                self.wagons.append(Wagon(self, 2, y, 2))
-                continue
-
-            #wagon
-            self.wagons.append(Wagon(self, 2, y, 1))
-
-
-
-
 #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
-class Wagon(Label):
-    def __init__(self, Train:Canvas, x , y, tetewagonqueue):
-        super().__init__(Train, width=100, height=100, border=0)
+class Wagon():
+    def __init__(self, game:Game, playSpace:Canvas, x:int , y:int, tetewagonqueue:int):
         self.x = x
         self.y = y
         self.marshall = False
-        self.grid(row=x, column=y, sticky= 'nsew')
 
-        self.config(bg = "brown")
-
-
+        taille = 100
 
         #chargement de la bonne image
         if tetewagonqueue == 0:
-            self.img = Game.createImg(100, 100, "png/locomotive val.png")
+            self.img = Game.createImg(taille, taille, "png/locomotive val.png")
         elif tetewagonqueue == 1:
-            self.img = Game.createImg(100, 100, "png/wagon val.png")
+            self.img = Game.createImg(taille, taille, "png/wagon val.png")
         elif tetewagonqueue == 2:
-            self.img = Game.createImg(100, 100, "png/queue val.png")
+            self.img = Game.createImg(taille, taille, "png/queue val.png")
 
         #placement de l'image sur le label
-        self.config(image = self.img)
-
-
-
-
-
-
-class Bandit(Label):
-    def __init__(self, name):
-        self.name = name
-        self.position = (0, NB_WAGONS)
-        self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
-        self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
-
-
-
-    def deplacement(self):
-        pass
+        # self.config(image = self.img)
+            
+        img = playSpace.create_image((0+y*taille, 0+x*taille), image=self.img, anchor="nw")
+        game.imgsOnPlaySpace.append(img)
 
 
 
@@ -283,16 +263,7 @@ class Bandit(Label):
 mon_jeu = Game()
 
 
-#Teste pour voir la position du Marshall
-# print("position du Marshall")
-# for wagon in mon_jeu.train.wagons:
-#     print(int(wagon.marshall), end="")
-# print()
-
-#Test pour afficher le nom de chaque Bandit
-# print("nom de chaque Bandit")
-# for bandit in mon_jeu.bandits:
-#     print(bandit.name)
-
 
 mon_jeu.mainloop()
+
+
