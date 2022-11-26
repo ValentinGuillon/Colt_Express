@@ -1,6 +1,6 @@
 import random 
-from tkinter import *
-from PIL import Image, ImageTk
+from tkinter import * #pour générer une fenêtre et son contenu
+from PIL import Image, ImageTk #pour l'import et la modification d'images
 
 
 global NB_WAGONS
@@ -16,15 +16,20 @@ NB_JOUEURS = NB_WAGONS
 class Game(Tk):
     def __init__(self):
         super().__init__()
-        self.title("Colt Express")
+        self.title("Colt Zeʁma")
         # self.geometry("720x480")
         self["bg"] = "orange"
         # self.iconbitmap("./train.ico")
         
-        self.columnconfigure(0, weight = 3)
+        # self.columnconfigure(0, weight = 3)
+        # self.columnconfigure(1, weight = 1)
+        # self.rowconfigure(0, weight=3)
+        # self.rowconfigure(1, weight=1)
+        self.columnconfigure(0, weight = 1)
         self.columnconfigure(1, weight = 1)
-        self.rowconfigure(0, weight=3)
+        self.rowconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
+        
         
         
         #attention, il doit y avoir deux espaces, un pour le jeu (train, décor), et un pour le "menu"
@@ -33,8 +38,6 @@ class Game(Tk):
 
         self.menuSpace = Canvas(self, bg="red")
         self.menuSpace.grid(row = 0, column= 1, sticky='nsew')
-        self.menuSpace.rowconfigure(0, weight=1)
-        self.menuSpace.columnconfigure(0, weight=1)
 
         
 
@@ -43,18 +46,18 @@ class Game(Tk):
         # self.playSpace.columnconfigure(1, weight = 1)
         # self.playSpace.rowconfigure(0, weight=3)
         # self.playSpace.rowconfigure(1, weight=1)
+        self.playSpace.rowconfigure(0, weight=1)
+        self.playSpace.rowconfigure(1, weight=1)
+        self.playSpace.rowconfigure(2, weight=1)
 
-        #background décor
+        #le décor derrière le train
         self.paysage = Game.createImg(100*(NB_WAGONS + 1), 100*4, "png/paysage_2.png")
-        # self.paysage = Image.open("png/paysage_2.png")
-        # self.paysage = self.paysage.resize((100*(NB_WAGONS + 1), 100*4))
-        # self.paysage = ImageTk.PhotoImage(self.paysage)
 
         self.paysageLb = Label(self.playSpace, image=self.paysage, border=0)
 
         self.paysageLb.grid(row=0, column=0, rowspan=3, columnspan=NB_WAGONS+1, sticky='nsew')
-        """ self.paysageLb.rowconfigure(0, weight=1)
-        self.paysageLb.columnconfigure(0, weight=1) """
+        # self.paysageLb.rowconfigure(0, weight=1)
+        # self.paysageLb.columnconfigure(0, weight=1)
 
         #création du train
         self.train = Train(self.playSpace, 500, 750)
@@ -71,6 +74,43 @@ class Game(Tk):
         #afin d'afficher les wagons
         self.train.rowconfigure(2, weight=3)
             
+
+        #=== FIN PLAY SPACE ================================
+
+        
+        #=== MENU SPACE ====================================
+        self.menuSpace.rowconfigure(0, weight=1)
+        self.menuSpace.columnconfigure(0, weight=1)
+        # grille de x = 3, y = 4+1+1+?
+        self.frame = Frame(self.menuSpace, width= 400, height= 100)
+        self.frame.grid(row=0,column=0,sticky='nsew')
+
+        
+        self.btnAction = Button(self.frame, text="Action")
+        self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
+
+        self.btnRight = Button(self.frame, text="->")
+        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="news")
+        self.btnLeft = Button(self.frame, text="<-")
+        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="news")
+        self.btnUp = Button(self.frame, text="Up")
+        self.btnUp.grid(row=0, column=1, sticky="news")
+        self.btnDown = Button(self.frame, text="Down")
+        self.btnDown.grid(row=3, column=1, sticky="news")
+
+        self.btnShoot = Button(self.frame, text="Shoot")
+        self.btnShoot.grid(row=1, column=1, sticky="news")
+        self.btnSteal = Button(self.frame, text="Steal")
+        self.btnSteal.grid(row=2, column=1, sticky="news")
+
+        self.history = Label(self.menuSpace, text = "EMPTY\nHistory")
+        self.history.grid(row=7, column=0, columnspan=3, sticky="news")
+
+        self.playSpace.bind('<Configure>', lambda e: self.resize_image())
+        #=== FIN MENU SPACE ================================
+
+        
+
         #création des bandits
         self.bandits = []
         for i in range(NB_JOUEURS):
@@ -81,29 +121,10 @@ class Game(Tk):
         #ajout du marshall
         self.train.wagons[0].marshall = True
 
-        #=== FIN PLAY SPACE ================================
 
-        
-        #=== MENU SPACE ====================================
-        #grille de x = 3, y = 4+1+1+?
-        self.frame = Frame(self.menuSpace, width= 400, height= 100)
-        self.frame.grid(row=0,column=0,sticky='nsew')
 
-        
-        self.btnAction = Button(self.frame, text="Action").grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
-        self.btnRight = Button(self.frame, text="->").grid(row=1, column=2, rowspan=2, sticky="news")
-        self.btnLeft = Button(self.frame, text="<-").grid(row=1, column=0, rowspan=2, sticky="news")
-        self.btnUp = Button(self.frame, text="Up").grid(row=0, column=1, sticky="news")
-        self.btnDown = Button(self.frame, text="Down").grid(row=3, column=1, sticky="news")
 
-        self.btnShoot = Button(self.frame, text="Shoot").grid(row=1, column=1, sticky="news")
-        self.btnSteal = Button(self.frame, text="Steal").grid(row=2, column=1, sticky="news")
-
-        self.history = Label(self.menuSpace, text = "EMPTY\nHistory").grid(row=7, column=0, columnspan=3, sticky="news")
-
-        self.playSpace.bind('<Configure>', lambda e: self.resize_image())
-        #=== FIN MENU SPACE ================================
 
     def resize_image(self):
             #oum: j'ai mis en commentaire cette ligne pk ça beug
@@ -113,8 +134,6 @@ class Game(Tk):
             largeur=self.playSpace.winfo_width()
             
             pay = Game.createImg(largeur, hauteur, "png/paysage_2.png")
-            # pay = Image.open("png/paysage_2.png").resize((largeur, hauteur))
-            # pay = ImageTk.PhotoImage(pay)
             
             self.paysageLb.config(image = pay)
             self.paysageLb.image = pay
@@ -123,34 +142,20 @@ class Game(Tk):
             h = int(hauteur / 4)
             # print(w, h)
             
-            loco1 = Game.createImg(w, h, "png/locomotive val.png")
-            # loco = Image.open("png/locomotive val.png").resize((w,h))
-            # background = Image.new('RGBA', loco.size, (0, 0, 0, 0))
-            # loco1 = Image.alpha_composite(background, loco)
-            # loco1 = ImageTk.PhotoImage(loco1)
-            
-            wagon1 = Game.createImg(w, h, "png/wagon val.png")
-            # wagon = Image.open("png/wagon val.png").resize((w,h))
-            # background = Image.new('RGBA', wagon.size, (0, 0, 0, 0))
-            # wagon1 = Image.alpha_composite(background, wagon)
-            # wagon1 =ImageTk.PhotoImage(wagon1)
-            
-            queue1 = Game.createImg(w, h, "png/queue val.png")
-            # queue = Image.open("png/queue val.png").resize((w,h))
-            # background = Image.new('RGBA', queue.size, (0, 0, 0, 0))
-            # queue1 = Image.alpha_composite(background, queue)
-            # queue1 = ImageTk.PhotoImage(queue1)
+            loco = Game.createImg(w, h, "png/locomotive val.png")
+            wagon = Game.createImg(w, h, "png/wagon val.png")
+            queue = Game.createImg(w, h, "png/queue val.png")
  
             
-            self.train.wagons[0].config(image = loco1)
-            self.train.wagons[0].image = loco1
+            self.train.wagons[0].config(image = loco)
+            self.train.wagons[0].image = loco
             
             for i in range(1, NB_WAGONS):
-                self.train.wagons[i].config(image = wagon1)
-                self.train.wagons[i].image = wagon1
+                self.train.wagons[i].config(image = wagon)
+                self.train.wagons[i].image = wagon
             
-            self.train.wagons[NB_WAGONS].config(image = queue1)
-            self.train.wagons[NB_WAGONS].image = queue1
+            self.train.wagons[NB_WAGONS].config(image = queue)
+            self.train.wagons[NB_WAGONS].image = queue
 
 
     @classmethod
@@ -200,41 +205,7 @@ class Game(Tk):
 
 
 
-# class Train():
-#     wagons = []
-#     #Constructeur
-#     def __init__(self):
-#         # self.wm_attributes()
-
-#         # #Créer les cases
-#         # for x in range(2):
-#         #     for y in range(NB_WAGONS):
-#         #         #loco
-#         #         if x == 0 and y == 0:
-#         #             self.wagons.append(Wagon(self, x, y, 0))
-#         #             isLoco = False
-#         #             continue
-#         #         #queue
-#         #         if x == 1 and y == NB_WAGONS - 1:
-#         #             self.wagons.append(Wagon(self, x, y, 2))
-#         #             continue
-
-#         #         #wagon
-#         #         self.wagons.append(Wagon(self, x, y, 1))
-        
-#         #Créer les cases
-#         for y in range(NB_WAGONS + 1):
-#             #loco
-#             if y == 0:
-#                 self.wagons.append(Wagon(self, 2, y, 0))
-#                 continue
-#             #queue
-#             if y == NB_WAGONS:
-#                 self.wagons.append(Wagon(self, 2, y, 2))
-#                 continue
-
-#             #wagon
-#             self.wagons.append
+    
 
 
 class Train(Canvas):
@@ -247,24 +218,6 @@ class Train(Canvas):
         # self.rowconfigure(2,weight = 1)
 
 
-        # self.wm_attributes()
-
-        # #Créer les cases
-        # for x in range(2):
-        #     for y in range(NB_WAGONS):
-        #         #loco
-        #         if x == 0 and y == 0:
-        #             self.wagons.append(Wagon(self, x, y, 0))
-        #             isLoco = False
-        #             continue
-        #         #queue
-        #         if x == 1 and y == NB_WAGONS - 1:
-        #             self.wagons.append(Wagon(self, x, y, 2))
-        #             continue
-
-        #         #wagon
-        #         self.wagons.append(Wagon(self, x, y, 1))
-        
         #Créer les cases
         for y in range(NB_WAGONS + 1):
             #loco
@@ -281,6 +234,7 @@ class Train(Canvas):
 
 
 
+
 #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
 class Wagon(Label):
     def __init__(self, Train:Canvas, x , y, tetewagonqueue):
@@ -290,7 +244,7 @@ class Wagon(Label):
         self.marshall = False
         self.grid(row=x, column=y, sticky= 'nsew')
 
-        self["bg"] = "brown"
+        self.config(bg = "brown")
 
 
 
@@ -302,8 +256,8 @@ class Wagon(Label):
         elif tetewagonqueue == 2:
             self.img = Game.createImg(100, 100, "png/queue val.png")
 
-        #posage du png
-        self["image"] = self.img
+        #placement de l'image sur le label
+        self.config(image = self.img)
 
 
 
