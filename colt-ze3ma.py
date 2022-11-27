@@ -23,7 +23,10 @@ class Game(Tk):
         self.title("Colt Zeʁma")
         # self.geometry("720x480")
         self["bg"] = "orange"
-        self.iconbitmap("./train.ico")
+        icon = './train.ico'
+        img = Image.open(icon)
+        img = ImageTk.PhotoImage(img)
+        self.call('wm', 'iconphoto', self._w, img)
         
         self.columnconfigure(0, weight = 1)
         self.rowconfigure(0, weight=1)
