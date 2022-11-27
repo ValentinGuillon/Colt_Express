@@ -48,7 +48,7 @@ class Game(Tk):
         # self.playSpace.rowconfigure(2, weight=1)
 
         #le décor derrière le train
-        self.paysage = Game.createImg(100*(NB_WAGONS + 1), 100*4, "png/paysage_2.png")
+        self.paysage = Game.createImg(100*(NB_WAGONS + 1), 100*4, "png/landscape.png")
         img = self.playSpace.create_image(0, 0, image=self.paysage, anchor="nw")
         self.imgsOnPlaySpace.append(img)
         
@@ -144,7 +144,7 @@ class Game(Tk):
     def resize_image(self):
             #oum: j'ai mis en commentaire cette ligne pk ça beug
             #self.update()
-            print(self.imgsOnPlaySpace)
+
             for img in self.imgsOnPlaySpace:
                 self.playSpace.delete(img)
 
@@ -155,7 +155,7 @@ class Game(Tk):
 
 
             
-            self.pay = Game.createImg(largeur, hauteur, "png/paysage_2.png")
+            self.pay = Game.createImg(largeur, hauteur, "png/landscape.png")
             img = self.playSpace.create_image(0, 0, image=self.pay, anchor="nw")
             self.imgsOnPlaySpace.append(img)
             # return
@@ -173,18 +173,18 @@ class Game(Tk):
             # self.train.wagons[0].config(image = loco)
             # self.train.wagons[0].image = loco
 
-            img = self.playSpace.create_image(0, h+(h/3), image=self.loco, anchor="nw")
+            img = self.playSpace.create_image(0, h, image=self.loco, anchor="nw")
             self.imgsOnPlaySpace.append(img)
             
             for i in range(1, NB_WAGONS):
                 # self.train.wagons[i].config(image = wagon)
                 # self.train.wagons[i].image = wagon
-                img = self.playSpace.create_image(i*w, h+(h/3), image=self.wagon, anchor="nw")
+                img = self.playSpace.create_image(i*w, h, image=self.wagon, anchor="nw")
                 self.imgsOnPlaySpace.append(img)
             
             # self.train.wagons[NB_WAGONS].config(image = queue)
             # self.train.wagons[NB_WAGONS].image = queue
-            img = self.playSpace.create_image(NB_WAGONS*w, h+(h/3), image=self.queue, anchor="nw")
+            img = self.playSpace.create_image(NB_WAGONS*w, h, image=self.queue, anchor="nw")
             self.imgsOnPlaySpace.append(img)
 
 
@@ -265,6 +265,12 @@ class Wagon():
 
 mon_jeu = Game()
 
+
+#affiche le bool "marshall" de chaque wagon
+print("wagon.marshall (de chaque wagon) :")
+for wagon in mon_jeu.wagons:
+    print(wagon.marshall, end=" ")
+print()
 
 
 mon_jeu.mainloop()
