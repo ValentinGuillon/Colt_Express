@@ -283,17 +283,53 @@ class Wagon():
         game.imgsOnPlaySpace.append(img)
 
     
-class Bandit(Label):
-    def __init__(self, name):
+
+        
+
+class Bandit():
+    imgBody = Image.open("png/bandit.png")
+    imgDetails = Image.open("png/bandit_details.png")
+
+    def __init__(self, playSpace:Canvas, name:str, color:tuple):
         self.name = name
+        self.color = color
         self.position = (0, NB_WAGONS)
         self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
         self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
 
+        
+
+    def executeAction(self):
+        pass
 
 
     def deplacement(self):
         pass
+
+    
+    def shoot(self):
+        #tire sur un Bandit à la même position (aka, appeler la fonction getHit() du Bandit touché)
+        pass
+
+    
+    def rob(self):
+        #vole un butin aléatoirement sur sa position
+        pass
+
+    
+    def getHitBandit(self):
+        #perd un butin aléatoirement
+        pass
+
+    
+    def getHitByMarshall(self):
+        #perd un butin aléatoirement, et monte sur le toit
+        pass
+    
+
+
+    
+
 
 
 
