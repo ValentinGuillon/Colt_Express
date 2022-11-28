@@ -4,12 +4,12 @@ from PIL import Image, ImageTk
 
 
 global colors
-colors = {"red":(255, 0, 0),
-          "orange":(255, 128, 0),
-          "yellow":(255, 255, 0),
-          "green":(0, 255, 0),
-          "blue":(0, 0, 255)}
-
+colors = {"red":(255, 0, 0, 1),
+          "orange":(255, 128, 0, 1),
+          "yellow":(255, 255, 0, 1),
+          "green":(0, 255, 0, 1),
+          "blue":(0, 0, 255, 1)}
+print(type(colors["red"][3]))
 
 global posX
 global posY
@@ -80,10 +80,10 @@ class Root(Tk):
         body = body.resize((width, height))
 
         #lors du resize, il y'a de l'aliasing, donc tout les pixels non completement transparent devienne noir
-        for y in range(body.height):
-            for x in range(body.width):
-                if body.getpixel((x, y))[3] != 0:
-                    body.putpixel((x, y), value=(0, 0, 0))
+        # for y in range(body.height):
+        #     for x in range(body.width):
+        #         if body.getpixel((x, y))[3] != 0:
+        #             body.putpixel((x, y), value=(0, 0, 0))
 
         details = Image.open(files[1])
         details = details.resize((width, height))
@@ -94,7 +94,8 @@ class Root(Tk):
         for y in range(details.height):
             for x in range(details.width):
                 if details.getpixel((x, y)) != (0, 0, 0, 0):
-                    details.putpixel((x, y), value=color)
+                    tempC = (color[0], color[1], color[2], details.getpixel((x, y))[3])
+                    details.putpixel((x, y), value=tempC)
 
         self.bandit = Image.alpha_composite(body, details)
         self.bandit = ImageTk.PhotoImage(self.bandit)
