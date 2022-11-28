@@ -13,10 +13,10 @@ NB_JOUEURS = NB_WAGONS
 
 
 
-def createImg(x, y, file):
-    img = Image.open(file)
-    img = img.resize((x, y))
-    return ImageTk.PhotoImage(img)
+# def createImg(x, y, file):
+#     img = Image.open(file)
+#     img = img.resize((x, y))
+#     return ImageTk.PhotoImage(img)
 
 def createLoadedImg(x, y, img):
     img = img.resize((x, y))
