@@ -366,7 +366,7 @@ class Bandit():
             return
         
         if self.actions[0] in ['right', 'left', 'up', 'down']:
-            self.deplacement()
+            self.deplacement(self.actions[0])
         elif self.actions[0] == 'shoot':
             self.shoot()
         elif self.actions[0] == 'rob':
@@ -376,10 +376,63 @@ class Bandit():
         #self.gedHitByMarshall()
 
         self.actions.pop(0)
+        mon_jeu.resize_image()
 
 
-    def deplacement(self):
-        print(f'{self.name} move to {self.actions[0]}')
+    def deplacement(self, action:str):
+        x = self.position['x']
+        y = self.position['y']
+        name = self.name
+
+        if action == 'right':
+            if x == NB_WAGONS:
+                print(f"{name} can't move {action}")
+                return
+
+            #on retire le bandit du wagon actuel
+            for i, bandit in enumerate(Game.wagons[x].bandits):
+                if not bandit.name == name:
+                    continue
+                Game.wagons[x].bandits.pop(i)
+
+            #on ajoute le bandit dans le wagon destination
+            Game.wagons[x+1].bandits.append(self)
+
+            self.position['x'] += 1
+
+            
+
+        if action == 'left':
+            if x == 0:
+                print(f"{name} can't move {action}")
+                return
+
+            #on retire le bandit du wagon actuel
+            for i, bandit in enumerate(Game.wagons[x].bandits):
+                if not bandit.name == name:
+                    continue
+                Game.wagons[x].bandits.pop(i)
+
+            #on ajoute le bandit dans le wagon destination
+            Game.wagons[x-1].bandits.append(self)
+
+            self.position['x'] -= 1
+
+        if action == 'up':
+            if y == 0:
+                print(f"{name} can't move {action}")
+                return
+            self.position['y'] = 0
+
+        if action == 'down':
+            if y == 1:
+                print(f"{name} can't move {action}")
+                return
+            self.position['y'] = 1
+        
+        
+        print(f'{self.name} has moved {action}')
+        
 
 
     def shoot(self):
