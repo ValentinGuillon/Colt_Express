@@ -98,7 +98,7 @@ class Game(Tk):
         self.frame.grid(row=0,column=0,sticky='nsew')
 
 
-        self.btnAction = Button(self.frame, text="Action\n(moveMarshall)", command=self.testActions)
+        self.btnAction = Button(self.frame, text="Action\n(testActions)", command=self.testActions)
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
         self.btnRight = Button(self.frame, text="->")
@@ -220,34 +220,51 @@ class Game(Tk):
 
 
             #ON DESSINE LES BANDITS ===================
+            wBandit = int(w/2.7)
+            hBandit = h//2
             #les offSet sont à modifier
             # offSetX = w//4 #doit être < w
             # offSetY = h//2 - (int(h*0.2)) #doit être < h
+            baseOffSetX = (w//2) - (wBandit//2)
+            baseOffSetY = (h-hBandit)
 
-            # for bandit in Game.bandits:
-            #     x = bandit.position['x']
-            #     y = bandit.position['y']
-                
-            #     self.img = Game.createBanditPng(w//2, h//2, bandit.color)
-            #     img = self.playSpace.create_image((x*w)+offSetX, (y*h)+offSetY, image=self.img, anchor="nw")
 
             for wagon in Game.wagons:
-                nbBandit = len(wagon.bandits)
-                
+                nbBandits = len(wagon.bandits)
+
+                if nbBandits == 0:
+                    continue
+
                 for i, bandit in enumerate(wagon.bandits):
                     x = bandit.position['x']
                     y = bandit.position['y']
+                    offSetX = baseOffSetX
+                    offSetY = baseOffSetY
 
                     #faire deux cas de calcul des offSet, pour y == 0, et y == 1
                     #faire un cas spécial pour x == 0 (locomotive)
 
-                    #!!! offSetX est mal calculer
-                    offSetX = ((w//4)*(nbBandit*(i))) // 4 #doit être < w
-                    offSetY = (h//2) - (((i+1)%((nbBandit//2)+1))*(h*0.05)) #doit être < h
+                    # #!!! offSetX est mal calculer
+                    # offSetX += ((w//4)*(nbBandits*(i))) // 4 #doit être < w
+                    # offSetX -= ((w//4)*(nbBandits*(i))) // 4 #doit être < w
+
+                    
+                    
+                    if (i % 2) == 1:
+                        offSetX += ((w // nbBandits) + ((i * (w // nbBandits)))) // 4
+
+                    else:
+                        offSetX -= ((w // nbBandits) + ((i * (w // nbBandits)))) // 4
+
+
                     if y == 1:
                         offSetY -= h*0.2 #réhaussement de 20% de la hauteur du train
+                        offSetY -= (h*0.02) * (i%3)
                     
-                    bandit.img = Game.createBanditPng(w//2, h//2, bandit.color)
+
+                        
+                    bandit.img = Game.createBanditPng(wBandit, hBandit, bandit.color)
+                    # img = self.playSpace.create_image((x*(w//2))+offSetX, (y*h)+offSetY, image=bandit.img, anchor="nw")
                     img = self.playSpace.create_image((x*w)+offSetX, (y*h)+offSetY, image=bandit.img, anchor="nw")
                     self.imgsOnPlaySpace.append(img)
 
@@ -390,7 +407,6 @@ class Bandit():
             self.rob()
 
         self.actions.pop(0)
-        mon_jeu.resize_image()
 
 
     def deplacement(self, action:str):
