@@ -124,7 +124,7 @@ class Game(Tk):
         for i in range(NB_JOUEURS):
             name = "Bandit" + str(i + 1)
             color = random.choice(list(colors.values()))
-            Game.bandits.append(Bandit(self.playSpace, name, color))
+            Game.bandits.append(Bandit(self, name, color))
 
 
         #ajout du marshall
@@ -355,17 +355,17 @@ class Bandit():
     imgBody = Image.open("png/bandit.png")
     imgDetails = Image.open("png/bandit_details.png")
 
-    def __init__(self, playSpace:Canvas, name:str, color:tuple):
+    def __init__(self, game:Game, name:str, color:tuple):
         self.name = name
         self.color = color
         self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
-        self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
-        self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
+        self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer)
+        self.game = game
         self.img = None
         self.butins = []
 
         #on ajoute le bandit dans la liste bandits du bon wagon
-        Game.wagons[self.position['x']].bandits.append(self)
+        self.game.wagons[self.position['x']].bandits.append(self)
 
 
     def test(self):
@@ -404,13 +404,13 @@ class Bandit():
                 return
 
             #on retire le bandit du wagon actuel
-            for i, bandit in enumerate(Game.wagons[x].bandits):
+            for i, bandit in enumerate(self.game.wagons[x].bandits):
                 if not bandit.name == name:
                     continue
-                Game.wagons[x].bandits.pop(i)
+                self.game.wagons[x].bandits.pop(i)
 
             #on ajoute le bandit dans le wagon destination
-            Game.wagons[x+1].bandits.append(self)
+            self.game.wagons[x+1].bandits.append(self)
 
             self.position['x'] += 1
 
@@ -422,13 +422,13 @@ class Bandit():
                 return
 
             #on retire le bandit du wagon actuel
-            for i, bandit in enumerate(Game.wagons[x].bandits):
+            for i, bandit in enumerate(self.game.wagons[x].bandits):
                 if not bandit.name == name:
                     continue
-                Game.wagons[x].bandits.pop(i)
+                self.game.wagons[x].bandits.pop(i)
 
             #on ajoute le bandit dans le wagon destination
-            Game.wagons[x-1].bandits.append(self)
+            self.game.wagons[x-1].bandits.append(self)
 
             self.position['x'] -= 1
 
@@ -455,7 +455,7 @@ class Bandit():
             return
 
         #si le Marshall est dans le même wagon
-        if Game.wagons[self.position['x']].marshall == True:
+        if self.game.wagons[self.position['x']].marshall == True:
             self.getHitByMarshall()
 
 
@@ -482,7 +482,7 @@ class Bandit():
             #on retire un butin du bandit
             butin = self.butins.pop(random.choice(list(range(len(self.butins)))))
             #qu'on rajoute dans le wagon
-            Game.wagons[self.position['x']].append(butin)
+            self.game.wagons[self.position['x']].append(butin)
             print(f'{self.name} lose a butin')
         
         #le bandit monte sur le toit
