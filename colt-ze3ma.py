@@ -87,7 +87,7 @@ class Game(Tk):
         self.btnDown = Button(self.frame, text="Down")
         self.btnDown.grid(row=3, column=1, sticky="news")
 
-        self.btnShoot = Button(self.frame, text="Shoot")
+        self.btnShoot = Button(self.frame, text="Shoot", command=self.testBanditActions)
         self.btnShoot.grid(row=1, column=1, sticky="news")
         self.btnSteal = Button(self.frame, text="Steal")
         self.btnSteal.grid(row=2, column=1, sticky="news")
@@ -99,11 +99,10 @@ class Game(Tk):
 
 
 
-        # #création des bandits
-        # self.bandits = []
-        # for i in range(NB_JOUEURS):
-        #     name = "Bandit " + str(i + 1)
-        #     self.bandits.append(Bandit(name))
+        #création des bandits
+        for i in range(NB_JOUEURS):
+            name = "Bandit " + str(i + 1)
+            Game.bandits.append(Bandit(self.playSpace, name, (255, 255, 0, 0)))
 
 
         #ajout du marshall
@@ -113,6 +112,11 @@ class Game(Tk):
         #resize des images de self.playSpace lorsque la fenêtre est redimentionnée
         self.playSpace.bind('<Configure>', lambda e: self.resize_image())
 
+
+    def testBanditActions(self):
+        for bandit in Game.bandits:
+            bandit.test()
+        print()
 
 
     def resize_image(self):
@@ -203,6 +207,7 @@ class Game(Tk):
         self.printPosMarshall()
 
 
+    #affiche le bool "marshall" de chaque wagon
     def printPosMarshall(self):
         print("Position du Marshall")
         for wagon in self.wagons:
@@ -248,33 +253,52 @@ class Bandit():
         self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
 
 
+    def test(self):
+        act = ['right', 'left', 'up', 'down', 'shoot', 'rob']
+        self.actions.append(random.choice(act))
+        self.executeAction()
+
 
     def executeAction(self):
-        pass
+        if not len(self.actions):
+            print(f'{self.name} has no actions')
+            return
+        
+        if self.actions[0] in ['right', 'left', 'up', 'down']:
+            self.deplacement()
+        elif self.actions[0] == 'shoot':
+            self.shoot()
+        elif self.actions[0] == 'rob':
+            self.rob()
+
+        #self.getHitByBandit()
+        #self.gedHitByMarshall()
+
+        self.actions.pop(0)
 
 
     def deplacement(self):
-        pass
+        print(f'{self.name} move to {self.actions[0]}')
 
 
     def shoot(self):
-        #tire sur un Bandit à la même position (aka, appeler la fonction getHit() du Bandit touché)
-        pass
+        #tire sur un Bandit, aléatoirement, à la même position (aka, appeler la fonction getHit() du Bandit touché)
+        print(f'{self.name} shoot')
 
 
     def rob(self):
-        #vole un butin aléatoirement sur sa position
-        pass
+        #vole un butin, aléatoirement, sur sa position
+        print(f'{self.name} rob')
 
 
-    def getHitBandit(self):
-        #perd un butin aléatoirement
-        pass
+    def getHitByBandit(self):
+        #perd un butin, aléatoirement
+        print(f'{self.name} get hit by a bandit')
 
 
     def getHitByMarshall(self):
-        #perd un butin aléatoirement, et monte sur le toit
-        pass
+        #perd un butin, aléatoirement, et monte sur le toit
+        print(f'{self.name} get hit by the Marshall')
 
 
 
@@ -287,7 +311,6 @@ class Bandit():
 mon_jeu = Game()
 
 
-#affiche le bool "marshall" de chaque wagon
 
 
 
