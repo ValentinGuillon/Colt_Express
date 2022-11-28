@@ -18,10 +18,13 @@ def createImg(x, y, file):
     img = img.resize((x, y))
     return ImageTk.PhotoImage(img)
 
-
+def createLoadedImg(x, y, img):
+    img = img.resize((x, y))
+    return ImageTk.PhotoImage(img)
 
 
 class Game(Tk):
+    imgPaysage = Image.open("png/landscape.png")
     imgsOnPlaySpace = []
     wagons = []
     bandits = []
@@ -51,24 +54,28 @@ class Game(Tk):
 
 
         #=== PLAY SPACE ====================================
+        #chargement du background
         #le décor derrière le train
-        self.paysage = createImg(100*(NB_WAGONS + 1), 100*4, "png/landscape.png")
-        img = self.playSpace.create_image(0, 0, image=self.paysage, anchor="nw")
-        self.imgsOnPlaySpace.append(img)
+        # self.paysage = createImg(100*(NB_WAGONS + 1), 100*4, "png/landscape.png")
+        # img = self.playSpace.create_image(0, 0, image=self.paysage, anchor="nw")
+        # self.imgsOnPlaySpace.append(img)
 
 
         #création des wagons
         for y in range(NB_WAGONS + 1):
             #loco
             if y == 0:
-                self.wagons.append(Wagon(self, self.playSpace, y, 0))
+                # self.wagons.append(Wagon(self, self.playSpace, y, 0))
+                self.wagons.append(Wagon(self, y, type='loco'))
                 continue
             #queue
             if y == NB_WAGONS:
-                self.wagons.append(Wagon(self, self.playSpace, y, 2))
+                # self.wagons.append(Wagon(self, self.playSpace, y, 2))
+                self.wagons.append(Wagon(self, y, type='wagon'))
                 continue
             #wagon
-            self.wagons.append(Wagon(self, self.playSpace, y, 1))
+            # self.wagons.append(Wagon(self, self.playSpace, y, 1))
+            self.wagons.append(Wagon(self, y, type='queue'))
 
 
 
@@ -141,8 +148,9 @@ class Game(Tk):
 
 
 
-            self.pay = createImg(largeur, hauteur, "png/landscape.png")
-            img = self.playSpace.create_image(0, 0, image=self.pay, anchor="nw")
+            # self.pay = createImg(largeur, hauteur, "png/landscape.png")
+            self.imgPaysage = createLoadedImg(largeur, hauteur, Game.imgPaysage)
+            img = self.playSpace.create_image(0, 0, image=self.imgPaysage, anchor="nw")
             self.imgsOnPlaySpace.append(img)
             # return
 
@@ -151,26 +159,29 @@ class Game(Tk):
             h = int(hauteur / 3)
             # print(w, h)
 
-            self.loco = createImg(w, h, "png/locomotive val.png")
-            self.wagon = createImg(w, h, "png/wagon val.png")
-            self.queue = createImg(w, h, "png/queue val.png")
+            # self.loco = createImg(w, h, "png/locomotive val.png")
+            # self.wagon = createImg(w, h, "png/wagon val.png")
+            # self.queue = createImg(w, h, "png/queue val.png")
+            self.imgLoco = createLoadedImg(w, h, Wagon.imgLoco)
+            self.imgWagon = createLoadedImg(w, h, Wagon.imgWagon)
+            self.imgQueue = createLoadedImg(w, h, Wagon.imgQueue)
  
 
             # self.train.wagons[0].config(image = loco)
             # self.train.wagons[0].image = loco
 
-            img = self.playSpace.create_image(0, h, image=self.loco, anchor="nw")
+            img = self.playSpace.create_image(0, h, image=self.imgLoco, anchor="nw")
             self.imgsOnPlaySpace.append(img)
 
             for i in range(1, NB_WAGONS):
                 # self.train.wagons[i].config(image = wagon)
                 # self.train.wagons[i].image = wagon
-                img = self.playSpace.create_image(i*w, h, image=self.wagon, anchor="nw")
+                img = self.playSpace.create_image(i*w, h, image=self.imgWagon, anchor="nw")
                 self.imgsOnPlaySpace.append(img)
 
             # self.train.wagons[NB_WAGONS].config(image = queue)
             # self.train.wagons[NB_WAGONS].image = queue
-            img = self.playSpace.create_image(NB_WAGONS*w, h, image=self.queue, anchor="nw")
+            img = self.playSpace.create_image(NB_WAGONS*w, h, image=self.imgQueue, anchor="nw")
             self.imgsOnPlaySpace.append(img)
 
 
@@ -219,24 +230,39 @@ class Game(Tk):
 
 
 class Wagon():
+    imgLoco = Image.open('png/locomotive val.png')
+    imgWagon = Image.open('png/wagon val.png')
+    imgQueue = Image.open('png/queue val.png')
+
     #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
-    def __init__(self, game:Game, playSpace:Canvas , y:int, tetewagonqueue:int):
+    # def __init__(self, game:Game, playSpace:Canvas , y:int, tetewagonqueue:int):
+    def __init__(self, game:Game, y:int, type:str):
         # self.y = y
         self.marshall = False
+        self.type = type
 
-        taille = 100
+        # taille = 100
 
         #chargement de la bonne image
-        if tetewagonqueue == 0:
-            self.img = createImg(taille, taille, "png/locomotive val.png")
-        elif tetewagonqueue == 1:
-            self.img = createImg(taille, taille, "png/wagon val.png")
-        elif tetewagonqueue == 2:
-            self.img = createImg(taille, taille, "png/queue val.png")
+        # if tetewagonqueue == 0:
+        #     self.img = createImg(taille, taille, "png/locomotive val.png")
+        # elif tetewagonqueue == 1:
+        #     self.img = createImg(taille, taille, "png/wagon val.png")
+        # elif tetewagonqueue == 2:
+        #     self.img = createImg(taille, taille, "png/queue val.png")
+
+        # #(valentin)
+        # if type == 'loco':
+        #     self.img = Image.open('png/locomotive val.png')
+        # elif type == 'wagon':
+        #     self.img = Image.open('png/wagon val.png')
+        # elif type == 'queue':
+        #     self.img = Image.open('png/queue val.png')
 
 
-        img = playSpace.create_image((y*taille, 2*taille), image=self.img, anchor="nw")
-        game.imgsOnPlaySpace.append(img)
+
+        # img = playSpace.create_image((y*taille, 2*taille), image=self.img, anchor="nw")
+        # game.imgsOnPlaySpace.append(img)
 
 
 
