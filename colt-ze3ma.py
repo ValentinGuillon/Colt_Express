@@ -13,6 +13,14 @@ NB_JOUEURS = NB_WAGONS
 
 
 
+def createImg(x, y, file):
+    img = Image.open(file)
+    img = img.resize((x, y))
+    return ImageTk.PhotoImage(img)
+
+
+
+
 class Game(Tk):
     imgsOnPlaySpace = []
     wagons = []
@@ -44,7 +52,7 @@ class Game(Tk):
 
         #=== PLAY SPACE ====================================
         #le décor derrière le train
-        self.paysage = Game.createImg(100*(NB_WAGONS + 1), 100*4, "png/landscape.png")
+        self.paysage = createImg(100*(NB_WAGONS + 1), 100*4, "png/landscape.png")
         img = self.playSpace.create_image(0, 0, image=self.paysage, anchor="nw")
         self.imgsOnPlaySpace.append(img)
 
@@ -133,7 +141,7 @@ class Game(Tk):
 
 
 
-            self.pay = Game.createImg(largeur, hauteur, "png/landscape.png")
+            self.pay = createImg(largeur, hauteur, "png/landscape.png")
             img = self.playSpace.create_image(0, 0, image=self.pay, anchor="nw")
             self.imgsOnPlaySpace.append(img)
             # return
@@ -143,9 +151,9 @@ class Game(Tk):
             h = int(hauteur / 3)
             # print(w, h)
 
-            self.loco = Game.createImg(w, h, "png/locomotive val.png")
-            self.wagon = Game.createImg(w, h, "png/wagon val.png")
-            self.queue = Game.createImg(w, h, "png/queue val.png")
+            self.loco = createImg(w, h, "png/locomotive val.png")
+            self.wagon = createImg(w, h, "png/wagon val.png")
+            self.queue = createImg(w, h, "png/queue val.png")
  
 
             # self.train.wagons[0].config(image = loco)
@@ -164,13 +172,6 @@ class Game(Tk):
             # self.train.wagons[NB_WAGONS].image = queue
             img = self.playSpace.create_image(NB_WAGONS*w, h, image=self.queue, anchor="nw")
             self.imgsOnPlaySpace.append(img)
-
-
-    @classmethod
-    def createImg(cls, x, y, file):
-        img = Image.open(file)
-        img = img.resize((x, y))
-        return ImageTk.PhotoImage(img)
 
 
 
@@ -227,11 +228,11 @@ class Wagon():
 
         #chargement de la bonne image
         if tetewagonqueue == 0:
-            self.img = Game.createImg(taille, taille, "png/locomotive val.png")
+            self.img = createImg(taille, taille, "png/locomotive val.png")
         elif tetewagonqueue == 1:
-            self.img = Game.createImg(taille, taille, "png/wagon val.png")
+            self.img = createImg(taille, taille, "png/wagon val.png")
         elif tetewagonqueue == 2:
-            self.img = Game.createImg(taille, taille, "png/queue val.png")
+            self.img = createImg(taille, taille, "png/queue val.png")
 
 
         img = playSpace.create_image((y*taille, 2*taille), image=self.img, anchor="nw")
