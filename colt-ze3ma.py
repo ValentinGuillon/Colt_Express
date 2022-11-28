@@ -96,7 +96,7 @@ class Game(Tk):
         self.frame.grid(row=0,column=0,sticky='nsew')
 
 
-        self.btnAction = Button(self.frame, text="Action\n(moveMarshall)", command=self.moveMarshall)
+        self.btnAction = Button(self.frame, text="Action\n(moveMarshall)", command=self.testActions)
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
         self.btnRight = Button(self.frame, text="->")
@@ -108,7 +108,7 @@ class Game(Tk):
         self.btnDown = Button(self.frame, text="Down")
         self.btnDown.grid(row=3, column=1, sticky="news")
 
-        self.btnShoot = Button(self.frame, text="Shoot\n(testBanditActions)", command=self.testBanditActions)
+        self.btnShoot = Button(self.frame, text="Shoot")
         self.btnShoot.grid(row=1, column=1, sticky="news")
         self.btnSteal = Button(self.frame, text="Steal\n(print Bandits of\nall wagons)", command=self.printBanditsOfAllWagons)
         self.btnSteal.grid(row=2, column=1, sticky="news")
@@ -135,12 +135,25 @@ class Game(Tk):
         self.playSpace.bind('<Configure>', lambda e: self.resize_image())
 
 
-    def testBanditActions(self):
+    def testActions(self):
+        #execute l'action de chaque bandit (donnée aléatoirement)
         print("Execute first action of each bandit :")
         for bandit in Game.bandits:
             bandit.test()
         print()
 
+        #déplace le marshall
+        self.moveMarshall()
+
+        #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le dbandit si oui)
+        for bandit in Game.bandits:
+            bandit.checkMarshallPresence()
+        print()
+
+        #update du Canvas
+        self.resize_image()
+
+        
     def printBanditsOfAllWagons(self):
         print("list Bandits de chaque wagon :")
         for i, wagon in enumerate(Game.wagons):
@@ -349,6 +362,7 @@ class Bandit():
         self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
         self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
         self.img = None
+        self.butins = []
 
         #on ajoute le bandit dans la liste bandits du bon wagon
         Game.wagons[self.position['x']].bandits.append(self)
@@ -432,7 +446,17 @@ class Bandit():
         
         
         print(f'{self.name} has moved {action}')
-        
+        # self.checkMarshallPresence()
+
+    
+    def checkMarshallPresence(self):
+        #si le bandit est sur le toit
+        if self.position['y'] == 0:
+            return
+
+        #si le Marshall est dans le même wagon
+        if Game.wagons[self.position['x']].marshall == True:
+            self.getHitByMarshall()
 
 
     def shoot(self):
@@ -454,6 +478,16 @@ class Bandit():
         #perd un butin, aléatoirement, et monte sur le toit
         print(f'{self.name} get hit by the Marshall')
 
+        if len(self.butins):
+            #on retire un butin du bandit
+            butin = self.butins.pop(random.choice(list(range(len(self.butins)))))
+            #qu'on rajoute dans le wagon
+            Game.wagons[self.position['x']].append(butin)
+            print(f'{self.name} lose a butin')
+        
+        #le bandit monte sur le toit
+        self.position['y'] = 0
+        print(f'{self.name} move on the roof')
 
 
 
