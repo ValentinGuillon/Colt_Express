@@ -10,6 +10,12 @@ global NB_BALLES
 NB_WAGONS = 4
 NB_JOUEURS = NB_WAGONS
 
+global colors
+colors = {"red":(255, 0, 0),
+          "orange":(255, 128, 0),
+          "yellow":(255, 255, 0),
+          "green":(0, 255, 0),
+          "blue":(0, 0, 255)}
 
 
 
@@ -90,7 +96,7 @@ class Game(Tk):
         self.frame.grid(row=0,column=0,sticky='nsew')
 
 
-        self.btnAction = Button(self.frame, text="Action", command=self.moveMarshall)
+        self.btnAction = Button(self.frame, text="Action\n(moveMarshall)", command=self.moveMarshall)
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
         self.btnRight = Button(self.frame, text="->")
@@ -102,9 +108,9 @@ class Game(Tk):
         self.btnDown = Button(self.frame, text="Down")
         self.btnDown.grid(row=3, column=1, sticky="news")
 
-        self.btnShoot = Button(self.frame, text="Shoot", command=self.testBanditActions)
+        self.btnShoot = Button(self.frame, text="Shoot\n(testBanditActions)", command=self.testBanditActions)
         self.btnShoot.grid(row=1, column=1, sticky="news")
-        self.btnSteal = Button(self.frame, text="Steal")
+        self.btnSteal = Button(self.frame, text="Steal\n(print Bandits of\nall wagons)", command=self.printBanditsOfAllWagons)
         self.btnSteal.grid(row=2, column=1, sticky="news")
 
         self.history = Label(self.menuSpace, text = "EMPTY\nHistory")
@@ -116,8 +122,9 @@ class Game(Tk):
 
         #création des bandits
         for i in range(NB_JOUEURS):
-            name = "Bandit " + str(i + 1)
-            Game.bandits.append(Bandit(self.playSpace, name, (255, 255, 0, 0)))
+            name = "Bandit" + str(i + 1)
+            color = random.choice(list(colors.values()))
+            Game.bandits.append(Bandit(self.playSpace, name, color))
 
 
         #ajout du marshall
@@ -129,8 +136,19 @@ class Game(Tk):
 
 
     def testBanditActions(self):
+        print("Execute first action of each bandit :")
         for bandit in Game.bandits:
             bandit.test()
+        print()
+
+    def printBanditsOfAllWagons(self):
+        print("list Bandits de chaque wagon :")
+        for i, wagon in enumerate(Game.wagons):
+            # print(f'wagon{i} => {wagon.bandits}')
+            print(f'wagon {i} => [', end='')
+            for bandit in wagon.bandits:
+                print(f'{bandit.name}', end=' ')
+            print(']')
         print()
 
 
@@ -138,23 +156,24 @@ class Game(Tk):
             #oum: j'ai mis en commentaire cette ligne pk ça beug
             #self.update()
 
+            #ON VIDE LE CANVAS ========================
             for img in self.imgsOnPlaySpace:
                 self.playSpace.delete(img)
-
             self.imgsOnPlaySpace.clear()
 
+            #ON RÉCUPÈRE LA TAILLE DU CANVAS ==========
             hauteur=self.playSpace.winfo_height()
             largeur=self.playSpace.winfo_width()
 
 
-
+            #ON DESSINE LE BACKGROUND =================
             # self.pay = createImg(largeur, hauteur, "png/landscape.png")
             self.imgPaysage = createLoadedImg(largeur, hauteur, Game.imgPaysage)
             img = self.playSpace.create_image(0, 0, image=self.imgPaysage, anchor="nw")
             self.imgsOnPlaySpace.append(img)
-            # return
 
 
+            #ON DESSINE LES WAGONS ====================
             w = int(largeur / (NB_WAGONS+1))
             h = int(hauteur / 3)
             # print(w, h)
@@ -183,6 +202,56 @@ class Game(Tk):
             # self.train.wagons[NB_WAGONS].image = queue
             img = self.playSpace.create_image(NB_WAGONS*w, h, image=self.imgQueue, anchor="nw")
             self.imgsOnPlaySpace.append(img)
+
+
+            #ON DESSINE LES BANDITS ===================
+            #les offSet sont à modifier
+            # offSetX = w//4 #doit être < w
+            # offSetY = h//2 - (int(h*0.2)) #doit être < h
+
+            # for bandit in Game.bandits:
+            #     x = bandit.position['x']
+            #     y = bandit.position['y']
+                
+            #     self.img = Game.createBanditPng(w//2, h//2, bandit.color)
+            #     img = self.playSpace.create_image((x*w)+offSetX, (y*h)+offSetY, image=self.img, anchor="nw")
+
+            for wagon in Game.wagons:
+                nbBandit = len(wagon.bandits)
+                
+                for i, bandit in enumerate(wagon.bandits):
+                    x = bandit.position['x']
+                    y = bandit.position['y']
+
+                    #faire deux cas de calcul des offSet, pour y == 0, et y == 1
+                    #faire un cas spécial pour x == 0 (locomotive)
+
+                    #!!! offSetX est mal calculer
+                    offSetX = ((w//4)*(nbBandit*(i))) // 4 #doit être < w
+                    offSetY = (h//2) - (((i+1)%((nbBandit//2)+1))*(h*0.05)) #doit être < h
+                    if y == 1:
+                        offSetY -= h*0.2 #réhaussement de 20% de la hauteur du train
+                    
+                    bandit.img = Game.createBanditPng(w//2, h//2, bandit.color)
+                    img = self.playSpace.create_image((x*w)+offSetX, (y*h)+offSetY, image=bandit.img, anchor="nw")
+                    self.imgsOnPlaySpace.append(img)
+
+
+            
+
+    @staticmethod
+    def createBanditPng(width, height, color):
+        body = Bandit.imgBody.resize((width, height))
+        details = Bandit.imgDetails.resize((width, height))
+        
+        for y in range(details.height):
+            for x in range(details.width):
+                if details.getpixel((x, y)) != (0, 0, 0, 0): #est un pixel transparent
+                    tempColor = (color[0], color[1], color[2], details.getpixel((x, y))[3])
+                    details.putpixel((x, y), value=tempColor)
+
+        img = Image.alpha_composite(body, details)
+        return ImageTk.PhotoImage(img)
 
 
 
@@ -224,7 +293,7 @@ class Game(Tk):
         print("Position du Marshall")
         for wagon in self.wagons:
             print(wagon.marshall, end=" ")
-        print()
+        print('\n')
 
 
 
@@ -236,10 +305,11 @@ class Wagon():
 
     #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
     # def __init__(self, game:Game, playSpace:Canvas , y:int, tetewagonqueue:int):
-    def __init__(self, game:Game, y:int, type:str):
-        # self.y = y
+    def __init__(self, game:Game, x:int, type:str):
+        self.x = x
         self.marshall = False
-        self.type = type
+        self.type = type #'loco' ou 'wagon' or 'queue'
+        self.bandits = []
 
         # taille = 100
 
@@ -275,9 +345,13 @@ class Bandit():
     def __init__(self, playSpace:Canvas, name:str, color:tuple):
         self.name = name
         self.color = color
-        self.position = (0, NB_WAGONS)
+        self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
         self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
         self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
+        self.img = None
+
+        #on ajoute le bandit dans la liste bandits du bon wagon
+        Game.wagons[self.position['x']].bandits.append(self)
 
 
     def test(self):
