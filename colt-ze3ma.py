@@ -101,7 +101,7 @@ class Game(Tk):
         self.frame.grid(row=0,column=0,sticky='nsew')
 
         
-        self.btnAction = Button(self.frame, text="Action")
+        self.btnAction = Button(self.frame, text="Action", command= self.deplacement)
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
 
         self.btnRight = Button(self.frame, text="->")
@@ -134,12 +134,18 @@ class Game(Tk):
             
         #ajout du marshall
         self.wagons[0].marshall = True
+        self.printPosMarshall()
 
 
         self.playSpace.bind('<Configure>', lambda e: self.resize_image())
 
 
-
+    def printPosMarshall(self):
+        print("wagon.marshall (de chaque wagon) :")
+        for wagon in self.wagons:
+            print(wagon.marshall, end=" ")
+        print()   
+    
 
     def resize_image(self):
             #oum: j'ai mis en commentaire cette ligne pk ça beug
@@ -213,19 +219,36 @@ class Game(Tk):
 
         #on verifie si le Marshall est en tete ou en queue de train
         if i == 0:
-            self.marshallMoveLeft()
+            self.wagons[i].marshall = False
+            #self.marshallMoveRight()
+            i+=1
+            #i+=1 qui serais du coup dans la fonction moveRight
+            self.wagons[i].marshall = True
+            
+            
             #return
         elif i == NB_WAGONS - 1:
-            self.marshallMoveRight()
-            #return
-
+            self.wagons[i].marshall = False
+            #self.marshallMoveLeft()
+            i-=1
+            #i-=1 qui serais du coup dans la fonction moveLeft
+            self.wagons[i].marshall = True
 
         #le marshall n'est pas en tête/queue du train, donc...
-        if (random.randint(0,1)):
-            self.marshallMoveLeft()
+        elif (random.randint(0,1)):
+            self.wagons[i].marshall = False
+            #self.marshallMoveLeft()
+            i-=1
+            # i-=1 qui serais du coup dans la fonction moveLeft
+            self.wagons[i].marshall = True
+            
         else:
-            self.marshallMoveRight()
-
+            self.wagons[i].marshall = False
+            #self.marshallMoveRight()
+            i+=1
+            #i+=1 qui serais du coup dans la fonction moveRight
+            self.wagons[i].marshall = True
+        self.printPosMarshall()
 
     def marshallMoveLeft():
         pass
@@ -233,7 +256,7 @@ class Game(Tk):
     def marshallMoveRight():
         pass
 
-    
+
 
 
 #tetewagonqueue est un entier entre 0 et 2, 0=loco, 1=wagon, 2=queue
@@ -259,6 +282,18 @@ class Wagon():
         img = playSpace.create_image((0+y*taille, 0+x*taille), image=self.img, anchor="nw")
         game.imgsOnPlaySpace.append(img)
 
+    
+class Bandit(Label):
+    def __init__(self, name):
+        self.name = name
+        self.position = (0, NB_WAGONS)
+        self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer) (ex: "droite"=droite, "tire"=tire)
+        self.marshall = 0 #je pense que c'est pas nécessaire (Valentin)
+
+
+
+    def deplacement(self):
+        pass
 
 
 
@@ -267,10 +302,7 @@ mon_jeu = Game()
 
 
 #affiche le bool "marshall" de chaque wagon
-print("wagon.marshall (de chaque wagon) :")
-for wagon in mon_jeu.wagons:
-    print(wagon.marshall, end=" ")
-print()
+
 
 
 mon_jeu.mainloop()
