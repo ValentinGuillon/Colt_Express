@@ -6,9 +6,11 @@ from PIL import Image, ImageTk #pour l'import et la modification d'images
 global NB_WAGONS
 global NB_ACTIONS 
 global NB_JOUEURS 
-global NB_BALLES
-NB_WAGONS = 4
-NB_JOUEURS = NB_WAGONS
+global MAX_BULLETS
+NB_JOUEURS = 4
+NB_WAGONS = NB_JOUEURS
+MAX_BULLETS = (NB_JOUEURS // 2) + 1
+
 
 global colors
 colors = {"red":(255, 0, 0),
@@ -363,6 +365,7 @@ class Bandit():
         self.game = game
         self.img = None
         self.butins = []
+        self.bullets = MAX_BULLETS
 
         #on ajoute le bandit dans la liste bandits du bon wagon
         self.game.wagons[self.position['x']].bandits.append(self)
@@ -385,9 +388,6 @@ class Bandit():
             self.shoot()
         elif self.actions[0] == 'rob':
             self.rob()
-
-        #self.getHitByBandit()
-        #self.gedHitByMarshall()
 
         self.actions.pop(0)
         mon_jeu.resize_image()
@@ -460,8 +460,37 @@ class Bandit():
 
 
     def shoot(self):
-        #tire sur un Bandit, aléatoirement, à la même position (aka, appeler la fonction getHit() du Bandit touché)
+        #tire sur un Bandit, aléatoirement, à la même position
         print(f'{self.name} shoot')
+
+        if self.bullets == 0:
+            print(f'{self.name} has no more bullets')
+            return
+        
+        self.bullets -= 1
+        nb_targets = 0
+
+        #on compte le nombre de cible possible
+        for bandit in self.game.wagons[self.position['x']].bandits:
+            if bandit.name == self.name:
+                continue
+
+            if bandit.position['y'] == self.position['y']:
+                nb_targets += 1
+
+        if nb_targets == 0:
+            print(f'{self.name} has no targets to shoot')
+            return
+        
+        #on tire sur un bandit
+        target = None
+        while(1):
+            target = random.choice(self.game.wagons[self.position['x']].bandits)
+            if target.position['y'] == self.position['y']:
+                break
+
+        target.getHitByBandit(self.name)
+            
 
 
     def rob(self):
@@ -469,9 +498,17 @@ class Bandit():
         print(f'{self.name} rob')
 
 
-    def getHitByBandit(self):
+    def getHitByBandit(self, ennemy:str):
         #perd un butin, aléatoirement
-        print(f'{self.name} get hit by a bandit')
+        print(f'{self.name} get hit by {ennemy}')
+
+        if len(self.butins) == 0: #le bandit n'a pas de butins
+            return
+        
+        #on retire un butin du bandit, aléatoirement
+        butin = self.butins.pop(random.randint(len(self.butins)))
+        #qu'on rajoute dans la liste butins du wagon du bandit
+        self.game.wagons[self.position['x']].append(butin)
 
 
     def getHitByMarshall(self):
