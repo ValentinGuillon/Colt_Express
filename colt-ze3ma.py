@@ -251,7 +251,10 @@ class Game(Tk):
             #taille des personnages (marshall and Bandit)
             widthCharacter = int (widthWagon * 0.4)
             heightCharacter = heightWagon//2
-
+            
+            #taille des butins
+            widthButin = int(widthWagon * 0.1)
+            heightButin = heightWagon//4
 
             #var "img" will be used as a create_image() container
 
@@ -344,6 +347,30 @@ class Game(Tk):
                     break
         
             # FIN === ON DESSINE LE MARSHALL ======================
+                    
+
+
+            #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
+            
+            for wagon in self.wagons:
+                for butin in wagon.butins :
+                    if butin.type == 'magot':
+                        imgMagot = Image.open("png/magot.png")
+                        self.imgMag = Game.createLoadedImg(widthButin,heightButin, imgMagot)
+                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgMag, anchor="nw")
+                        self.imgsOnCanvasPlaySpace.append(img)
+                    elif butin.type == 'bijoux' : 
+                        imgBijoux = Image.open("png/bijoux.png")
+                        self.imgBig = Game.createLoadedImg(widthButin,heightButin, imgBijoux)
+                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgBig, anchor="nw")
+                        self.imgsOnCanvasPlaySpace.append(img)
+                    else:
+                        imgBourse = Image.open("png/bourse.png")
+                        self.imgBou = Game.createLoadedImg(widthButin,heightButin, imgBourse)
+                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgBou, anchor="nw")
+                        self.imgsOnCanvasPlaySpace.append(img)
+        
+            # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
 
 
