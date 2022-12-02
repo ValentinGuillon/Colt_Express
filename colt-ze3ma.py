@@ -54,7 +54,10 @@ class Game(Tk):
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
-
+    imgBourse = Image.open("png/bourse.png")
+    imgBijoux = Image.open("png/bijoux.png")
+    imgMagot = Image.open("png/magot.png")
+    
     def __init__(self):
         super().__init__()
 
@@ -353,22 +356,21 @@ class Game(Tk):
             #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
             
             for wagon in self.wagons:
+                print(wagon.xPosition)
+                print()
                 for butin in wagon.butins :
+                    print(butin.type)
+                    print()
                     if butin.type == 'magot':
-                        imgMagot = Image.open("png/magot.png")
-                        self.imgMag = Game.createLoadedImg(widthButin,heightButin, imgMagot)
-                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgMag, anchor="nw")
-                        self.imgsOnCanvasPlaySpace.append(img)
+                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgMagot)
                     elif butin.type == 'bijoux' : 
-                        imgBijoux = Image.open("png/bijoux.png")
-                        self.imgBig = Game.createLoadedImg(widthButin,heightButin, imgBijoux)
-                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgBig, anchor="nw")
-                        self.imgsOnCanvasPlaySpace.append(img)
+                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBijoux) 
                     else:
-                        imgBourse = Image.open("png/bourse.png")
-                        self.imgBou = Game.createLoadedImg(widthButin,heightButin, imgBourse)
-                        img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = self.imgBou, anchor="nw")
-                        self.imgsOnCanvasPlaySpace.append(img)
+                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBourse)  
+                    
+                    
+                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = butin.img, anchor="nw")
+                    self.imgsOnCanvasPlaySpace.append(img)
         
             # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
@@ -718,9 +720,7 @@ class Bandit():
 
 
 class Butin():
-    imgBourse = Image.open("png/bourse.png")
-    imgBijoux = Image.open("png/bijoux.png")
-    imgMagot = Image.open("png/magot.png")
+    
     
     lootValues = {'bourse':[100,200], 'bijoux' : [500], 'magot' : [1000]}
     
@@ -729,6 +729,10 @@ class Butin():
         self.value = random.choice(Butin.lootValues[type])
         self.inOut = 1 #0 = interieur, 1 = toit
         self.bracable = True
+        self.img = None
+        
+        
+                   
 
 
 
