@@ -356,14 +356,14 @@ class Game(Tk):
             #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
             
             for wagon in self.wagons:
-                print(wagon.xPosition)
-                print()
+                # print(wagon.xPosition)
+                # print()
                 nbButins = len(wagon.butins)
                 for i,butin in enumerate(wagon.butins) :
                     xOffsetButin = xOffsetCharacter + widthButin
                     #yOffsetButin = yOffsetCharacter
-                    print(butin.type)
-                    print()
+                    # print(butin.type)
+                    # print()
                     if butin.type == 'magot':
                         butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgMagot)
                     elif butin.type == 'bijoux' : 
@@ -659,7 +659,9 @@ class Bandit():
         if len(wagon.butins) == 0:
             print('There is no loot here')
             return
-
+        if self.position['y'] == 0:
+            print("You have to be inside the wagon to rob ")
+            return
 
         robbedButin = wagon.butins.pop(len(wagon.butins) - 1)
         self.butins.append(robbedButin)
