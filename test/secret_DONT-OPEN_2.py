@@ -7,15 +7,17 @@ global time
 time = 0
 
 global repoPath
-repoPath = '../png/wip/secret_DONT-OPEN/'
+repoPath = '../png/work_in_progress/'
 
 
 
 class Root(Tk):
     imgs = []
-
+    images = []
 
     def __init__(self):
+
+
         super().__init__()
         self.geometry("900x650")
 
@@ -30,190 +32,103 @@ class Root(Tk):
         self.btn.config(command=self.parallax)
         self.btn.grid(column=1)
 
-        self.exit = Button(self, text="Move Btn")
-        self.exit.config(command=self.moveBtn)
-        self.exit.grid()
+
         
         self.cnv = Canvas(self, width=800, height=600, bg="orange")
         self.cnv.grid(row=1, column=1)
 
+
+        for _ in range(5):
+            Root.images.append(Image())
+
         
-        self.imgLoco = Image.open("../png/locomotive val.png")
-
-        self.img1 = Image.open(repoPath + '1_sky.png')
-        self.img2 = Image.open(repoPath + '2_mountains-over-horizon.png')
-        self.img3 = Image.open(repoPath + '3_sand.png')
-        self.img4 = Image.open(repoPath + '5_mountains_1.png')
-        self.img5 = Image.open(repoPath + '5_mountains_2.png')
-        self.img6 = Image.open(repoPath + '6_cactus_1.png')
-        self.img7 = Image.open(repoPath + '6_cactus_2.png')
-        self.img8 = Image.open(repoPath + '7_rails_1.png')
-        self.img9 = Image.open(repoPath + '7_rails_2.png')
-        self.img10 = Image.open(repoPath + '7_rails_3.png')
-        self.img11 = Image.open(repoPath + '8_rocks-ahead_1.png')
-        self.img12 = Image.open(repoPath + '8_rocks-ahead_2.png')
-        self.img13 = Image.open(repoPath + '8_rocks-ahead_3.png')
 
 
-
-        # self.img_1 = Root.createImg("1_sky")
-        # self.img_2 = Root.createImg("2_mountains-over-horizon")
-        # self.img_3 = Root.createImg("3_sand")
-        # self.img_4 = Root.createImg("5_mountains_1")
-        # self.img_5 = Root.createImg("5_mountains_2")
-        # self.img_6 = Root.createImg("6_cactus_1")
-        # self.img_7 = Root.createImg("6_cactus_2")
-        # self.img_8 = Root.createImg("7_rails_1")
-        # self.img_9 = Root.createImg("7_rails_2")
-        # self.img_10 = Root.createImg("7_rails_3")
-        # self.img_11 = Root.createImg("8_rocks-ahead_1")
-        # self.img_12 = Root.createImg("8_rocks-ahead_2")
-        # self.img_13 = Root.createImg("8_rocks-ahead_3")
-
-        # self.loco = self.loco.resize((200, 200))
-        # self.loco = ImageTk.PhotoImage(self.loco)
-
-        # img1 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_1)
-        # img2 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_2)
-        # img3 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_3)
-        # img4 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_4)
-        # img5 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_5)
-        # img6 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_6)
-        # img7 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_7)
-        # img8 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_8)
-        # # img9 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_9)
-        # # img10 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_10)
-        # img11 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_11)
-        # img12 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_12)
-        # img13 = self.cnv.create_image(0, 0, anchor="nw", image=self.img_13)
-        # imgLoco = self.cnv.create_image(200, 0, anchor="nw", image=self.loco)
-
-        # self.imgs.append(img1)
-        # self.imgs.append(img2)
-        # self.imgs.append(img3)
-        # self.imgs.append(img4)
-        # self.imgs.append(img5)
-        # self.imgs.append(img6)
-        # self.imgs.append(img7)
-        # self.imgs.append(img8)
-        # # self.imgs.append(img9)
-        # # self.imgs.append(img10)
-        # self.imgs.append(img11)
-        # self.imgs.append(img12)
-        # self.imgs.append(img13)
-        # self.imgs.append(imgLoco)
-
-
-        # while(1):
-        #     self.after(ms=1, func=self.parallax)
-        #     # self.parallax()
 
 
     @staticmethod
-    def createLoadedImd(img):
-        img = img.resize((800, 600))
+    def createLoadedImd(witdh, height, img):
+        img = img.resize((witdh, height))
         return ImageTk.PhotoImage(img)
-
-    
-    def moveBtn(self):
-        print("=========================")
 
 
 
     def parallax(self):
         global time
-        for img in self.imgs:
+        for img in Root.imgs:
             self.cnv.delete(img)
+        Root.imgs.clear()
 
-        if time == 90:
+        if time == 2000:
             time = 0
 
+        widthCanvas = self.cnv.winfo_width()
+        heightCanvas = self.cnv.winfo_height()
 
-        
+
+        nb = 0
+
+        #1 back
+        self.images[nb] = Root.createLoadedImd(widthCanvas, heightCanvas, Image.img1)
+        img = self.cnv.create_image(0, 0, anchor="nw", image=self.images[nb])
+        Root.imgs.append(img)
+
+        nb += 1
+
+        #2 mountain
+        self.images[nb] = Root.createLoadedImd(widthCanvas, heightCanvas, Image.img2)
+        img = self.cnv.create_image(0, 0, anchor="nw", image=self.images[nb])
+        Root.imgs.append(img)
+
+        nb += 1
+
+        #3 rails
+        self.images[nb] = Root.createLoadedImd(widthCanvas, heightCanvas, Image.img3)
+        img = self.cnv.create_image(0, 0, anchor="nw", image=self.images[nb])
+        Root.imgs.append(img)
+
+        nb += 1
+
+        #4 rock
+        self.images[nb] = Root.createLoadedImd(widthCanvas, heightCanvas, Image.img4)
+        img = self.cnv.create_image(0, 0, anchor="nw", image=self.images[nb])
+        Root.imgs.append(img)
+
+        nb += 1
 
 
-        #1
-        self.img = Root.createLoadedImd(self.img1)
-        img1 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img1)
+        #loco
+        self.images[nb] = Root.createLoadedImd((widthCanvas//4)*2, heightCanvas//3, Image.imgLoco)
+        img = self.cnv.create_image(widthCanvas//3, heightCanvas//3, anchor="nw", image=self.images[nb])
+        Root.imgs.append(img)
 
-        #2
-        self.img = Root.createLoadedImd(self.img2)
-        img2 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img2)
 
-        #3
-        self.img = Root.createLoadedImd(self.img3)
-        img3 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img3)
 
-        #4
-        self.img = Root.createLoadedImd(self.img4)
-        img4 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img4)
 
-        #5
-        self.img = Root.createLoadedImd(self.img5)
-        img5 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img5)
-
-        #6
-        self.img = Root.createLoadedImd(self.img6)
-        img6 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img6)
-
-        #7
-        self.img = Root.createLoadedImd(self.img7)
-        img7 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img7)
-
-        #rails
-        if time < 30:
-            self.img = Root.createLoadedImd(self.img8)
-            img8 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-            self.imgs.append(img8)
-
-        elif time < 60:
-            self.img = Root.createLoadedImd(self.img9)
-            img9 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-            self.imgs.append(img9)
-
-        else:
-            self.img = Root.createLoadedImd(self.img10)
-            img10 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-            self.imgs.append(img10)
-
-        #11
-        self.img = Root.createLoadedImd(self.img11)
-        img11 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img11)
-
-        #12
-        self.img = Root.createLoadedImd(self.img12)
-        img12 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img12)
-
-        #13
-        self.img = Root.createLoadedImd(self.img13)
-        img13 = self.cnv.create_image(0, 0, anchor="nw", image=self.img)
-        self.imgs.append(img13)
-
-        # loco
-        self.img = ImageTk.PhotoImage(self.imgLoco.resize((200, 200)))
-        imgLoco = self.cnv.create_image(200, 200, anchor="nw", image=self.img)
-        self.imgs.append(imgLoco)
-
-        
-
-            
-
-        
         time += 1
-        print(time)
+        if time%1000 == 0 :
+            print("================")
 
-        self.after(ms=100, func=self.parallax)
+        print(time)
+        
+
+        self.after(ms=1000, func=self.parallax)
 
         
+
+
+
+
+class Image:
+    imgLoco = Image.open("../png/loco val v2.png")
+
+    img1 = Image.open(repoPath + '1_back.png')
+    img2 = Image.open(repoPath + '2_mountain.png')
+    img3 = Image.open(repoPath + '3_rails.png')
+    img4 = Image.open(repoPath + '4_rock.png')
+
+    def __init__(self):
+        self.img = None
 
 
 
@@ -221,9 +136,7 @@ class Root(Tk):
 
 
 root = Root()
-# root.after(1, root.parallax())
-# while(1):
-#     root.after(ms=1, func=root.parallax)
+
 
 root.mainloop()
 
