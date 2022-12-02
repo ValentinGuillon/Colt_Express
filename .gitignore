@@ -1,3 +1,5 @@
 *.kra~
 *.png~
 .vscode/
+tempCodeRunnerFile.py
+test/tempCodeRunnerFile.py
