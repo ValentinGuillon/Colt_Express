@@ -358,7 +358,10 @@ class Game(Tk):
             for wagon in self.wagons:
                 print(wagon.xPosition)
                 print()
-                for butin in wagon.butins :
+                nbButins = len(wagon.butins)
+                for i,butin in enumerate(wagon.butins) :
+                    xOffsetButin = xOffsetCharacter + widthButin
+                    #yOffsetButin = yOffsetCharacter
                     print(butin.type)
                     print()
                     if butin.type == 'magot':
@@ -368,8 +371,12 @@ class Game(Tk):
                     else:
                         butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBourse)  
                     
-                    
-                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetMarshall, heightWagon+heightCharacter, image = butin.img, anchor="nw")
+                    if (i % 2) == 1: #permet de décaler les bandit les uns des autres
+                        xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
+
+                    else:
+                        xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
+                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightWagon+heightCharacter, image = butin.img, anchor="nw")
                     self.imgsOnCanvasPlaySpace.append(img)
         
             # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
