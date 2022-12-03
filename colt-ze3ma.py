@@ -49,28 +49,28 @@ COLORS = {"red":(255, 0, 0),
 
 class Game(Tk):
     imgPaysage = Image.open("png/landscape.png")
-    imgMarshall = Image.open('png/marshall_v0.png') #width = 22%, height = 38% (par rapport à un wagon)
+    imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42% (par rapport à un wagon)
     imgsOnCanvasPlaySpace = [] # liste d'entiers (représentant les images sur un Canvas)
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
-    imgLoco = Image.open('png/loco_v2.png')
-    imgWagon = Image.open('png/wagon_v2.png')
-    imgQueue = Image.open('png/queue_v2.png')
+    imgLoco = Image.open('png/loco_v2.png') #width = 200%, height = 100%
+    imgWagon = Image.open('png/wagon_v2.png') #width = 100%, height = 100%
+    imgQueue = Image.open('png/queue_v2.png') #width = 100%, height = 100%
 
-    imgBourse = Image.open("png/bourse_v0.png")
-    imgBijoux = Image.open("png/bijoux_v0.png")
-    imgMagot = Image.open("png/magot_v0.png")
+    imgBourse = Image.open("png/bourse_v0.png") #width = 13%, height = 11%
+    imgBijoux = Image.open("png/bijoux_v0.png") #width = 7%, height = 6%
+    imgMagot = Image.open("png/magot_v0.png") #width = 35%, height = 20%
 
-    imgBody = Image.open("png/bandit_body_v0.png") #width = 22%, height = 38% (par rapport à un wagon)
-    imgDetails = Image.open("png/bandit_details_v0.png") #width = 22%, height = 38%
+    imgBody = Image.open("png/bandit_body_v0.png") #width = 26%, height = 42%
+    imgDetails = Image.open("png/bandit_details_v0.png") #width = 26%, height = 42%
     
     def __init__(self):
         super().__init__()
 
         #window parameters
         self.title("Colt Zeʁma")
-        self.geometry("900x380")
+        self.geometry("940x380")
 
         img = Image.open('train.ico')
         img = ImageTk.PhotoImage(img)
@@ -116,7 +116,7 @@ class Game(Tk):
         self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
         self.btnRight = Button(self.buttonsZone, text="->")
         self.btnLeft = Button(self.buttonsZone, text="<-")
-        self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printButinsOfAllWagons)
+        self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printBanditsOfAllWagons)
         self.btnDown = Button(self.buttonsZone, text="(Bandits' butins)", command=self.printButinsOfAllBandits)
         self.btnShoot = Button(self.buttonsZone, text="(Bandits' bullets)", command=self.printBulletsOfAllBandits)
         self.btnSteal = Button(self.buttonsZone, text="(Wagons' butins)", command=self.printButinsOfAllWagons)
@@ -259,8 +259,8 @@ class Game(Tk):
             widthWagon = widthCanvas // (NB_WAGONS+1+1)
             heightWagon = heightCanvas // 3
             #taille des personnages (marshall and Bandit)
-            widthCharacter = int (widthWagon * 0.4)
-            heightCharacter = heightWagon//2
+            widthCharacter = int (widthWagon *0.26)
+            heightCharacter = int (heightWagon *0.42)
             
             #taille des butins
             widthButin = int(widthWagon * 0.1)
@@ -309,22 +309,24 @@ class Game(Tk):
                 if nbBandits == 0:
                     continue
 
-                for i, bandit in enumerate(wagon.bandits):
+                # for i, bandit in enumerate(wagon.bandits):
+                for i in range(nbBandits):
+                    bandit = wagon.bandits[i]
+
                     xBanditPosition = bandit.position['x']
                     yBanditPosition = bandit.position['y']
                     xOffsetBandit = xOffsetCharacter
                     yOffsetBandit = yOffsetCharacter
 
-                    #faire deux cas de calcul des offSet, pour y == 0, et y == 1
-                    #faire un cas spécial pour x == 0 (locomotive)
-
-                    if (i % 2) == 1: #permet de décaler les bandit les uns des autres
+                    #décalage selon le nombre de bandits dans le même wagon
+                    if (i % 2) == 1:
                         xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
 
                     else:
                         xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
 
 
+                    #décalage selon l'étage
                     if yBanditPosition == 0: #sur le toit
                         yOffsetBandit += heightWagon*0.4
                         yOffsetBandit -= (heightWagon*0.01) * (i%3)
