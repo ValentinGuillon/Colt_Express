@@ -49,21 +49,28 @@ COLORS = {"red":(255, 0, 0),
 
 class Game(Tk):
     imgPaysage = Image.open("png/landscape.png")
-    imgMarshall = Image.open('png/marshall.png')
+    imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42% (par rapport à un wagon)
     imgsOnCanvasPlaySpace = [] # liste d'entiers (représentant les images sur un Canvas)
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
-    imgBourse = Image.open("png/bourse.png")
-    imgBijoux = Image.open("png/bijoux.png")
-    imgMagot = Image.open("png/magot.png")
+    imgLoco = Image.open('png/loco_v2.png') #width = 200%, height = 100%
+    imgWagon = Image.open('png/wagon_v2.png') #width = 100%, height = 100%
+    imgQueue = Image.open('png/queue_v2.png') #width = 100%, height = 100%
+
+    imgBourse = Image.open("png/bourse_v0.png") #width = 13%, height = 11%
+    imgBijoux = Image.open("png/bijoux_v0.png") #width = 7%, height = 6%
+    imgMagot = Image.open("png/magot_v0.png") #width = 35%, height = 20%
+
+    imgBody = Image.open("png/bandit_body_v0.png") #width = 26%, height = 42%
+    imgDetails = Image.open("png/bandit_details_v0.png") #width = 26%, height = 42%
     
     def __init__(self):
         super().__init__()
 
         #window parameters
         self.title("Colt Zeʁma")
-        # self.geometry("720x480")
+        self.geometry("940x380")
 
         img = Image.open('train.ico')
         img = ImageTk.PhotoImage(img)
@@ -109,7 +116,7 @@ class Game(Tk):
         self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
         self.btnRight = Button(self.buttonsZone, text="->")
         self.btnLeft = Button(self.buttonsZone, text="<-")
-        self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printButinsOfAllWagons)
+        self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printBanditsOfAllWagons)
         self.btnDown = Button(self.buttonsZone, text="(Bandits' butins)", command=self.printButinsOfAllBandits)
         self.btnShoot = Button(self.buttonsZone, text="(Bandits' bullets)", command=self.printBulletsOfAllBandits)
         self.btnSteal = Button(self.buttonsZone, text="(Wagons' butins)", command=self.printButinsOfAllWagons)
@@ -277,11 +284,11 @@ class Game(Tk):
             heightCanvas = self.playSpace.winfo_height()
 
             #taille d'un Wagon
-            widthWagon = widthCanvas // (NB_WAGONS+1)
+            widthWagon = widthCanvas // (NB_WAGONS+1+1)
             heightWagon = heightCanvas // 3
             #taille des personnages (marshall and Bandit)
-            widthCharacter = int (widthWagon * 0.4)
-            heightCharacter = heightWagon//2
+            widthCharacter = int (widthWagon *0.26)
+            heightCharacter = int (heightWagon *0.42)
             
             #taille des butins
             widthButin = int(widthWagon * 0.1)
@@ -297,9 +304,9 @@ class Game(Tk):
 
 
             #ON DESSINE LES WAGONS ==============================
-            self.imgLoco = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgLoco)
-            self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgWagon)
-            self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgQueue)
+            self.imgLoco = Game.createLoadedImg(widthWagon*2, heightWagon, Game.imgLoco)
+            self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
+            self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
             
             #loco
             img = self.playSpace.create_image(0, heightWagon, image=self.imgLoco, anchor="nw")
@@ -307,11 +314,11 @@ class Game(Tk):
             
             #wagon
             for xWagonPosition in range(1, NB_WAGONS):
-                img = self.playSpace.create_image(xWagonPosition*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
+                img = self.playSpace.create_image((xWagonPosition +1)*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
                 self.imgsOnCanvasPlaySpace.append(img)
 
             #queue
-            img = self.playSpace.create_image(NB_WAGONS*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
+            img = self.playSpace.create_image((NB_WAGONS +1)*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
             self.imgsOnCanvasPlaySpace.append(img)
 
             #FIN === ON DESSINE LES WAGONS =====================
@@ -320,8 +327,9 @@ class Game(Tk):
 
             #ON DESSINE LES BANDITS ============================
             #les Offset permet de placer un personnage au centre du wagon
-            xOffsetCharacter = (widthWagon//2) - (widthCharacter//2)
-            yOffsetCharacter = (heightWagon-heightCharacter)
+            xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
+            yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
+
 
             for wagon in Game.wagons:
                 nbBandits = len(wagon.bandits)
@@ -329,25 +337,29 @@ class Game(Tk):
                 if nbBandits == 0:
                     continue
 
-                for i, bandit in enumerate(wagon.bandits):
+                # for i, bandit in enumerate(wagon.bandits):
+                for i in range(nbBandits):
+                    bandit = wagon.bandits[i]
+
                     xBanditPosition = bandit.position['x']
                     yBanditPosition = bandit.position['y']
                     xOffsetBandit = xOffsetCharacter
                     yOffsetBandit = yOffsetCharacter
 
-                    #faire deux cas de calcul des offSet, pour y == 0, et y == 1
-                    #faire un cas spécial pour x == 0 (locomotive)
-
-                    if (i % 2) == 1: #permet de décaler les bandit les uns des autres
+                    #décalage selon le nombre de bandits dans le même wagon
+                    if (i % 2) == 1:
                         xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
 
                     else:
                         xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
 
 
-                    if yBanditPosition == 1: #si le Bandit est à l'intérieur du train
-                        yOffsetBandit -= heightWagon*0.2 #réhaussement de 20% de la hauteur du train
-                        yOffsetBandit -= (heightWagon*0.02) * (i%3) #réhaussement de 2% * 0 ou 1 ou 2
+                    #décalage selon l'étage
+                    if yBanditPosition == 0: #sur le toit
+                        yOffsetBandit += heightWagon*0.4
+                        yOffsetBandit -= (heightWagon*0.01) * (i%3)
+                    if yBanditPosition == 1: #dans le wagon
+                        yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
 
 
                     xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
@@ -362,12 +374,12 @@ class Game(Tk):
 
 
             #ON DESSINE LE MARSHALL ==============================
-            self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, self.imgMarshall)
+            self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
             
             for wagon in self.wagons :
                 if wagon.marshall == True:
                     xOffsetMarshall = xOffsetCharacter
-                    yOffsetMarshall = yOffsetCharacter - (heightWagon * 0.2) #réhaussement de 20%
+                    yOffsetMarshall = yOffsetCharacter #réhaussement de 20%
 
                     xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
                     yMarshallPosition = heightWagon + yOffsetMarshall
@@ -421,8 +433,8 @@ class Game(Tk):
 
     @staticmethod
     def createBanditPng(width, height, color):
-        body = Bandit.imgBody.resize((width, height))
-        details = Bandit.imgDetails.resize((width, height))
+        body = Game.imgBody.resize((width, height))
+        details = Game.imgDetails.resize((width, height))
 
         #on modifie la couleur de chaque pixel du png 
         for y in range(details.height):
@@ -486,9 +498,6 @@ class Game(Tk):
 
 
 class Wagon():
-    imgLoco = Image.open('png/locomotive val.png')
-    imgWagon = Image.open('png/wagon val.png')
-    imgQueue = Image.open('png/queue val.png')
 
     butinTypes = ['bourse', 'bijoux'] #'magot' only apply for type == 'loco'
 
@@ -531,8 +540,6 @@ class Wagon():
 
 
 class Bandit():
-    imgBody = Image.open("png/bandit.png")
-    imgDetails = Image.open("png/bandit_details.png")
 
 
     def __init__(self, game:Game, name:str, color:tuple):
