@@ -54,9 +54,9 @@ class Game(Tk):
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
-    imgLoco = Image.open('png/locomotive val.png')
-    imgWagon = Image.open('png/wagon val.png')
-    imgQueue = Image.open('png/queue val.png')
+    imgLoco = Image.open('png/loco val v2.png')
+    imgWagon = Image.open('png/wagon val v2.png')
+    imgQueue = Image.open('png/queue val v2.png')
 
     imgBourse = Image.open("png/bourse.png")
     imgBijoux = Image.open("png/bijoux.png")
@@ -70,7 +70,7 @@ class Game(Tk):
 
         #window parameters
         self.title("Colt Zeʁma")
-        # self.geometry("720x480")
+        self.geometry("900x380")
 
         img = Image.open('train.ico')
         img = ImageTk.PhotoImage(img)
@@ -256,7 +256,7 @@ class Game(Tk):
             heightCanvas = self.playSpace.winfo_height()
 
             #taille d'un Wagon
-            widthWagon = widthCanvas // (NB_WAGONS+1)
+            widthWagon = widthCanvas // (NB_WAGONS+1+1)
             heightWagon = heightCanvas // 3
             #taille des personnages (marshall and Bandit)
             widthCharacter = int (widthWagon * 0.4)
@@ -276,7 +276,7 @@ class Game(Tk):
 
 
             #ON DESSINE LES WAGONS ==============================
-            self.imgLoco = Game.createLoadedImg(widthWagon, heightWagon, Game.imgLoco)
+            self.imgLoco = Game.createLoadedImg(widthWagon*2, heightWagon, Game.imgLoco)
             self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
             self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
             
@@ -286,11 +286,11 @@ class Game(Tk):
             
             #wagon
             for xWagonPosition in range(1, NB_WAGONS):
-                img = self.playSpace.create_image(xWagonPosition*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
+                img = self.playSpace.create_image((xWagonPosition +1)*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
                 self.imgsOnCanvasPlaySpace.append(img)
 
             #queue
-            img = self.playSpace.create_image(NB_WAGONS*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
+            img = self.playSpace.create_image((NB_WAGONS +1)*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
             self.imgsOnCanvasPlaySpace.append(img)
 
             #FIN === ON DESSINE LES WAGONS =====================
@@ -299,8 +299,9 @@ class Game(Tk):
 
             #ON DESSINE LES BANDITS ============================
             #les Offset permet de placer un personnage au centre du wagon
-            xOffsetCharacter = (widthWagon//2) - (widthCharacter//2)
-            yOffsetCharacter = (heightWagon-heightCharacter)
+            xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
+            yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
+
 
             for wagon in Game.wagons:
                 nbBandits = len(wagon.bandits)
@@ -324,9 +325,11 @@ class Game(Tk):
                         xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
 
 
-                    if yBanditPosition == 1: #si le Bandit est à l'intérieur du train
-                        yOffsetBandit -= heightWagon*0.2 #réhaussement de 20% de la hauteur du train
-                        yOffsetBandit -= (heightWagon*0.02) * (i%3) #réhaussement de 2% * 0 ou 1 ou 2
+                    if yBanditPosition == 0: #sur le toit
+                        yOffsetBandit += heightWagon*0.4
+                        yOffsetBandit -= (heightWagon*0.01) * (i%3)
+                    if yBanditPosition == 1: #dans le wagon
+                        yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
 
 
                     xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
@@ -346,7 +349,7 @@ class Game(Tk):
             for wagon in self.wagons :
                 if wagon.marshall == True:
                     xOffsetMarshall = xOffsetCharacter
-                    yOffsetMarshall = yOffsetCharacter - (heightWagon * 0.2) #réhaussement de 20%
+                    yOffsetMarshall = yOffsetCharacter #réhaussement de 20%
 
                     xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
                     yMarshallPosition = heightWagon + yOffsetMarshall
