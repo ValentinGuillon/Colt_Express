@@ -734,6 +734,7 @@ class Bandit():
         if len(self.butins):
             #on retire un butin du bandit
             lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
+            lostButin.inOut = self.position['y']
             #qu'on rajoute dans le wagon
             self.game.wagons[self.position['x']].butins.append(lostButin)
             print(f'{self.name} lost {lostButin.type}({lostButin.value})')
