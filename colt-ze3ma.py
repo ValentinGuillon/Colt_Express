@@ -54,9 +54,16 @@ class Game(Tk):
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
+    imgLoco = Image.open('png/locomotive val.png')
+    imgWagon = Image.open('png/wagon val.png')
+    imgQueue = Image.open('png/queue val.png')
+
     imgBourse = Image.open("png/bourse.png")
     imgBijoux = Image.open("png/bijoux.png")
     imgMagot = Image.open("png/magot.png")
+
+    imgBody = Image.open("png/bandit.png")
+    imgDetails = Image.open("png/bandit_details.png")
     
     def __init__(self):
         super().__init__()
@@ -269,9 +276,9 @@ class Game(Tk):
 
 
             #ON DESSINE LES WAGONS ==============================
-            self.imgLoco = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgLoco)
-            self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgWagon)
-            self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Wagon.imgQueue)
+            self.imgLoco = Game.createLoadedImg(widthWagon, heightWagon, Game.imgLoco)
+            self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
+            self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
             
             #loco
             img = self.playSpace.create_image(0, heightWagon, image=self.imgLoco, anchor="nw")
@@ -334,7 +341,7 @@ class Game(Tk):
 
 
             #ON DESSINE LE MARSHALL ==============================
-            self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, self.imgMarshall)
+            self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
             
             for wagon in self.wagons :
                 if wagon.marshall == True:
@@ -391,8 +398,8 @@ class Game(Tk):
 
     @staticmethod
     def createBanditPng(width, height, color):
-        body = Bandit.imgBody.resize((width, height))
-        details = Bandit.imgDetails.resize((width, height))
+        body = Game.imgBody.resize((width, height))
+        details = Game.imgDetails.resize((width, height))
 
         #on modifie la couleur de chaque pixel du png 
         for y in range(details.height):
@@ -456,9 +463,6 @@ class Game(Tk):
 
 
 class Wagon():
-    imgLoco = Image.open('png/locomotive val.png')
-    imgWagon = Image.open('png/wagon val.png')
-    imgQueue = Image.open('png/queue val.png')
 
     butinTypes = ['bourse', 'bijoux'] #'magot' only apply for type == 'loco'
 
@@ -501,8 +505,6 @@ class Wagon():
 
 
 class Bandit():
-    imgBody = Image.open("png/bandit.png")
-    imgDetails = Image.open("png/bandit_details.png")
 
 
     def __init__(self, game:Game, name:str, color:tuple):
