@@ -49,21 +49,21 @@ COLORS = {"red":(255, 0, 0),
 
 class Game(Tk):
     imgPaysage = Image.open("png/landscape.png")
-    imgMarshall = Image.open('png/marshall.png')
+    imgMarshall = Image.open('png/marshall_v0.png') #width = 22%, height = 38% (par rapport à un wagon)
     imgsOnCanvasPlaySpace = [] # liste d'entiers (représentant les images sur un Canvas)
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
 
-    imgLoco = Image.open('png/loco val v2.png')
-    imgWagon = Image.open('png/wagon val v2.png')
-    imgQueue = Image.open('png/queue val v2.png')
+    imgLoco = Image.open('png/loco_v2.png')
+    imgWagon = Image.open('png/wagon_v2.png')
+    imgQueue = Image.open('png/queue_v2.png')
 
-    imgBourse = Image.open("png/bourse.png")
-    imgBijoux = Image.open("png/bijoux.png")
-    imgMagot = Image.open("png/magot.png")
+    imgBourse = Image.open("png/bourse_v0.png")
+    imgBijoux = Image.open("png/bijoux_v0.png")
+    imgMagot = Image.open("png/magot_v0.png")
 
-    imgBody = Image.open("png/bandit.png")
-    imgDetails = Image.open("png/bandit_details.png")
+    imgBody = Image.open("png/bandit_body_v0.png") #width = 22%, height = 38% (par rapport à un wagon)
+    imgDetails = Image.open("png/bandit_details_v0.png") #width = 22%, height = 38%
     
     def __init__(self):
         super().__init__()
