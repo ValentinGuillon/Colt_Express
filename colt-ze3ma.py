@@ -115,20 +115,42 @@ class Game(Tk):
         self.btnSteal = Button(self.buttonsZone, text="(Wagons' butins)", command=self.printButinsOfAllWagons)
 
         #actions history
-        self.actionsHistory = Label(self.menuSpace, text = "EMPTY\nHistory")
-
+        #self.actionsHistory = Label(self.menuSpace, text = "EMPTY\nHistory")
+        self.log=Canvas(self.menuSpace,bg='#FFFFFF',scrollregion=(0,0,2000,2000))
+        vbar=Scrollbar(self.menuSpace,orient=VERTICAL)
+        #vbar.pack(side=RIGHT,fill=Y)
+        vbar.grid(column=1, row=8, sticky='NS')
+        vbar.config(command=self.log.yview)
+        #self.log.config(width=200,height=400)
+        self.log.config(yscrollcommand=vbar.set)
+        
+        self.test=self.log.create_text(100,100,text="\nEMPTY\n History")
+        
+        
         #placement des widgets
         self.buttonsZone.grid(row=0,column=0,sticky='nsew')
-        self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="news")
-        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="news")
-        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="news")
-        self.btnUp.grid(row=0, column=1, sticky="news")
-        self.btnDown.grid(row=3, column=1, sticky="news")
-        self.btnShoot.grid(row=1, column=1, sticky="news")
-        self.btnSteal.grid(row=2, column=1, sticky="news")
-        self.actionsHistory.grid(row=7, column=0, columnspan=3, sticky="news")
+        self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="nsew")
+        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="nsew")
+        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="nsew")
+        self.btnUp.grid(row=0, column=1, sticky="nsew")
+        self.btnDown.grid(row=3, column=1, sticky="nsew")
+        self.btnShoot.grid(row=1, column=1, sticky="nsew")
+        self.btnSteal.grid(row=2, column=1, sticky="nsew")
+        #self.actionsHistory.grid(row=7, column=0, columnspan=3, sticky="nsew")
+        self.log.grid(row = 8, column=0, sticky="nsew")
+        
+        
 
         #=== FIN MENU SPACE ================================
+        
+        
+        
+        
+        
+        
+        
+        
+        
 
 
         #création des bandits
@@ -152,6 +174,7 @@ class Game(Tk):
         self.btnAction.config(state='disabled')
         #execute l'action de chaque bandit (donnée aléatoirement)
         print("Execute first action of each bandit :")
+        self.log.insert(self.test, END,f"\nExecute first action of each bandit :"+"\n")
         for bandit in Game.bandits:
             bandit.testRandomAction()
         print()
@@ -166,6 +189,7 @@ class Game(Tk):
         #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
         for bandit in Game.bandits:
             bandit.checkMarshallPresence()
+            bandit.checkForButin()
         
         #update du Canvas
         self.updateCanvasImgs()
@@ -187,6 +211,7 @@ class Game(Tk):
         #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
         for bandit in Game.bandits:
             bandit.checkMarshallPresence()
+            bandit.checkForButin()
 
         #update du Canvas
         self.updateCanvasImgs()
@@ -197,10 +222,13 @@ class Game(Tk):
 
     def printBanditsOfAllWagons(self): #à supprimer
         print("Bandits de chaque wagon :")
+        self.log.insert(self.test, END,f"\nBandits de chaque wagon :"+"\n")
         for wagon in Game.wagons:
             print(f'wagon {wagon.xPosition + 1} => ', end='')
+            self.log.insert(self.test, END,f"\nwagon {wagon.xPosition + 1} =>  :"+"\n")
             for bandit in wagon.bandits:
                 print(f"({bandit.name}:{bandit.position['y']})", end=' ')
+                self.log.insert(self.test, END,f"\n({bandit.name}:{bandit.position['y']})"+"\n")
             print()
         print()
 
@@ -361,7 +389,9 @@ class Game(Tk):
                 nbButins = len(wagon.butins)
                 for i,butin in enumerate(wagon.butins) :
                     xOffsetButin = xOffsetCharacter + widthButin
-                    #yOffsetButin = yOffsetCharacter
+                    yOffsetButin = heightWagon   
+                    if butin.inOut == 0:
+                        yOffsetButin =  heightButin
                     # print(butin.type)
                     # print()
                     if butin.type == 'magot':
@@ -376,7 +406,7 @@ class Game(Tk):
 
                     else:
                         xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
-                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightWagon+heightCharacter, image = butin.img, anchor="nw")
+                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightCharacter+yOffsetButin, image = butin.img, anchor="nw")
                     self.imgsOnCanvasPlaySpace.append(img)
         
             # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
@@ -681,7 +711,7 @@ class Bandit():
 
         #on retire un butin du bandit, aléatoirement
         lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-
+        lostButin.inOut = self.position['y']
         #qu'on rajoute dans la liste butins du wagon du bandit
         self.game.wagons[self.position['x']].butins.append(lostButin)
 
@@ -705,6 +735,15 @@ class Bandit():
         self.position['y'] = 0
 
         print(f'{self.name} move on the roof')
+        
+    def checkForButin(self):
+        for wagon in self.game.wagons:
+            for i, butin in enumerate (wagon.butins) :
+                if butin.bracable == False:
+                    if self.position['x'] == wagon.xPosition: 
+                        robbedButin = wagon.butins.pop(i)
+                        self.butins.append(robbedButin)
+                    
 
 
 
@@ -736,7 +775,7 @@ class Butin():
     def __init__(self, game:Game, type:str):
         self.type = type
         self.value = random.choice(Butin.lootValues[type])
-        self.inOut = 1 #0 = interieur, 1 = toit
+        self.inOut = 1 #1 = interieur,0 = toit
         self.bracable = True
         self.img = None
         
