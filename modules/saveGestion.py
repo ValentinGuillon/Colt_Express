@@ -119,6 +119,64 @@ def loadSave():
 
 
 
+
+
+
+def save(nbPlayers, wagons, bandits, butins):
+
+    with open('saves/save.txt', 'w') as file:
+        file.write(f'{nbPlayers}\n')
+        file.write(f'{len(butins)}\n')
+
+        for wagon in wagons:
+            y = wagon.xPosition
+            type = wagon.type
+            marshall = wagon.marshall
+            file.write(f'{y},{type},{marshall}\n')
+
+        for bandit in bandits:
+            name = bandit.name
+            color = bandit.color
+            x, y = bandit.position['x'], bandit.position['y']
+            actions = ''
+            for i, action in enumerate(bandit.actions):
+                actions += action
+                if i < len(bandit.actions):
+                    actions += ','
+            bullets = bandit.bullets
+
+            file.write(f'{name},{color},{x},{y},{actions},{bullets}\n')
+
+        for butin in butins:
+            type = butin.type
+            value = butin.value
+            x, y = butin.position['x'], butin.position['y']
+            bracable = butin.bracable
+
+            file.write(f'{type},{value},{x},{y},{bracable}\n')
+
+
+
+
+
+"""
+4
+10
+0,loco,False
+...
+Clément,green,4,0,up,shoot,left,down,rob,left,3
+...
+magot,1000,2,out,False
+...
+
+"""
+
+
+
+
+
+
+
 # b, c, d, e = loadSave()
 
 
@@ -138,3 +196,33 @@ def loadSave():
 
 
 # print(d[0][4:-1])
+
+
+
+"""
+Wagon
+    self.xPosition = x
+    self.marshall = False
+    self.type = type #'loco' ou 'wagon' or 'queue'
+    self.bandits = []
+    self.butins = []
+
+Bandit
+    self.name = name
+    self.color = color
+    self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
+    self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer)
+    self.game = game
+    self.img = None
+    self.butins = []
+    self.bullets = MAX_BULLETS
+
+Butin
+    self.game = game
+    self.type = type
+    self.value = random.choice(Butin.lootValues[type])
+    self.position = {'x':x, 'y':'in'} #y = 'in' or 'out' or '{banditName}'
+    # self.inOut = 1 #1 = interieur,0 = toit
+    self.bracable = True
+    self.img = None
+"""

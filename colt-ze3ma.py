@@ -122,7 +122,7 @@ class Game(Tk):
 
         #boutons
         self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
-        self.btnRight = Button(self.buttonsZone, text="->")
+        self.btnRight = Button(self.buttonsZone, text="(Save", command=self.saveGame)
         self.btnLeft = Button(self.buttonsZone, text="<-")
         self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printBanditsOfAllWagons)
         self.btnDown = Button(self.buttonsZone, text="(Bandits' butins)", command=self.printButinsOfAllBandits)
@@ -248,8 +248,8 @@ class Game(Tk):
 
 
 
-
-
+    def saveGame(self):
+        save(NB_JOUEURS, self.wagons, self.bandits, self.butins)
 
 
     def testActionsStep1on4(self):
@@ -809,9 +809,9 @@ class Bandit():
 
         #on retire un butin du bandit, aléatoirement
         lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-        if self.positino['y'] == 0:
+        if self.position['y'] == 0:
             lostButin.position['y'] = 'out'
-        elif self.positino['y'] == 1:
+        elif self.position['y'] == 1:
             lostButin.position['y'] = 'int'
         #qu'on rajoute dans la liste butins du wagon du bandit
         self.game.wagons[self.position['x']].butins.append(lostButin)
