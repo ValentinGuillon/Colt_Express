@@ -54,6 +54,11 @@ class Game(Tk):
     imgPaysage = Image.open("png/landscape.png")
     imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42% (par rapport à un wagon)
     imgsOnCanvasPlaySpace = [] # liste d'entiers (représentant les images sur un Canvas)
+    imgsOnCanvasMenuSpace = []
+
+    imgMenuSpace = Image.open('png/menuSpaceBackground.png')
+    imgMenuButton = Image.open('png/menuSpaceButton.png')
+
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
     butins = [] # liste de classe Bandit
@@ -118,7 +123,7 @@ class Game(Tk):
         self.menuSpace.rowconfigure(0, weight=1)
         self.menuSpace.columnconfigure(0, weight=1)
 
-        self.buttonsZone = Frame(self.menuSpace, width= 400, height= 100)
+        self.buttonsZone = Canvas(self.menuSpace, width= 400, height= 100, bg='blue')
 
         #boutons
         self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
@@ -145,8 +150,8 @@ class Game(Tk):
         #placement des widgets
         self.buttonsZone.grid(row=0,column=0,sticky='nsew')
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="nsew")
-        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="nsew")
-        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="nsew")
+        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="ew")
+        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="ew")
         self.btnUp.grid(row=0, column=1, sticky="nsew")
         self.btnDown.grid(row=3, column=1, sticky="nsew")
         self.btnShoot.grid(row=1, column=1, sticky="nsew")
@@ -154,6 +159,18 @@ class Game(Tk):
         #self.actionsHistory.grid(row=7, column=0, columnspan=3, sticky="nsew")
         self.log.grid(row = 8, column=0, sticky="nsew")
         
+        
+        #place image on buttons
+        # self.imgBtn = Game.createLoadedImg(40, 25, self.imgMenuButton)
+        # self.imgBtn2 = Game.createLoadedImg(40, 50, self.imgMenuButton)
+
+        # self.btnAction.config(image=self.imgBtn)
+        # self.btnRight.config(image=self.imgBtn2)
+        # self.btnLeft.config(image=self.imgBtn2)
+        # self.btnUp.config(image=self.imgBtn)
+        # self.btnDown.config(image=self.imgBtn)
+        # self.btnShoot.config(image=self.imgBtn)
+        # self.btnSteal.config(image=self.imgBtn)
         
 
         #=== FIN MENU SPACE ================================
@@ -243,6 +260,7 @@ class Game(Tk):
 
 
         #resize des images de l'interface lorsque la fenêtre est redimensionnée
+        self.buttonsZone.bind('<Configure>', lambda e: self.updateCanvasImgs())
         self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
 
 
@@ -345,13 +363,27 @@ class Game(Tk):
 
 
     def updateCanvasImgs(self):
-        #oum: j'ai mis en commentaire cette ligne pk ça beug
-        #self.update()
-
         #ON VIDE LE CANVAS ===================================
         for img in self.imgsOnCanvasPlaySpace:
             self.playSpace.delete(img)
+        for img in self.imgsOnCanvasMenuSpace:
+            self.menuSpace.delete(img)
         self.imgsOnCanvasPlaySpace.clear()
+        self.imgsOnCanvasMenuSpace.clear()
+
+
+
+
+
+        #Canvas MenuSpace
+        x = self.buttonsZone.winfo_width()
+        y = self.buttonsZone.winfo_height()
+        self.imgBg = Game.createLoadedImg(x, y, self.imgMenuSpace)
+        img = self.buttonsZone.create_image(0, 0, image=self.imgBg, anchor="nw")
+        self.imgsOnCanvasMenuSpace.append(img)
+
+
+
 
         #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
         #taille du Canvas
@@ -549,7 +581,6 @@ class Game(Tk):
         else:
             self.wagons[xWagonPosition].marshall = False
             self.wagons[xWagonPosition - 1].marshall = True
-
 
 
 
