@@ -184,6 +184,7 @@ class Game(Tk):
         self.log.insert(self.test, END,f"\nExecute first action of each bandit :"+"\n")
         for bandit in Game.bandits:
             bandit.testRandomAction()
+            bandit.checkForButin()
         print()
 
         #update du Canvas
@@ -196,7 +197,8 @@ class Game(Tk):
         #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
         for bandit in Game.bandits:
             bandit.checkMarshallPresence()
-            bandit.checkForButin()
+            
+            
         
         #update du Canvas
         self.updateCanvasImgs()
@@ -218,7 +220,7 @@ class Game(Tk):
         #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
         for bandit in Game.bandits:
             bandit.checkMarshallPresence()
-            bandit.checkForButin()
+            
 
         #update du Canvas
         self.updateCanvasImgs()
@@ -600,7 +602,7 @@ class Bandit():
 
             #on ajoute le bandit dans le wagon destination
             self.game.wagons[xBanditPosition+1].bandits.append(self)
-
+        
             self.position['x'] += 1
 
 
@@ -745,12 +747,13 @@ class Bandit():
         print(f'{self.name} move on the roof')
         
     def checkForButin(self):
-        for wagon in self.game.wagons:
-            for i, butin in enumerate (wagon.butins) :
-                if butin.bracable == False:
-                    if self.position['x'] == wagon.xPosition: 
-                        robbedButin = wagon.butins.pop(i)
-                        self.butins.append(robbedButin)
+        wagon = self.game.wagons[self.position['x']]
+        for i, butin in enumerate (wagon.butins) :
+            if butin.bracable == False:
+                if self.position['x'] == wagon.xPosition: 
+                    robbedButin = wagon.butins.pop(i)
+                    self.butins.append(robbedButin)
+                    print(f'{self.name} got {robbedButin.type}({robbedButin.value})')
                     
 
 
