@@ -1,6 +1,7 @@
 import random
 from tkinter import * #pour générer une fenêtre et son contenu
 from PIL import Image, ImageTk #pour l'import et la modification d'images
+from modules.saveGestion import * #for loadSave(win)
 
 
 global NB_WAGONS
@@ -8,6 +9,7 @@ global NB_ACTIONS
 global NB_JOUEURS 
 global MAX_BULLETS
 global COLORS
+global LOAD_SAVE
 
 NB_JOUEURS = 4
 NB_WAGONS = NB_JOUEURS
@@ -20,6 +22,7 @@ COLORS = {"red":(255, 0, 0),
           "green":(0, 255, 0),
           "blue":(0, 0, 255)}
 
+LOAD_SAVE = FALSE
 
 
 
@@ -51,8 +54,14 @@ class Game(Tk):
     imgPaysage = Image.open("png/landscape.png")
     imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42% (par rapport à un wagon)
     imgsOnCanvasPlaySpace = [] # liste d'entiers (représentant les images sur un Canvas)
+    imgsOnCanvasMenuSpace = []
+
+    imgMenuSpace = Image.open('png/menuSpaceBackground.png')
+    imgMenuButton = Image.open('png/menuSpaceButton.png')
+
     wagons = [] # liste de classe Wagon
     bandits = [] # liste de classe Bandit
+    butins = [] # liste de classe Bandit
 
     imgLoco = Image.open('png/loco_v2.png') #width = 200%, height = 100%
     imgWagon = Image.open('png/wagon_v2.png') #width = 100%, height = 100%
@@ -79,6 +88,22 @@ class Game(Tk):
         self.columnconfigure(0, weight = 1)
         self.rowconfigure(0, weight=1)
 
+        self.btnLoad = Button(self, text='Load', command=self.updateLoadSaveVar)
+        self.btnNew = Button(self, text='New', command=self.continueInit)
+
+        self.btnLoad.grid()
+        self.btnNew.grid(column=1)
+
+
+    def updateLoadSaveVar(self):
+        global LOAD_SAVE
+        LOAD_SAVE = True
+        self.continueInit()
+
+
+    def continueInit(self):
+        self.btnLoad.destroy()
+        self.btnNew.destroy()
 
         #zone sur laquelle on dessinera paysage, le train, les personnages et les butins
         self.playSpace = Canvas(self)
@@ -90,18 +115,6 @@ class Game(Tk):
 
 
         #=== PLAY SPACE ====================================
-        #création des wagons
-        for y in range(NB_WAGONS + 1):
-            #loco
-            if y == 0:
-                self.wagons.append(Wagon(self, y, type='loco'))
-                continue
-            #queue
-            if y == NB_WAGONS:
-                self.wagons.append(Wagon(self, y, type='wagon'))
-                continue
-            #wagon
-            self.wagons.append(Wagon(self, y, type='queue'))
 
         #=== FIN PLAY SPACE ================================
 
@@ -110,11 +123,11 @@ class Game(Tk):
         self.menuSpace.rowconfigure(0, weight=1)
         self.menuSpace.columnconfigure(0, weight=1)
 
-        self.buttonsZone = Frame(self.menuSpace, width= 400, height= 100)
+        self.buttonsZone = Canvas(self.menuSpace, width= 400, height= 100, bg='blue')
 
         #boutons
         self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
-        self.btnRight = Button(self.buttonsZone, text="->")
+        self.btnRight = Button(self.buttonsZone, text="(Save", command=self.saveGame)
         self.btnLeft = Button(self.buttonsZone, text="<-")
         self.btnUp = Button(self.buttonsZone, text="(Wagons' bandits)", command=self.printBanditsOfAllWagons)
         self.btnDown = Button(self.buttonsZone, text="(Bandits' butins)", command=self.printButinsOfAllBandits)
@@ -137,8 +150,8 @@ class Game(Tk):
         #placement des widgets
         self.buttonsZone.grid(row=0,column=0,sticky='nsew')
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="nsew")
-        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="nsew")
-        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="nsew")
+        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="ew")
+        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="ew")
         self.btnUp.grid(row=0, column=1, sticky="nsew")
         self.btnDown.grid(row=3, column=1, sticky="nsew")
         self.btnShoot.grid(row=1, column=1, sticky="nsew")
@@ -147,34 +160,114 @@ class Game(Tk):
         self.log.grid(row = 8, column=0, sticky="nsew")
         
         
+        #place image on buttons
+        # self.imgBtn = Game.createLoadedImg(40, 25, self.imgMenuButton)
+        # self.imgBtn2 = Game.createLoadedImg(40, 50, self.imgMenuButton)
+
+        # self.btnAction.config(image=self.imgBtn)
+        # self.btnRight.config(image=self.imgBtn2)
+        # self.btnLeft.config(image=self.imgBtn2)
+        # self.btnUp.config(image=self.imgBtn)
+        # self.btnDown.config(image=self.imgBtn)
+        # self.btnShoot.config(image=self.imgBtn)
+        # self.btnSteal.config(image=self.imgBtn)
+        
 
         #=== FIN MENU SPACE ================================
         
         
         
+        global NB_JOUEURS
         
-        
-        
-        
-        
-        
+        if not LOAD_SAVE:
+            #création des wagons
+            for y in range(NB_WAGONS + 1):
+                #loco
+                if y == 0:
+                    self.wagons.append(Wagon(self, y, 'loco'))
+                    continue
+                #queue
+                if y == NB_WAGONS:
+                    self.wagons.append(Wagon(self, y, 'wagon'))
+                    continue
+                #wagon
+                self.wagons.append(Wagon(self, y, 'queue'))
 
 
-        #création des bandits
-        for i in range(NB_JOUEURS):
-            name = "Bandit" + str(i + 1)
-            color = random.choice(list(COLORS.values()))
-            Game.bandits.append(Bandit(self, name, color))
+            #création des bandits
+            for i in range(NB_JOUEURS):
+                name = "Bandit" + str(i + 1)
+                color = random.choice(list(COLORS.keys()))
+                Game.bandits.append(Bandit(self, name, color))
 
 
-        #ajout du marshall
-        self.wagons[0].marshall = True
+            #ajout du marshall
+            self.wagons[0].marshall = True
+
+
+
+        else:
+            
+            #import save
+            NB_JOUEURS, tempWagons, tempBandits, tempButins = loadSave()
+
+            #load Wagon(s)
+            for wagonElement in tempWagons:
+                xPos = wagonElement[0]
+                type = wagonElement[1]
+                marshall = wagonElement[2]
+
+                loadedWagon = Wagon(self, xPos, type, marshall=marshall)
+                self.wagons.append(loadedWagon)
+            
+            #load Bandit(s)
+            for banditElement in tempBandits:
+                name = banditElement[0]
+                color = banditElement[1]
+                xPos, yPos = banditElement[2], banditElement[3]
+                actions = banditElement[4:-1]
+                bullets = banditElement[-1]
+
+                loadedBandit = Bandit(self, name, color, position=(xPos, yPos), actions=actions, bullets=bullets)
+                self.bandits.append(loadedBandit)
+            
+            # print("before = ", self.butins)
+            #load Butin(s)
+            for butinElement in tempButins:
+                type = butinElement[0]
+                value = butinElement[1]
+                xPos, yPos = butinElement[2], butinElement[3]
+                bracable = butinElement[4]
+
+                loadedButin = Butin(self, type, None, value=value, position=(xPos, yPos), bracable=bracable)
+                # le Butin s'auto append dans self.butins
+
+            # print("after = ", self.butins)
+
+            # butins' distribution
+            for butin in self.butins:
+                #in a Wagon
+                if butin.position['y'] in ['in', 'out']:
+                    self.wagons[butin.position['x']].butins.append(butin)
+                
+                #in a Bandit
+                else:
+                    for bandit in self.bandits:
+                        if bandit.name == butin.position['y']:
+                            bandit.butins.append(butin)
+                            break
+
 
 
         #resize des images de l'interface lorsque la fenêtre est redimensionnée
+        self.buttonsZone.bind('<Configure>', lambda e: self.updateCanvasImgs())
         self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
 
 
+
+
+    def saveGame(self):
+        save(NB_JOUEURS, self.wagons, self.bandits, self.butins)
 
 
     def testActionsStep1on4(self):
@@ -272,158 +365,172 @@ class Game(Tk):
 
 
     def updateCanvasImgs(self):
-            #oum: j'ai mis en commentaire cette ligne pk ça beug
-            #self.update()
+        #ON VIDE LE CANVAS ===================================
+        for img in self.imgsOnCanvasPlaySpace:
+            self.playSpace.delete(img)
+        for img in self.imgsOnCanvasMenuSpace:
+            self.menuSpace.delete(img)
+        self.imgsOnCanvasPlaySpace.clear()
+        self.imgsOnCanvasMenuSpace.clear()
 
-            #ON VIDE LE CANVAS ===================================
-            for img in self.imgsOnCanvasPlaySpace:
-                self.playSpace.delete(img)
-            self.imgsOnCanvasPlaySpace.clear()
 
-            #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
-            #taille du Canvas
-            widthCanvas = self.playSpace.winfo_width()
-            heightCanvas = self.playSpace.winfo_height()
 
-            #taille d'un Wagon
-            widthWagon = widthCanvas // (NB_WAGONS+1+1)
-            heightWagon = heightCanvas // 3
-            #taille des personnages (marshall and Bandit)
-            widthCharacter = int (widthWagon *0.26)
-            heightCharacter = int (heightWagon *0.42)
-            
-            #taille des butins
-            widthButin = int(widthWagon * 0.1)
-            heightButin = heightWagon//4
 
-            #var "img" will be used as a create_image() container
 
-            #ON DESSINE LE BACKGROUND ============================
-            self.imgPaysage = Game.createLoadedImg(widthCanvas, heightCanvas, Game.imgPaysage)
-            img = self.playSpace.create_image(0, 0, image=self.imgPaysage, anchor="nw")
+        #Canvas MenuSpace
+        x = self.buttonsZone.winfo_width()
+        y = self.buttonsZone.winfo_height()
+        self.imgBg = Game.createLoadedImg(x, y, self.imgMenuSpace)
+        img = self.buttonsZone.create_image(0, 0, image=self.imgBg, anchor="nw")
+        self.imgsOnCanvasMenuSpace.append(img)
+
+
+
+
+        #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
+        #taille du Canvas
+        widthCanvas = self.playSpace.winfo_width()
+        heightCanvas = self.playSpace.winfo_height()
+
+        #taille d'un Wagon
+        widthWagon = widthCanvas // (NB_WAGONS+1+1)
+        heightWagon = heightCanvas // 3
+        #taille des personnages (marshall and Bandit)
+        widthCharacter = int (widthWagon *0.26)
+        heightCharacter = int (heightWagon *0.42)
+        
+        #taille des butins
+        widthButin = int(widthWagon * 0.1)
+        heightButin = heightWagon//4
+
+        #var "img" will be used as a create_image() container
+
+        #ON DESSINE LE BACKGROUND ============================
+        self.imgPaysage = Game.createLoadedImg(widthCanvas, heightCanvas, Game.imgPaysage)
+        img = self.playSpace.create_image(0, 0, image=self.imgPaysage, anchor="nw")
+        self.imgsOnCanvasPlaySpace.append(img)
+
+
+
+        #ON DESSINE LES WAGONS ==============================
+        self.imgLoco = Game.createLoadedImg(widthWagon*2, heightWagon, Game.imgLoco)
+        self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
+        self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
+        
+        #loco
+        img = self.playSpace.create_image(0, heightWagon, image=self.imgLoco, anchor="nw")
+        self.imgsOnCanvasPlaySpace.append(img)
+        
+        #wagon
+        for xWagonPosition in range(1, NB_WAGONS):
+            img = self.playSpace.create_image((xWagonPosition +1)*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
             self.imgsOnCanvasPlaySpace.append(img)
 
+        #queue
+        img = self.playSpace.create_image((NB_WAGONS +1)*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
+        self.imgsOnCanvasPlaySpace.append(img)
+
+        #FIN === ON DESSINE LES WAGONS =====================
 
 
-            #ON DESSINE LES WAGONS ==============================
-            self.imgLoco = Game.createLoadedImg(widthWagon*2, heightWagon, Game.imgLoco)
-            self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
-            self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
-            
-            #loco
-            img = self.playSpace.create_image(0, heightWagon, image=self.imgLoco, anchor="nw")
-            self.imgsOnCanvasPlaySpace.append(img)
-            
-            #wagon
-            for xWagonPosition in range(1, NB_WAGONS):
-                img = self.playSpace.create_image((xWagonPosition +1)*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
+
+        #ON DESSINE LES BANDITS ============================
+        #les Offset permet de placer un personnage au centre du wagon
+        xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
+        yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
+
+
+        for wagon in Game.wagons:
+            nbBandits = len(wagon.bandits)
+
+            if nbBandits == 0:
+                continue
+
+            # for i, bandit in enumerate(wagon.bandits):
+            for i in range(nbBandits):
+                bandit = wagon.bandits[i]
+
+                xBanditPosition = bandit.position['x']
+                yBanditPosition = bandit.position['y']
+                xOffsetBandit = xOffsetCharacter
+                yOffsetBandit = yOffsetCharacter
+
+                #décalage selon le nombre de bandits dans le même wagon
+                if (i % 2) == 1:
+                    xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
+
+                else:
+                    xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
+
+
+                #décalage selon l'étage
+                if yBanditPosition == 0: #sur le toit
+                    yOffsetBandit += heightWagon*0.4
+                    yOffsetBandit -= (heightWagon*0.01) * (i%3)
+                if yBanditPosition == 1: #dans le wagon
+                    yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+
+                xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
+                yImgPosition = (yBanditPosition * heightWagon) + yOffsetBandit
+
+                bandit.img = Game.createBanditPng(widthCharacter, heightCharacter, COLORS[bandit.color])
+                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=bandit.img, anchor="nw")
                 self.imgsOnCanvasPlaySpace.append(img)
 
-            #queue
-            img = self.playSpace.create_image((NB_WAGONS +1)*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
-            self.imgsOnCanvasPlaySpace.append(img)
-
-            #FIN === ON DESSINE LES WAGONS =====================
-
-
-
-            #ON DESSINE LES BANDITS ============================
-            #les Offset permet de placer un personnage au centre du wagon
-            xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
-            yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
-
-
-            for wagon in Game.wagons:
-                nbBandits = len(wagon.bandits)
-
-                if nbBandits == 0:
-                    continue
-
-                # for i, bandit in enumerate(wagon.bandits):
-                for i in range(nbBandits):
-                    bandit = wagon.bandits[i]
-
-                    xBanditPosition = bandit.position['x']
-                    yBanditPosition = bandit.position['y']
-                    xOffsetBandit = xOffsetCharacter
-                    yOffsetBandit = yOffsetCharacter
-
-                    #décalage selon le nombre de bandits dans le même wagon
-                    if (i % 2) == 1:
-                        xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
-
-                    else:
-                        xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
-
-
-                    #décalage selon l'étage
-                    if yBanditPosition == 0: #sur le toit
-                        yOffsetBandit += heightWagon*0.4
-                        yOffsetBandit -= (heightWagon*0.01) * (i%3)
-                    if yBanditPosition == 1: #dans le wagon
-                        yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
-
-
-                    xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
-                    yImgPosition = (yBanditPosition * heightWagon) + yOffsetBandit
-
-                    bandit.img = Game.createBanditPng(widthCharacter, heightCharacter, bandit.color)
-                    img = self.playSpace.create_image(xImgPosition, yImgPosition, image=bandit.img, anchor="nw")
-                    self.imgsOnCanvasPlaySpace.append(img)
-
-            #FIN === ON DESSINE LES BANDITS ======================
+        #FIN === ON DESSINE LES BANDITS ======================
                     
 
 
-            #ON DESSINE LE MARSHALL ==============================
-            self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
-            
-            for wagon in self.wagons :
-                if wagon.marshall == True:
-                    xOffsetMarshall = xOffsetCharacter
-                    yOffsetMarshall = yOffsetCharacter #réhaussement de 20%
-
-                    xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
-                    yMarshallPosition = heightWagon + yOffsetMarshall
-                    
-
-                    img = self.playSpace.create_image(xMarshallPosition, yMarshallPosition, image=self.imgMarshal, anchor="nw")
-                    self.imgsOnCanvasPlaySpace.append(img)
-                    break
+        #ON DESSINE LE MARSHALL ==============================
+        self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
         
-            # FIN === ON DESSINE LE MARSHALL ======================
+        for wagon in self.wagons :
+            if wagon.marshall == True:
+                xOffsetMarshall = xOffsetCharacter
+                yOffsetMarshall = yOffsetCharacter #réhaussement de 20%
+
+                xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
+                yMarshallPosition = heightWagon + yOffsetMarshall
+                
+
+                img = self.playSpace.create_image(xMarshallPosition, yMarshallPosition, image=self.imgMarshal, anchor="nw")
+                self.imgsOnCanvasPlaySpace.append(img)
+                break
+    
+        # FIN === ON DESSINE LE MARSHALL ======================
                     
 
 
-            #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
-            
-            for wagon in self.wagons:
-                # print(wagon.xPosition)
+        #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
+        
+        for wagon in self.wagons:
+            # print(wagon.xPosition)
+            # print()
+            nbButins = len(wagon.butins)
+            for i,butin in enumerate(wagon.butins) :
+                xOffsetButin = xOffsetCharacter + widthButin
+                yOffsetButin = heightWagon   
+                if butin.position['y'] == 'toit':
+                    yOffsetButin =  heightButin
+                # print(butin.type)
                 # print()
-                nbButins = len(wagon.butins)
-                for i,butin in enumerate(wagon.butins) :
-                    xOffsetButin = xOffsetCharacter + widthButin
-                    yOffsetButin = heightWagon   
-                    if butin.inOut == 0:
-                        yOffsetButin =  heightButin
-                    # print(butin.type)
-                    # print()
-                    if butin.type == 'magot':
-                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgMagot)
-                    elif butin.type == 'bijoux' : 
-                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBijoux) 
-                    else:
-                        butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBourse)  
-                    
-                    if (i % 2) == 1: #permet de décaler les bandit les uns des autres
-                        xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
+                if butin.type == 'magot':
+                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgMagot)
+                elif butin.type == 'bijoux' : 
+                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBijoux) 
+                else:
+                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBourse)  
+                
+                if (i % 2) == 1: #permet de décaler les bandit les uns des autres
+                    xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
 
-                    else:
-                        xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
-                    img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightCharacter+yOffsetButin, image = butin.img, anchor="nw")
-                    self.imgsOnCanvasPlaySpace.append(img)
-        
-            # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
+                else:
+                    xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
+                img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightCharacter+yOffsetButin, image = butin.img, anchor="nw")
+                self.imgsOnCanvasPlaySpace.append(img)
+    
+        # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
 
 
@@ -497,27 +604,30 @@ class Game(Tk):
 
 
 
-
-
 class Wagon():
 
     butinTypes = ['bourse', 'bijoux'] #'magot' only apply for type == 'loco'
 
 
-    def __init__(self, game:Game, x:int, type:str):
+    def __init__(self, game:Game, x:int, type:str, marshall:bool=None):
         self.xPosition = x
         self.marshall = False
         self.type = type #'loco' ou 'wagon' or 'queue'
         self.bandits = []
         self.butins = []
 
-        #replissage de butins, en fonction de type
-        if self.type == 'loco':
-            self.butins.append(Butin(game, type = 'magot'))
+
+        if LOAD_SAVE: #load from a save
+            self.marshall = marshall
 
         else:
-            for i in range(random.randint(1, 4)):
-                self.butins.append(Butin(game, type=random.choice(Wagon.butinTypes)))
+            #replissage de butins, en fonction de type
+            if self.type == 'loco':
+                self.butins.append(Butin(game, 'magot', self.xPosition))
+
+            else:
+                for i in range(random.randint(1, 4)):
+                    self.butins.append(Butin(game, random.choice(Wagon.butinTypes), self.xPosition))
 
 
 
@@ -544,7 +654,7 @@ class Wagon():
 class Bandit():
 
 
-    def __init__(self, game:Game, name:str, color:tuple):
+    def __init__(self, game:Game, name:str, color:str, position:tuple=None, actions:list[str]=None, bullets:int=None):
         self.name = name
         self.color = color
         self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
@@ -555,14 +665,25 @@ class Bandit():
         self.bullets = MAX_BULLETS
 
 
-        #on ajoute le bandit dans la liste bandits du bon wagon (en queue de train)
-        self.game.wagons[NB_WAGONS].bandits.append(self)
+
+        if not LOAD_SAVE:
+            #on ajoute le bandit dans la liste bandits du bon wagon (en queue de train)
+            self.game.wagons[NB_WAGONS].bandits.append(self)
+
+        else: #load from save
+            self.position['x'] = position[0]
+            self.position['y'] = position[1]
+            self.actions = actions
+            self.bullets = bullets
+            self.game.wagons[self.position['x']].bandits.append(self)
+
 
 
 
     def testRandomAction(self):
-        act = ['right', 'left', 'up', 'down', 'shoot', 'rob']
-        self.actions.append(random.choice(act))
+        if not len(self.actions):
+            act = ['right', 'left', 'up', 'down', 'shoot', 'rob']
+            self.actions.append(random.choice(act))
         self.executeAction()
 
 
@@ -705,6 +826,7 @@ class Bandit():
         robbedButin = wagon.butins.pop(len(wagon.butins) - 1)
         self.butins.append(robbedButin)
         robbedButin.bracable = False
+        robbedButin.position['y'] = self.name
 
         print(f'{self.name} robbed {robbedButin.type}({robbedButin.value})')
 
@@ -720,7 +842,10 @@ class Bandit():
 
         #on retire un butin du bandit, aléatoirement
         lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-        lostButin.inOut = self.position['y']
+        if self.position['y'] == 0:
+            lostButin.position['y'] = 'out'
+        elif self.position['y'] == 1:
+            lostButin.position['y'] = 'int'
         #qu'on rajoute dans la liste butins du wagon du bandit
         self.game.wagons[self.position['x']].butins.append(lostButin)
 
@@ -736,7 +861,12 @@ class Bandit():
         if len(self.butins):
             #on retire un butin du bandit
             lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-            lostButin.inOut = self.position['y']
+
+            if self.position['y'] == 0:
+                lostButin.position['y'] = 'out'
+            elif self.position['y'] == 1:
+                lostButin.position['y'] = 'int'
+
             #qu'on rajoute dans le wagon
             self.game.wagons[self.position['x']].butins.append(lostButin)
             print(f'{self.name} lost {lostButin.type}({lostButin.value})')
@@ -746,7 +876,17 @@ class Bandit():
 
         print(f'{self.name} move on the roof')
         
+    # def checkForButin(self):
+    #     for wagon in self.game.wagons:
+    #         for i, butin in enumerate (wagon.butins) :
+    #             if butin.bracable == False:
+    #                 if self.position['x'] == wagon.xPosition:
+    #                     robbedButin = wagon.butins.pop(i)
+    #                     robbedButin.position['y'] = self.name
+    #                     self.butins.append(robbedButin)
+
     def checkForButin(self):
+<<<<<<< HEAD
         wagon = self.game.wagons[self.position['x']]
         for i, butin in enumerate (wagon.butins) :
             if butin.bracable == False:
@@ -754,6 +894,27 @@ class Bandit():
                     robbedButin = wagon.butins.pop(i)
                     self.butins.append(robbedButin)
                     print(f'{self.name} got {robbedButin.type}({robbedButin.value})')
+=======
+        for i, butin in enumerate(self.game.wagons[self.position['x']].butins):
+            if butin.bracable == False:
+                if self.butinAtSamePosition(butin):
+                    robbedButin = self.game.wagons[self.position['x']].butins.pop(i)
+                    robbedButin.position['y'] = self.name
+                    self.butins.append(robbedButin)
+
+
+
+    def butinAtSamePosition(self, butin):
+        pos:str = butin.position['y']
+        
+        if pos == 'out' and self.position['y'] == 0:
+            return True
+        if pos == 'int' and self.position['y'] == 1:
+            return True
+        
+        return False
+
+>>>>>>> 030940e126b8fe59fc1e4fea8cebe464d8134aaf
                     
 
 
@@ -783,12 +944,23 @@ class Butin():
     
     lootValues = {'bourse':[100,200], 'bijoux' : [500], 'magot' : [1000]}
     
-    def __init__(self, game:Game, type:str):
+    def __init__(self, game:Game, type:str, x:int, value:int=None, position:tuple[int|str]=None, bracable:bool=None):
+        self.game = game
         self.type = type
         self.value = random.choice(Butin.lootValues[type])
-        self.inOut = 1 #1 = interieur,0 = toit
+        self.position = {'x':x, 'y':'in'} #y = 'in' or 'out' or '{banditName}'
+        # self.inOut = 1 #1 = interieur,0 = toit
         self.bracable = True
         self.img = None
+
+        if LOAD_SAVE: #load from save
+            self.value = value
+            self.position['x'] = position[0]
+            self.position['y'] = position[1]
+            self.bracable = bracable
+        
+        self.game.butins.append(self)
+
         
         
                    
