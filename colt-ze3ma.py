@@ -10,6 +10,7 @@ global NB_JOUEURS
 global MAX_BULLETS
 global COLORS
 global LOAD_SAVE
+global WIDGET_COLORS
 
 NB_JOUEURS = 4
 NB_WAGONS = NB_JOUEURS
@@ -21,6 +22,11 @@ COLORS = {"red":(255, 0, 0),
           "yellow":(255, 255, 0),
           "green":(0, 255, 0),
           "blue":(0, 0, 255)}
+
+WIDGET_COLORS = {"red":"#b13001",
+                "redLight":"#ca3904",
+                "sand":"#c1880b",
+                "train":"#854a04"}
 
 LOAD_SAVE = FALSE
 
@@ -86,7 +92,7 @@ class Game(Tk):
 
         #window parameters
         self.title("Colt Zeʁma")
-        #self.geometry("940x380")
+        self.geometry("900x415")
 
         img = Image.open('train.ico')
         img = ImageTk.PhotoImage(img)
@@ -114,38 +120,37 @@ class Game(Tk):
 
         #la fenêtre est coupée en 2 parties :
         #    playSpace: Canvas sur lequel on dessine l'aspect visuel du jeu (bg, train, personnages...)
-        #    menuSpace: Canvas sur lequel on interagi avec le jeu (bouttons d'action, log, save, exit...)
+        #    menuSpace: Canvas sur lequel on interagit avec le jeu (bouttons d'action, log, save, exit...)
 
 
 
         #=== PLAY SPACE ====================================
-        self.playSpace = Canvas(self)
+        self.playSpace = Canvas(self, highlightthickness=0)
         self.playSpace.grid(row = 0, column= 0, sticky='nsew')
 
         #=== FIN PLAY SPACE ================================
 
 
         #=== MENU SPACE ====================================
-        self.menuSpace = Canvas(self)
+        self.menuSpace = Canvas(self, bg=WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=WIDGET_COLORS['red'])
         self.menuSpace.grid(row = 0, column= 1, sticky='nsew')
 
-        self.menuSpace.rowconfigure(0, weight=1)
-        self.menuSpace.columnconfigure(0, weight=1)
+        for i in range(9):
+            self.menuSpace.rowconfigure(i, weight=1)
+        for i in range(3):
+            self.menuSpace.columnconfigure(i, weight=1)
 
 
         #boutons
-        self.buttonsZone = Canvas(self.menuSpace, width= 400, height= 100, bg='blue')
+        self.btnAction = Button(self.menuSpace, text="Action", command=self.testActionsStep1on4)
+        self.btnRight = Button(self.menuSpace, text="->", command=self.saveGame)
+        self.btnLeft = Button(self.menuSpace, text="<-")
+        self.btnUp = Button(self.menuSpace, text="Up")
+        self.btnDown = Button(self.menuSpace, text="Down")
+        self.btnShoot = Button(self.menuSpace, text="Shoot")
+        self.btnSteal = Button(self.menuSpace, text="Rob")
 
-        self.btnAction = Button(self.buttonsZone, text="(Actions test)", command=self.testActionsStep1on4)
-        self.btnRight = Button(self.buttonsZone, text="(Save", command=self.saveGame)
-        self.btnLeft = Button(self.buttonsZone, text="<-")
-        self.btnUp = Button(self.buttonsZone, text="Up")
-        self.btnDown = Button(self.buttonsZone, text="Down")
-        self.btnShoot = Button(self.buttonsZone, text="Shoot")
-        self.btnSteal = Button(self.buttonsZone, text="Rob")
-
-        #placement des widgets
-        self.buttonsZone.grid(row=0,column=0,sticky='nsew')
+        #placement des buttons
         self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="nsew")
         self.btnRight.grid(row=1, column=2, rowspan=2, sticky="ew")
         self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="ew")
@@ -156,8 +161,16 @@ class Game(Tk):
 
 
         #actions history
-        self.log = Text(self.menuSpace, font="Ariel", width=40, height=15, highlightthickness=0, borderwidth=0)
-        vbar = Scrollbar(self.menuSpace, orient=VERTICAL)
+        self.logSpace = Canvas(self.menuSpace, border=0)
+        self.logSpace.rowconfigure(0, weight=1)
+        self.logSpace.rowconfigure(3, weight=1)
+        self.logSpace.columnconfigure(0, weight=1)
+        self.logSpace.columnconfigure(3, weight=1)
+
+
+        self.lbLog = Label(self.logSpace, text="History", font=("Ariel", 12), fg=WIDGET_COLORS["sand"], bg=WIDGET_COLORS["train"])
+        self.log = Text(self.logSpace, font=("Ariel", 10), highlightthickness=1, border=0, highlightbackground=WIDGET_COLORS['train'], bg=WIDGET_COLORS["sand"])
+        vbar = Scrollbar(self.logSpace, orient=VERTICAL, bg=WIDGET_COLORS['train'], highlightthickness=1, border=0, highlightbackground=WIDGET_COLORS['train'], activebackground=WIDGET_COLORS['red'], troughcolor=WIDGET_COLORS['sand'], width=15)
 
         vbar.config(command=self.log.yview)
         self.log.config(yscrollcommand=vbar.set)
@@ -165,9 +178,11 @@ class Game(Tk):
         self.log.insert(END,"EMPTY\nHistory\n")
         self.log.config(state=DISABLED)
 
-        #placement des widgets
-        self.log.grid(row=8, column=0, sticky="nsew")
-        vbar.grid(row=8, column=1, sticky='NS')
+        #placement du log
+        self.logSpace.grid(row=9, column=0, columnspan=3)
+        self.lbLog.grid(row=1, column=1, columnspan=2, sticky="nsew")
+        self.log.grid(row=2, column=2, sticky="nsew")
+        vbar.grid(row=2, column=1, sticky='NS')
 
         #=== FIN MENU SPACE ================================
 
@@ -254,7 +269,6 @@ class Game(Tk):
 
 
         #resize des images de l'interface lorsque la fenêtre est redimensionnée
-        self.buttonsZone.bind('<Configure>', lambda e: self.updateCanvasImgs())
         self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
 
 
@@ -338,18 +352,6 @@ class Game(Tk):
 
 
 
-
-
-        #Canvas MenuSpace
-        x = self.buttonsZone.winfo_width()
-        y = self.buttonsZone.winfo_height()
-        self.imgBg = Game.createLoadedImg(x, y, self.imgMenuSpace)
-        img = self.buttonsZone.create_image(0, 0, image=self.imgBg, anchor="nw")
-        self.imgsOnCanvasMenuSpace.append(img)
-
-
-
-
         #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
         #taille du Canvas
         widthCanvas = self.playSpace.winfo_width()
@@ -365,6 +367,12 @@ class Game(Tk):
         #taille des butins
         widthButin = int(widthWagon * 0.1)
         heightButin = heightWagon//4
+
+
+
+        #resize du log
+        self.log.config(width=int((widthCanvas//2)*0.075), height=int((heightCanvas//3)*0.08))
+
 
         #var "img" will be used as a create_image() container
 
@@ -614,7 +622,7 @@ class Wagon():
 
 
 class Bandit():
-    def __init__(self, game:Game, name:str, color:str, position:tuple=None, actions:list[str]=None, bullets:int=None):
+    def __init__(self, game:Game, name:str, color:str, position:tuple[int]=None, actions:list[str]=None, bullets:int=None):
         self.name = name
         self.color = color
         self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
