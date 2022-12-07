@@ -24,9 +24,9 @@ COLORS = {"red":(255, 0, 0),
           "blue":(0, 0, 255)}
 
 WIDGET_COLORS = {"red":"#b13001",
-                "redLight":"#ca3904",
-                "sand":"#c1880b",
-                "train":"#854a04"}
+                 "redLight":"#ca3904",
+                 "sand":"#c1880b",
+                 "train":"#723f02"}
 
 LOAD_SAVE = FALSE
 
@@ -137,27 +137,28 @@ class Game(Tk):
 
         for i in range(9):
             self.menuSpace.rowconfigure(i, weight=1)
-        for i in range(3):
-            self.menuSpace.columnconfigure(i, weight=1)
+        self.menuSpace.columnconfigure(0, weight=1)
+        self.menuSpace.columnconfigure(5, weight=1)
 
+        self.btns = []
 
         #boutons
-        self.btnAction = Button(self.menuSpace, text="Action", command=self.testActionsStep1on4)
-        self.btnRight = Button(self.menuSpace, text="->", command=self.saveGame)
-        self.btnLeft = Button(self.menuSpace, text="<-")
-        self.btnUp = Button(self.menuSpace, text="Up")
-        self.btnDown = Button(self.menuSpace, text="Down")
-        self.btnShoot = Button(self.menuSpace, text="Shoot")
-        self.btnSteal = Button(self.menuSpace, text="Rob")
+        self.btnAction = Button(self.menuSpace, text="Action", command=self.testActionsStep1on4, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], disabledforeground='black')
+        self.btnRight = Button(self.menuSpace, text="->", command=self.saveGame, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnLeft = Button(self.menuSpace, text="<-", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnUp = Button(self.menuSpace, text="Up", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnDown = Button(self.menuSpace, text="Down", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnShoot = Button(self.menuSpace, text="Shoot", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnSteal = Button(self.menuSpace, text="Rob", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
 
         #placement des buttons
-        self.btnAction.grid(row=5, column=1, padx=5, pady=10, sticky="nsew")
-        self.btnRight.grid(row=1, column=2, rowspan=2, sticky="ew")
-        self.btnLeft.grid(row=1, column=0, rowspan=2, sticky="ew")
-        self.btnUp.grid(row=0, column=1, sticky="nsew")
-        self.btnDown.grid(row=3, column=1, sticky="nsew")
-        self.btnShoot.grid(row=1, column=1, sticky="nsew")
-        self.btnSteal.grid(row=2, column=1, sticky="nsew")
+        self.btnAction.grid(row=5, column=2, padx=5, pady=10)
+        self.btnRight.grid(row=1, column=3, rowspan=2)
+        self.btnLeft.grid(row=1, column=1, rowspan=2)
+        self.btnUp.grid(row=0, column=2)
+        self.btnDown.grid(row=3, column=2)
+        self.btnShoot.grid(row=1, column=2)
+        self.btnSteal.grid(row=2, column=2)
 
 
         #actions history
@@ -175,11 +176,11 @@ class Game(Tk):
         vbar.config(command=self.log.yview)
         self.log.config(yscrollcommand=vbar.set)
 
-        self.log.insert(END,"EMPTY\nHistory\n")
+        self.log.insert(END,"Be fairplay,\nDon't look others' actions\n")
         self.log.config(state=DISABLED)
 
         #placement du log
-        self.logSpace.grid(row=9, column=0, columnspan=3)
+        self.logSpace.grid(row=9, column=1, columnspan=3)
         self.lbLog.grid(row=1, column=1, columnspan=2, sticky="nsew")
         self.log.grid(row=2, column=2, sticky="nsew")
         vbar.grid(row=2, column=1, sticky='NS')
@@ -289,6 +290,7 @@ class Game(Tk):
 
     def testActionsStep1on4(self):
         self.btnAction.config(state='disabled')
+        self.btnAction.config(text='Wait...')
         #execute l'action de chaque bandit (donnée aléatoirement)
 
         self.insertTextInLog(f"\nTurn {self.turn} :\n")
@@ -334,6 +336,7 @@ class Game(Tk):
         #update du Canvas
         self.updateCanvasImgs()
         self.btnAction.config(state='normal')
+        self.btnAction.config(text='Action')
 
 
 
@@ -368,10 +371,25 @@ class Game(Tk):
         widthButin = int(widthWagon * 0.1)
         heightButin = heightWagon//4
 
+        #taille des images de boutons
+        sizeButton = ((heightCanvas//3) * 2) // 8
 
 
+
+        #MENU SPACE =========================================
         #resize du log
-        self.log.config(width=int((widthCanvas//2)*0.075), height=int((heightCanvas//3)*0.08))
+        self.log.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
+
+        #images des boutons
+        self.imgTest = Game.createLoadedImg(sizeButton, sizeButton, Game.imgWagon)
+        #others image has to be create...
+
+        self.btnRight.config(image=self.imgTest)
+        self.btnLeft.config(image=self.imgTest)
+        self.btnUp.config(image=self.imgTest)
+        self.btnDown.config(image=self.imgTest)
+        self.btnShoot.config(image=self.imgTest)
+        self.btnSteal.config(image=self.imgTest)
 
 
         #var "img" will be used as a create_image() container
