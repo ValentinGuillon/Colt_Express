@@ -70,6 +70,13 @@ class Game(Tk):
     imgMenuSpace = Image.open('png/menuSpaceBackground.png')
     imgMenuButton = Image.open('png/menuSpaceButton.png')
 
+    imgRight = Image.open('png/menuSpace_button_arrow_right.png')
+    imgLeft = Image.open('png/menuSpace_button_arrow_left.png')
+    imgUp = Image.open('png/menuSpace_button_arrow_up.png')
+    imgDown = Image.open('png/menuSpace_button_arrow_down.png')
+    imgShoot = Image.open('png/menuSpace_button_shoot.png')
+    # imgRob = Image.open('png/menuSpace_button_???.png')
+
     imgPaysage = Image.open("png/landscape.png")
     imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42%
 
@@ -77,9 +84,9 @@ class Game(Tk):
     imgWagon = Image.open('png/wagon_v2.png')
     imgQueue = Image.open('png/queue_v2.png')
 
-    imgBourse = Image.open("png/bourse_v0.png") #width = 13%, height = 11%
+    imgBourse = Image.open("png/bourse_v1.png") #width = 13%, height = 11%
     imgBijoux = Image.open("png/bijoux_v0.png") #width = 7%, height = 6%
-    imgMagot = Image.open("png/magot_v0.png") #width = 35%, height = 20%
+    imgMagot = Image.open("png/magot_v1.png") #width = 35%, height = 20%
 
     imgBody = Image.open("png/bandit_body_v0.png") #width = 26%, height = 42%
     imgDetails = Image.open("png/bandit_details_v0.png") #width = 26%, height = 42%
@@ -182,8 +189,8 @@ class Game(Tk):
         #placement du log
         self.logSpace.grid(row=9, column=1, columnspan=3)
         self.lbLog.grid(row=1, column=1, columnspan=2, sticky="nsew")
-        self.log.grid(row=2, column=2, sticky="nsew")
-        vbar.grid(row=2, column=1, sticky='NS')
+        self.log.grid(row=2, column=1, sticky="nsew")
+        vbar.grid(row=2, column=2, sticky='NS')
 
         #=== FIN MENU SPACE ================================
 
@@ -372,7 +379,7 @@ class Game(Tk):
         heightButin = heightWagon//4
 
         #taille des images de boutons
-        sizeButton = ((heightCanvas//3) * 2) // 8
+        sizeButton = ((heightCanvas//3) * 2) // 7
 
 
 
@@ -382,13 +389,18 @@ class Game(Tk):
 
         #images des boutons
         self.imgTest = Game.createLoadedImg(sizeButton, sizeButton, Game.imgWagon)
+        self.imgBtnRight = Game.createLoadedImg(sizeButton, sizeButton, Game.imgRight)
+        self.imgBtnLeft = Game.createLoadedImg(sizeButton, sizeButton, Game.imgLeft)
+        self.imgBtnUp = Game.createLoadedImg(sizeButton, sizeButton, Game.imgUp)
+        self.imgBtnDown = Game.createLoadedImg(sizeButton, sizeButton, Game.imgDown)
+        self.imgBtnShoot = Game.createLoadedImg(sizeButton, sizeButton, Game.imgShoot)
         #others image has to be create...
 
-        self.btnRight.config(image=self.imgTest)
-        self.btnLeft.config(image=self.imgTest)
-        self.btnUp.config(image=self.imgTest)
-        self.btnDown.config(image=self.imgTest)
-        self.btnShoot.config(image=self.imgTest)
+        self.btnRight.config(image=self.imgBtnRight)
+        self.btnLeft.config(image=self.imgBtnLeft)
+        self.btnUp.config(image=self.imgBtnUp)
+        self.btnDown.config(image=self.imgBtnDown)
+        self.btnShoot.config(image=self.imgBtnShoot)
         self.btnSteal.config(image=self.imgTest)
 
 
