@@ -7,15 +7,19 @@ from modules.saveGestion import * #for loadSave(win)
 global NB_WAGONS
 global NB_ACTIONS
 global NB_JOUEURS 
+global NB_TOURS
+global MAX_ACTIONS
 global MAX_BULLETS
 global COLORS
 global LOAD_SAVE
 global WIDGET_COLORS
 
+
 NB_JOUEURS = 4
 NB_WAGONS = NB_JOUEURS
+NB_TOURS = 3
+MAX_ACTIONS = NB_JOUEURS * 2
 MAX_BULLETS = (NB_JOUEURS // 2) + 1
-
 
 COLORS = {"red":(255, 0, 0),
           "orange":(255, 128, 0),
@@ -61,6 +65,10 @@ class Game(Tk):
     bandits = [] # liste de classe Bandit
     butins = [] # liste de classe Bandit
 
+    tempActions = []
+    tempColor = "green"
+    tempName = "nameOeuf"
+    
 
     imgsOnCanvasPlaySpace = [] # liste "stockant" ce qui est dessiné sur un Canvas (afin de les pouvoir les supprimer par la suite)
     imgsOnCanvasMenuSpace = []
@@ -96,6 +104,7 @@ class Game(Tk):
     def __init__(self):
         super().__init__()
         self.turn = 1
+        self.banditQuiChoisi = 0
 
         #window parameters
         self.title("Colt Zeʁma")
@@ -150,13 +159,24 @@ class Game(Tk):
         self.btns = []
 
         #boutons
-        self.btnAction = Button(self.menuSpace, text="Action", command=self.testActionsStep1on4, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], disabledforeground='black')
-        self.btnRight = Button(self.menuSpace, text="->", command=self.saveGame, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
-        self.btnLeft = Button(self.menuSpace, text="<-", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
-        self.btnUp = Button(self.menuSpace, text="Up", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
-        self.btnDown = Button(self.menuSpace, text="Down", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
-        self.btnShoot = Button(self.menuSpace, text="Shoot", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
-        self.btnSteal = Button(self.menuSpace, text="Rob", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnAction = Button(self.menuSpace, text="Action", command=self.validateActions, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], disabledforeground='black')
+        # self.btnAction = Button(self.menuSpace, text="Action", command=self.testActionsStep1on4, bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], disabledforeground='black')
+        self.btnRight = Button(self.menuSpace, text="->", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('right'))
+        self.btnLeft = Button(self.menuSpace, text="<-", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('left'))
+        self.btnUp = Button(self.menuSpace, text="Up", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('up'))
+        self.btnDown = Button(self.menuSpace, text="Down", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('down'))
+        self.btnShoot = Button(self.menuSpace, text="Shoot", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('shoot'))
+        self.btnSteal = Button(self.menuSpace, text="Rob", bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], command=lambda:self.addActions('rob'))
+        
+        
+        self.btns.append(self.btnRight)
+        self.btns.append(self.btnLeft)
+        self.btns.append(self.btnUp)
+        self.btns.append(self.btnDown)
+        self.btns.append(self.btnShoot)
+        self.btns.append(self.btnSteal)
+        
+        
 
         #placement des buttons
         self.btnAction.grid(row=5, column=2, padx=5, pady=10)
@@ -215,10 +235,10 @@ class Game(Tk):
 
 
             #création des bandits
-            for i in range(NB_JOUEURS):
-                name = "Bandit" + str(i + 1)
-                color = random.choice(list(COLORS.keys()))
-                Game.bandits.append(Bandit(self, name, color))
+            # for i in range(NB_JOUEURS):
+            #     name = "Bandit" + str(i + 1)
+            #     color = random.choice(list(COLORS.keys()))
+            #     Game.bandits.append(Bandit(self, name, color))
 
 
             #ajout du marshall
@@ -278,12 +298,107 @@ class Game(Tk):
 
         #resize des images de l'interface lorsque la fenêtre est redimensionnée
         self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
+        self.test = 1
 
 
+    def printBandit(self):
+        for bandit in self.bandits:
+            print(bandit.name, bandit.color, bandit.actions, bandit.position)
 
 
     def saveGame(self):
         save(NB_JOUEURS, self.wagons, self.bandits, self.butins)
+
+
+
+    def addActions(self, action):
+        Game.tempActions.append(action)
+
+        if len(Game.tempActions) < MAX_ACTIONS :
+            if self.btnAction["state"] == 'normal':
+                self.btnAction.config(state='disabled') #ce SERA BTN VALIDATE
+                for btn in self.btns:
+                    btn.config(state="normal")
+
+        else:
+            self.btnAction.config(state='normal')
+            for btn in self.btns:
+                btn.config(state="disabled")
+
+        print(Game.tempActions)
+
+
+    def validateActions(self):
+        if self.turn == 1:
+            print(f"regarde, elle est pas vide {Game.tempActions}")
+            aled = Bandit(self, Game.tempName, Game.tempColor, actions=Game.tempActions)
+            self.bandits.append(aled)
+            print(aled.name, aled.color, aled.actions)
+            
+            test = self.bandits[self.banditQuiChoisi]
+            print(test.name, test.color, test.actions)
+            self.updateCanvasImgs()
+
+        else:
+            self.bandits[self.banditQuiChoisi].actions = self.tempActions
+
+
+        self.banditQuiChoisi += 1
+
+        self.tempActions.clear()
+        if self.banditQuiChoisi == NB_JOUEURS:
+            self.btnAction.config(command=self.testActionsStep1on4)
+            self.btnAction.config(state='normal')
+            self.btnRight.config(command=self.printBandit)
+            self.btnRight.config(state='normal')
+            self.banditQuiChoisi = 0
+
+        else:
+            self.btnAction.config(state='disabled') #ce SERA BTN VALIDATE
+            for btn in self.btns:
+                btn.config(state="normal")
+
+
+
+
+    def createValidationCanvas(self):
+        self.validationSpace = Canvas(self.menuSpace, border=0, width=self.logSpace.winfo_width(), height=self.logSpace.winfo_height())
+        
+        for i in range(5):
+            
+            self.validationSpace.rowconfigure(i, weight=1)
+
+        if self.turn > 1:
+            self.labelTurn = Label(self.validationSpace)
+            self.labelName = Label(self.validationSpace)
+            self.canvasActions = Canvas(self.validationSpace, bg="blue")
+            self.btnValidate = Button(self.validationSpace, text='Validate')
+            self.labelTurn.grid(row=0, sticky="nsew")
+            self.labelName.grid(row=1, sticky="nsew")
+            self.canvasActions.grid(row=3, sticky="ew")
+            self.btnValidate.grid(row=4, sticky="nsew")
+
+            #create widgets (actions bar, entry for name, colors)
+
+
+
+        else:
+            #create widgets (actions bar, label for bandit name)
+            self.labelTurn = Label(self.validationSpace)
+            self.entryName = Entry(self.validationSpace)
+            self.canvasColor = Canvas(self.validationSpace, bg="red")
+            self.canvasActions = Canvas(self.validationSpace, bg="blue")
+            self.btnValidate = Button(self.validationSpace, text='Validate')
+
+
+            self.labelTurn.grid(row=0, sticky="nsew")
+            self.entryName.grid(row=1, sticky="nsew")
+            self.canvasColor.grid(row=2, sticky="ew")
+            self.canvasActions.grid(row=3, sticky="ew")
+            self.btnValidate.grid(row=4, sticky="nsew")
+
+
+        self.validationSpace.grid(row=9, column=1, columnspan=3)
 
 
 
@@ -344,6 +459,15 @@ class Game(Tk):
         self.updateCanvasImgs()
         self.btnAction.config(state='normal')
         self.btnAction.config(text='Action')
+        
+        if not len(self.bandits[0].actions):
+            self.turn += 1
+            self.createValidationCanvas()
+
+            self.btnAction.config(state='disabled') #ce SERA BTN VALIDATE
+            for btn in self.btns:
+                btn.config(state="normal")
+
 
 
 
@@ -375,8 +499,12 @@ class Game(Tk):
         heightCharacter = int (heightWagon *0.42)
 
         #taille des butins
-        widthButin = int(widthWagon * 0.1)
-        heightButin = heightWagon//4
+        widthBourse = int(widthWagon * 0.13)
+        heightBourse = int(heightWagon *  0.11)
+        widthBijoux = int(widthWagon * 0.07)
+        heightBijoux = int(heightWagon *  0.06)
+        widthMagot = int(widthWagon * 0.35)
+        heightMagot = int(heightWagon *  0.20)
 
         #taille des images de boutons
         sizeButton = ((heightCanvas//3) * 2) // 7
@@ -510,18 +638,27 @@ class Game(Tk):
             # print()
             nbButins = len(wagon.butins)
             for i,butin in enumerate(wagon.butins) :
-                xOffsetButin = xOffsetCharacter + widthButin
-                yOffsetButin = heightWagon   
-                if butin.position['y'] == 'toit':
-                    yOffsetButin =  heightButin
+                yOffsetButin = heightWagon 
                 # print(butin.type)
                 # print()
                 if butin.type == 'magot':
-                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgMagot)
+                    butin.img=  Game.createLoadedImg(widthMagot,heightMagot, self.imgMagot)
+                    xOffsetButin = xOffsetCharacter + widthMagot
+                    
+                    if butin.position['y'] == 'toit':
+                        yOffsetButin =  heightMagot
                 elif butin.type == 'bijoux' : 
-                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBijoux) 
-                else:
-                    butin.img=  Game.createLoadedImg(widthButin,heightButin, self.imgBourse)  
+                    butin.img=  Game.createLoadedImg(widthBijoux,heightBijoux, self.imgBijoux)
+                    xOffsetButin = xOffsetCharacter + widthBijoux
+                    
+                    if butin.position['y'] == 'toit':
+                        yOffsetButin =  heightBijoux 
+                elif butin.type == 'bourse':
+                    butin.img=  Game.createLoadedImg(widthBourse,heightBourse, self.imgBourse)
+                    xOffsetButin = xOffsetCharacter + widthBourse
+                    
+                    if butin.position['y'] == 'toit':
+                        yOffsetButin =  heightBourse  
                 
                 if (i % 2) == 1: #permet de décaler les bandit les uns des autres
                     xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
@@ -534,6 +671,7 @@ class Game(Tk):
         # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
 
+    
 
     @staticmethod
     def createLoadedImg(width, height, loadedImg):
@@ -584,6 +722,9 @@ class Game(Tk):
         else:
             self.wagons[xWagonPosition].marshall = False
             self.wagons[xWagonPosition - 1].marshall = True
+            
+            
+    
 
 
 
@@ -656,7 +797,7 @@ class Bandit():
         self.name = name
         self.color = color
         self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
-        self.actions = [] #action = 'right', 'left', 'up', 'down', 'shoot' or 'rob'
+        self.actions = actions.copy() #action = 'right', 'left', 'up', 'down', 'shoot' or 'rob'
         self.game = game
         self.img = None
         self.butins = []
@@ -754,7 +895,7 @@ class Bandit():
                 return
             self.position['y'] = 1
 
-
+        
         self.game.insertTextInLog(f"{self.name} has moved {action}\n")
 
         self.checkForButin()
