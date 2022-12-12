@@ -793,7 +793,7 @@ class Wagon():
 
 
 class Bandit():
-    def __init__(self, game:Game, name:str, color:str, position:tuple[int]=None, actions:list[str]=None, bullets:int=None):
+    def __init__(self, game:Game, name:str, color:str, position:tuple=None, actions:list=None, bullets:int=None):
         self.name = name
         self.color = color
         self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
@@ -1069,7 +1069,7 @@ class Bandit():
 class Butin():
     lootValues = {'bourse':[100,200], 'bijoux' : [500], 'magot' : [1000]}
 
-    def __init__(self, game:Game, type:str, x:int, value:int=None, position:tuple[int|str]=None, bracable:bool=None):
+    def __init__(self, game:Game, type:str, x:int, value:int=None, position:tuple=None, bracable:bool=None):
         self.game = game
         self.type = type
         self.value = random.choice(Butin.lootValues[type])
