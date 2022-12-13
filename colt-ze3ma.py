@@ -15,7 +15,7 @@ global LOAD_SAVE
 global WIDGET_COLORS
 
 
-NB_JOUEURS = 4
+NB_JOUEURS = 2
 NB_WAGONS = NB_JOUEURS
 NB_TOURS = 3
 MAX_ACTIONS = NB_JOUEURS * 2
@@ -402,9 +402,11 @@ class Game(Tk):
 
 
 
-    def insertTextInLog(self, text):
+    def insertTextInLog(self, text,color="black"):
+        colorize = "color-" + color
         self.log.config(state="normal")
-        self.log.insert(END, text)
+        self.log.tag_configure(colorize, foreground=color)
+        self.log.insert(END, text,colorize)
         self.log.see(END)
         self.log.config(state="disabled")
 
@@ -830,7 +832,7 @@ class Bandit():
     #execute the action at index 0 in self.actions
     def executeAction(self):
         if not len(self.actions):
-            self.game.insertTextInLog(f"{self.name} has no actions\n")
+            self.game.insertTextInLog(f"{self.name} has no actions\n",self.color)
             return
 
         if self.actions[0] in ['right', 'left', 'up', 'down']:
@@ -851,7 +853,7 @@ class Bandit():
 
         if action == 'right':
             if xBanditPosition == NB_WAGONS:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n")
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
                 return
 
             #on retire le bandit du wagon actuel
@@ -868,7 +870,7 @@ class Bandit():
 
         if action == 'left':
             if xBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n")
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
                 return
 
             #on retire le bandit du wagon actuel
@@ -885,18 +887,18 @@ class Bandit():
 
         if action == 'up':
             if yBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n")
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
                 return
             self.position['y'] = 0
 
         if action == 'down':
             if yBanditPosition == 1:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n")
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
                 return
             self.position['y'] = 1
 
         
-        self.game.insertTextInLog(f"{self.name} has moved {action}\n")
+        self.game.insertTextInLog(f"{self.name} has moved {action}\n",self.color)
 
         self.checkForButin()
 
@@ -915,10 +917,10 @@ class Bandit():
 
     #tire sur un Bandit, aléatoirement, à la même position
     def shoot(self):
-        self.game.insertTextInLog(f"{self.name} prepare to shoot\n")
+        self.game.insertTextInLog(f"{self.name} prepare to shoot\n",self.color)
 
         if self.bullets == 0:
-            self.game.insertTextInLog(f"{self.name} has no more bullets\n")
+            self.game.insertTextInLog(f"{self.name} has no more bullets\n",self.color)
             return
 
 
@@ -933,7 +935,7 @@ class Bandit():
                 nb_targets += 1
 
         if nb_targets == 0:
-            self.game.insertTextInLog(f"{self.name} has no targets to shoot\n")
+            self.game.insertTextInLog(f"{self.name} has no targets to shoot\n",self.color)
             return
 
 
@@ -955,7 +957,7 @@ class Bandit():
 
     #vole un butin, aléatoirement, sur sa position
     def rob(self):
-        self.game.insertTextInLog(f"{self.name} rob\n")
+        self.game.insertTextInLog(f"{self.name} rob\n",self.color)
 
         wagon = self.game.wagons[self.position['x']]
 
@@ -971,16 +973,16 @@ class Bandit():
         self.butins.append(robbedButin)
         robbedButin.bracable = False
         robbedButin.position['y'] = self.name
-        self.game.insertTextInLog(f"{self.name} robbed {robbedButin.type}({robbedButin.value})\n")
+        self.game.insertTextInLog(f"{self.name} robbed {robbedButin.type}({robbedButin.value})\n",self.color)
 
 
 
     #perd un butin, aléatoirement
     def getHitByBandit(self, ennemyName:str):
-        self.game.insertTextInLog(f"{self.name} get hit by {ennemyName}\n")
+        self.game.insertTextInLog(f"{self.name} get hit by {ennemyName}\n",self.color)#couleure de l'ennemy a ajouter 
 
 
-        if len(self.butins) == 0: #le bandit n'a pas de butins
+        if len(self.butins) == 0: #le bandit n'a pas de butins{self.name}
             return
 
         #on retire un butin du bandit, aléatoirement
@@ -991,13 +993,13 @@ class Bandit():
             lostButin.position['y'] = 'int'
         #qu'on rajoute dans la liste butins du wagon du bandit
         self.game.wagons[self.position['x']].butins.append(lostButin)
-        self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n")
+        self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n",self.color)
 
 
 
     #perd un butin, aléatoirement, et monte sur le toit
     def getHitByMarshall(self):
-        self.game.insertTextInLog(f"{self.name} get hit by the Marshall\n")
+        self.game.insertTextInLog(f"{self.name} get hit by the Marshall\n",self.color)
 
 
         if len(self.butins):
@@ -1011,11 +1013,11 @@ class Bandit():
 
             #qu'on rajoute dans le wagon
             self.game.wagons[self.position['x']].butins.append(lostButin)
-            self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n")
+            self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n",self.color)
 
         #le bandit monte sur le toit
         self.position['y'] = 0
-        self.game.insertTextInLog(f"{self.name} move on the roof\n")
+        self.game.insertTextInLog(f"{self.name} move on the roof\n",self.color)
 
 
     def checkForButin(self):
@@ -1026,7 +1028,7 @@ class Bandit():
                 if self.position['x'] == wagon.xPosition: 
                     robbedButin = wagon.butins.pop(i)
                     self.butins.append(robbedButin)
-                    self.game.insertTextInLog(f"{self.name} got {robbedButin.type}({robbedButin.value})\n")
+                    self.game.insertTextInLog(f"{self.name} got {robbedButin.type}({robbedButin.value})\n",self.color)
 
 
 
