@@ -120,11 +120,153 @@ class Game(Tk):
         self.columnconfigure(0, weight = 1)
         self.rowconfigure(0, weight=1)
 
-        self.btnLoad = Button(self, text='Load', command=self.loadSave)
-        self.btnNew = Button(self, text='New', command=self.continueInit)
 
-        self.btnLoad.grid()
-        self.btnNew.grid(column=1)
+        # createMainMenu
+        self.canvasMainMenu = Canvas(self, bg='red')
+        self.canvasMainMenu.grid(columnspan=2, sticky='nsew')
+
+        for i in [0, 2]:
+            self.canvasMainMenu.columnconfigure(i, weight = 1)
+        for i in [0, 5]:
+            self.canvasMainMenu.rowconfigure(i, weight = 1)
+
+        #mainMenu buttons
+        self.btnNew = Button(self.canvasMainMenu, text='New', command=self.createNewGameMenu)
+        self.btnLoad = Button(self.canvasMainMenu, text='Load', command=lambda:self.startGame(loadSave=True))
+        self.btncredits = Button(self.canvasMainMenu, text='Credits', command=self.createCredits)
+        self.btnExit = Button(self.canvasMainMenu, text='Exit', command=self.destroy)
+
+        self.btnNew.grid(column=1, row=1, sticky='nsew')
+        self.btnLoad.grid(column=1, row=2, sticky='nsew')
+        self.btncredits.grid(column=1, row=3, sticky='nsew')
+        self.btnExit.grid(column=1, row=4, sticky='nsew')
+
+        self.canvasMainMenu.bind('<Configure>', lambda e: self.resizeMenusBackground(self.canvasMainMenu))
+
+
+    def resizeMenusBackground(self, canvas):
+        self.img = Game.createLoadedImg(canvas.winfo_width(), canvas.winfo_height(), Game.imgPaysage)
+        canvas.create_image(0, 0, image=self.img, anchor='nw')
+
+
+    def createMainMenu(self):
+        # createMainMenu
+        self.canvasMainMenu = Canvas(self, bg='red')
+        self.canvasMainMenu.grid(columnspan=2, sticky='nsew')
+
+        for i in [0, 2]:
+            self.canvasMainMenu.columnconfigure(i, weight = 1)
+        for i in [0, 5]:
+            self.canvasMainMenu.rowconfigure(i, weight = 1)
+
+        #mainMenu buttons
+        self.btnNew = Button(self.canvasMainMenu, text='New', command=self.createNewGameMenu)
+        self.btnLoad = Button(self.canvasMainMenu, text='Load', command=lambda:self.startGame(loadSave=True))
+        self.btncredits = Button(self.canvasMainMenu, text='Credits', command=self.createCredits)
+        self.btnExit = Button(self.canvasMainMenu, text='Exit', command=self.destroy)
+
+        self.btnNew.grid(column=1, row=1, sticky='nsew')
+        self.btnLoad.grid(column=1, row=2, sticky='nsew')
+        self.btncredits.grid(column=1, row=3, sticky='nsew')
+        self.btnExit.grid(column=1, row=4, sticky='nsew')
+
+        self.canvasMainMenu.bind('<Configure>', lambda e: self.resizeMenusBackground(self.canvasMainMenu))
+
+
+    def createCredits(self):
+        self.canvasMainMenu.destroy()
+        self.creditsCanvas = Canvas(self, bg='green')
+        self.creditsCanvas.grid(columnspan=2, sticky='nsew')
+
+        for i in [0, 2]:
+            self.creditsCanvas.columnconfigure(i, weight = 1)
+        for i in [0, 3]:
+            self.creditsCanvas.rowconfigure(i, weight = 1)
+
+        txt = 'Created by\n\nMaria MESSAOUD-NACER\nValentin GUILLON\n\n\nBased on the game\n"Colt Express"'
+        self.labelCredits = Label(self.creditsCanvas, text=txt, justify='center')
+        self.creditsBtnExit = Button(self.creditsCanvas, text='Return to Main Menu', command=self.exitCredits)
+
+        self.labelCredits.grid(row=1, column=1, pady=15)
+        self.creditsBtnExit.grid(row=2, column=1, pady=15)
+
+        self.creditsCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.creditsCanvas))
+
+
+    def exitCredits(self):
+        self.creditsCanvas.destroy()
+        self.createMainMenu()
+
+
+    def createNewGameMenu(self):
+        self.canvasMainMenu.destroy()
+        self.loadGameCanvas = Canvas(self, bg='green')
+        self.loadGameCanvas.grid(columnspan=2, sticky='nsew')
+
+        for i in [0, 3]:
+            self.loadGameCanvas.columnconfigure(i, weight = 1)
+        for i in [0, 6]:
+            self.loadGameCanvas.rowconfigure(i, weight = 1)
+        
+
+        nbPlayers = IntVar()
+        nbTurns =  IntVar()
+        nbActions =  IntVar()
+
+        nbPlayers.set(4)
+        nbTurns.set(3)
+        nbActions.set(6)
+
+
+        self.labelNbPlayers = Label(self.loadGameCanvas, text='Nombre de joueurs')
+        self.labelNbTurns = Label(self.loadGameCanvas, text='Nombre de tours')
+        self.labelNbActions = Label(self.loadGameCanvas, text="Nombre d'actions par tour")
+        self.entryNbPlayers = Entry(self.loadGameCanvas, textvariable=nbPlayers)
+        self.entryNbTurns = Entry(self.loadGameCanvas, textvariable=nbTurns)
+        self.entryNbActions = Entry(self.loadGameCanvas, textvariable=nbActions)
+        self.launchNewGame = Button(self.loadGameCanvas, text='Start', command=lambda:self.startGame(nbPlayers.get(), nbTurns.get(), nbActions.get()))
+        self.btnExitNewGameMenu = Button(self.loadGameCanvas, text='Return to Main Menu', command=self.exitNewGameMenu)
+
+
+        self.labelNbPlayers.grid(row=1, column=1, sticky='e')
+        self.labelNbTurns.grid(row=2, column=1, sticky='e')
+        self.labelNbActions.grid(row=3, column=1, sticky='e')
+        self.entryNbPlayers.grid(row=1, column=2, sticky='w')
+        self.entryNbTurns.grid(row=2, column=2, sticky='w')
+        self.entryNbActions.grid(row=3, column=2, sticky='w')
+        self.launchNewGame.grid(row=4, column=1, columnspan=2, sticky='ew')
+        self.btnExitNewGameMenu.grid(row=5, column=1, columnspan=2, sticky='ew')
+
+        self.loadGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.loadGameCanvas))
+
+
+    def exitNewGameMenu(self):
+        self.loadGameCanvas.destroy()
+        self.createMainMenu()
+
+
+    def startGame(self, nbPlayers=6, nbTurns=3, nbActions=6, loadSave=False):
+        if loadSave:
+            global LOAD_SAVE
+
+            LOAD_SAVE = True
+
+        else:
+            global NB_JOUEURS
+            global NB_WAGONS
+            global NB_TOURS
+            global MAX_ACTIONS
+            global MAX_BULLETS
+
+            NB_JOUEURS = nbPlayers
+            NB_WAGONS = NB_JOUEURS
+            NB_TOURS = nbTurns
+            MAX_ACTIONS = nbActions
+            MAX_BULLETS = (NB_JOUEURS // 2) + 1
+        
+        self.continueInit()
+        
+
 
 
     def loadSave(self):
@@ -134,8 +276,7 @@ class Game(Tk):
 
 
     def continueInit(self):
-        self.btnLoad.destroy()
-        self.btnNew.destroy()
+        self.canvasMainMenu.destroy()
 
         #la fenêtre est coupée en 2 parties :
         #    playSpace: Canvas sur lequel on dessine l'aspect visuel du jeu (bg, train, personnages...)
