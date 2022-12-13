@@ -99,6 +99,9 @@ class Game(Tk):
     imgBody = Image.open("png/bandit_body_v0.png") #width = 26%, height = 42%
     imgDetails = Image.open("png/bandit_details_v0.png") #width = 26%, height = 42%
 
+    imgIconMinution = Image.open("png/icone_munition_v1.png")
+    imgIconBourse = Image.open("png/icone_bourse_v1.png")
+    #iconBanditHead => crop imgBody/Details to (28-1, 16-1) (58, 46)
 
 
     def __init__(self):
@@ -477,6 +480,55 @@ class Game(Tk):
 
 
 
+
+    def createInventoryCanvas(self, bandit, widthplaySpace, heightplaySpace, index:int):
+        #taille de l'inventaire
+        widthInventorySize = widthplaySpace//8
+        heightInventorySize = heightplaySpace//4
+
+        #position de l'inventaire
+        xPlacementPosition = ((widthplaySpace//NB_JOUEURS)*index) + (((widthplaySpace//NB_JOUEURS)//2) - widthInventorySize//2)
+        yPlacementPosition = int(heightplaySpace*0.71)
+
+        #taille des icones (de la tête du bandit en réalité, les autres sont 2* plus petit)
+        widthIcon = widthInventorySize
+        heightIcon = heightInventorySize//2
+
+
+        #création des images
+        bandit.imgHead = Game.createBanditPng(widthIcon, heightIcon, COLORS[bandit.color], crop=True)
+        bandit.imgMunition = Game.createLoadedImg(widthIcon//2, heightIcon//2, Game.imgIconMinution)
+        bandit.imgBourse = Game.createLoadedImg(widthIcon//2, heightIcon//2, Game.imgIconBourse)
+        nbMunitions = bandit.bullets
+        nbBourses = len(bandit.butins)
+
+        #placement des images
+        img1 = self.playSpace.create_image(xPlacementPosition, yPlacementPosition, image=bandit.imgHead, anchor="nw")
+        img2 = self.playSpace.create_image(xPlacementPosition, yPlacementPosition + heightIcon, image=bandit.imgMunition, anchor="nw")
+        img3 = self.playSpace.create_image(xPlacementPosition + (widthIcon//2), yPlacementPosition + heightIcon, image=bandit.imgBourse, anchor="nw")
+
+        #placement du texte
+        xTextOffset = widthIcon//4
+        yTextOffset = heightIcon//4
+
+        x = xPlacementPosition + ((xTextOffset) - (xTextOffset*0.2))
+        y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
+        img4 = self.playSpace.create_text(x, y, text=str(nbMunitions), anchor='nw')
+
+        x = xPlacementPosition + (((widthIcon//2) + xTextOffset) - (xTextOffset*0.2))
+        y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
+        img5 = self.playSpace.create_text(x, y, text=str(nbBourses), anchor='nw')
+
+        #mise des dessins dans la liste globale
+        self.imgsOnCanvasPlaySpace.append(img1)
+        self.imgsOnCanvasPlaySpace.append(img2)
+        self.imgsOnCanvasPlaySpace.append(img3)
+        self.imgsOnCanvasPlaySpace.append(img4)
+        self.imgsOnCanvasPlaySpace.append(img5)
+
+
+
+
     def updateCanvasImgs(self):
         #ON VIDE LE CANVAS ===================================
         for img in self.imgsOnCanvasPlaySpace:
@@ -673,6 +725,12 @@ class Game(Tk):
         # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
 
+        #ON DESSINE LES INVENTAIRES DES BANDITS ==============================
+
+        for i, bandit in enumerate(self.bandits):
+            self.createInventoryCanvas(bandit, widthCanvas, heightCanvas, i)
+
+        #FIN === ON DESSINE LES INVENTAIRES DES BANDITS ======================
     
 
     @staticmethod
@@ -682,9 +740,17 @@ class Game(Tk):
 
 
     @staticmethod
-    def createBanditPng(width, height, color):
-        body = Game.imgBody.resize((width, height))
-        details = Game.imgDetails.resize((width, height))
+    def createBanditPng(width, height, color, crop=False):
+        body = Game.imgBody
+        details = Game.imgDetails
+
+        if crop:
+            #head box from bandit body/details pngs : (28-1, 16-1) (58, 46)
+            body = body.crop((28-1, 16-1, 58, 46))
+            details = details.crop((28-1, 16-1, 58, 46))
+        
+        body = body.resize((width, height))
+        details = details.resize((width, height))
 
         #on modifie la couleur de chaque pixel du png 
         for y in range(details.height):
