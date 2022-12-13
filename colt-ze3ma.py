@@ -107,6 +107,7 @@ class Game(Tk):
     def __init__(self):
         super().__init__()
         self.turn = 1
+        self.action = 1
         self.banditQuiChoisi = 0
 
         #window parameters
@@ -562,7 +563,8 @@ class Game(Tk):
         #execute l'action de chaque bandit (donnée aléatoirement)
 
         self.insertTextInLog(f"\nTurn {self.turn} :\n")
-        self.turn += 1
+        self.insertTextInLog(f"Action {self.action} :\n")
+        self.action += 1
 
         for bandit in Game.bandits:
             bandit.testRandomAction()
