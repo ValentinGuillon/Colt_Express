@@ -384,10 +384,10 @@ class Game(Tk):
                     continue
                 #queue
                 if y == NB_WAGONS:
-                    self.wagons.append(Wagon(self, y, 'wagon'))
+                    self.wagons.append(Wagon(self, y, 'queue'))
                     continue
                 #wagon
-                self.wagons.append(Wagon(self, y, 'queue'))
+                self.wagons.append(Wagon(self, y, 'wagon'))
 
 
             #création des bandits
@@ -585,8 +585,6 @@ class Game(Tk):
             #-------------Fin Couleurs -----------
         self.logSpace.grid_forget()
         self.validationSpace.grid(row=9, column=1, columnspan=3)
-        
-        self.loadGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.loadGameCanvas))
         
     
 
@@ -874,41 +872,186 @@ class Game(Tk):
 
 
         #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
-        
-        for wagon in self.wagons:
-            # print(wagon.xPosition)
-            # print()
+        for wagon in Game.wagons:
             nbButins = len(wagon.butins)
-            for i,butin in enumerate(wagon.butins) :
-                yOffsetButin = heightWagon 
-                # print(butin.type)
-                # print()
-                if butin.type == 'magot':
-                    butin.img=  Game.createLoadedImg(widthMagot,heightMagot, self.imgMagot)
-                    xOffsetButin = xOffsetCharacter + widthMagot
-                    
-                    if butin.position['y'] == 'toit':
-                        yOffsetButin =  heightMagot
-                elif butin.type == 'bijoux' : 
-                    butin.img=  Game.createLoadedImg(widthBijoux,heightBijoux, self.imgBijoux)
-                    xOffsetButin = xOffsetCharacter + widthBijoux
-                    
-                    if butin.position['y'] == 'toit':
-                        yOffsetButin =  heightBijoux 
-                elif butin.type == 'bourse':
-                    butin.img=  Game.createLoadedImg(widthBourse,heightBourse, self.imgBourse)
-                    xOffsetButin = xOffsetCharacter + widthBourse
-                    
-                    if butin.position['y'] == 'toit':
-                        yOffsetButin =  heightBourse  
-                
-                if (i % 2) == 1: #permet de décaler les bandit les uns des autres
-                    xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
 
+            if nbButins == 0:
+                continue
+
+            #une boucle juste pour le magot
+            for butin in wagon.butins:
+                if not butin.type == 'magot':
+                    continue
+
+                xButinPosition = butin.position['x']
+                yButinPosition:str = butin.position['y']
+
+                #les Offset permet de placer le butin au centre du wagon (sont ajustés par la suite)
+                xOffsetButin = widthWagon + (widthWagon//2) - (widthMagot//2)
+                yOffsetButin = (heightWagon-heightMagot) - (heightWagon * 0.35) #hauteaur à l'intérieur du wagon
+
+                xImgPosition = (xButinPosition * widthWagon) + xOffsetButin
+
+                if yButinPosition == 'in':
+                    yImgPosition = heightWagon + yOffsetButin
+                elif yButinPosition == 'out':
+                    yImgPosition = yOffsetButin + (heightWagon * 0.40)
                 else:
-                    xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
-                img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightCharacter+yOffsetButin, image = butin.img, anchor="nw")
+                    print("ERROR: the butin is in a wagon's list, but is own by a bandit")
+                    continue
+
+
+                butin.img = Game.createLoadedImg(widthMagot, heightMagot, self.imgMagot)
+                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=butin.img, anchor="nw")
                 self.imgsOnCanvasPlaySpace.append(img)
+
+                break
+
+
+            #une boucle pour les autres type de butins (sauf 'magot')
+            for i in range(nbButins):
+                butin = wagon.butins[i]
+
+                xButinPosition = butin.position['x']
+                yButinPosition:str = butin.position['y']
+
+
+                if butin.type == 'magot':
+                    continue
+                    
+
+                elif butin.type == 'bijoux':
+                    #les Offset permet de placer le butin au centre du wagon (sont ajustés par la suite)
+                    xOffsetButin = widthWagon + (widthWagon//2) - (widthBijoux//2)
+                    yOffsetButin = (heightWagon-heightBijoux) - (heightWagon * 0.32) #hauteaur à l'intérieur du wagon
+
+                    if butin.bracable == False:
+                        #décalage selon le nombre de butins dans le même wagon
+                        if (i % 2) == 1:
+                            xOffsetButin += (((widthWagon*0.6) // nbButins) + ((i * ((widthWagon*0.6) // nbButins)))) //2
+
+                        else:
+                            xOffsetButin -= (((widthWagon*0.6) // nbButins) + ((i * ((widthWagon*0.6) // nbButins)))) //2
+
+                        #décalage y
+                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+                    else: #bracable == True
+                        #décalage selon le nombre de butins dans le même wagon
+                        if (i % 2) == 1:
+                            xOffsetButin += (((widthWagon*0.2) // nbButins) + ((i * ((widthWagon*0.2) // nbButins)))) //2
+
+                        else:
+                            xOffsetButin -= (((widthWagon*0.2) // nbButins) + ((i * ((widthWagon*0.2) // nbButins)))) //2
+
+                        #décalage y
+                        yOffsetButin -= heightWagon*0.2 #réhaussement pour le placer sur la table
+                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+
+                    xImgPosition = (xButinPosition * widthWagon) + xOffsetButin
+
+                    if yButinPosition == 'in':
+                        yImgPosition = heightWagon + yOffsetButin
+                    elif yButinPosition == 'out':
+                        yImgPosition = yOffsetButin + (heightWagon * 0.38)
+                    else:
+                        print("ERROR: the butin is in a wagon's list, but is own by a bandit")
+                        continue
+
+                    
+
+
+                elif butin.type == 'bourse':
+                    #les Offset permet de placer le butin au centre du wagon (sont ajustés par la suite)
+                    xOffsetButin = widthWagon + (widthWagon//2) - (widthBourse//2)
+                    yOffsetButin = (heightWagon-heightBourse) - (heightWagon * 0.32) #hauteaur à l'intérieur du wagon
+
+                    if butin.bracable == False:
+                        #décalage x selon le nombre de butins dans le même wagon
+                        if (i % 2) == 1:
+                            xOffsetButin += (((widthWagon*0.6) // nbButins) + ((i * ((widthWagon*0.6) // nbButins)))) // 2
+
+                        else:
+                            xOffsetButin -= (((widthWagon*0.6) // nbButins) + ((i * ((widthWagon*0.6) // nbButins)))) // 2
+
+                        #décalage y
+                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+
+                    else: #bracable == True
+                        #décalage x selon le nombre de butins dans le même wagon
+                        if (i % 2) == 1:
+                            xOffsetButin += (((widthWagon*0.2) // nbButins) + ((i * ((widthWagon*0.2) // nbButins)))) // 2
+
+                        else:
+                            xOffsetButin -= (((widthWagon*0.2) // nbButins) + ((i * ((widthWagon*0.2) // nbButins)))) // 2
+
+                        #décalage
+                        yOffsetButin -= heightWagon*0.2 #réhaussement pour le placer sur la table
+                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+
+                    xImgPosition = (xButinPosition * widthWagon) + xOffsetButin
+
+                    if yButinPosition == 'in':
+                        yImgPosition = heightWagon + yOffsetButin
+                    elif yButinPosition == 'out':
+                        yImgPosition = yOffsetButin + (heightWagon * 0.38)
+                    else:
+                        print("ERROR: the butin is in a wagon's list, but is own by a bandit")
+                        continue
+                
+
+
+
+                if butin.type == 'bijoux':
+                    butin.img = Game.createLoadedImg(widthBijoux, heightBijoux, self.imgBijoux)
+                elif butin.type == 'bourse':
+                    butin.img = Game.createLoadedImg(widthBourse, heightBourse, self.imgBourse)
+
+                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=butin.img, anchor="nw")
+                self.imgsOnCanvasPlaySpace.append(img)
+
+
+        # for wagon in self.wagons:
+        #     nbButins = len(wagon.butins)
+
+        #     for i,butin in enumerate(wagon.butins) :
+        #         xOffsetButin = 0
+        #         yOffsetButin = heightWagon
+ 
+        #         if butin.type == 'magot':
+        #             butin.img=  Game.createLoadedImg(widthMagot,heightMagot, self.imgMagot)
+        #             xOffsetButin = xOffsetCharacter + widthMagot
+                    
+        #             if butin.position['y'] == 'toit':
+        #                 yOffsetButin =  heightMagot
+
+
+        #         elif butin.type == 'bijoux' : 
+        #             butin.img=  Game.createLoadedImg(widthBijoux,heightBijoux, self.imgBijoux)
+        #             xOffsetButin = xOffsetCharacter + widthBijoux
+                    
+        #             if butin.position['y'] == 'toit':
+        #                 yOffsetButin =  heightBijoux 
+
+
+        #         elif butin.type == 'bourse':
+        #             butin.img=  Game.createLoadedImg(widthBourse,heightBourse, self.imgBourse)
+        #             xOffsetButin = xOffsetCharacter + widthBourse
+                    
+        #             if butin.position['y'] == 'toit':
+        #                 yOffsetButin =  heightBourse  
+
+                
+        #         if (i % 2) == 1: #permet de décaler les bandit les uns des autres
+        #             xOffsetButin += ((widthWagon //nbButins) + ((i * (widthWagon // nbButins)))) // 8
+
+        #         else:
+        #             xOffsetButin -= ((widthWagon // nbButins) + ((i * (widthWagon // nbButins)))) // 8
+        #         img = self.playSpace.create_image((wagon.xPosition * widthWagon) + xOffsetButin , heightCharacter+yOffsetButin, image = butin.img, anchor="nw")
+        #         self.imgsOnCanvasPlaySpace.append(img)
 
         # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
 
@@ -1022,7 +1165,7 @@ class Wagon():
             if self.type == 'loco':
                 self.butins.append(Butin(game, 'magot', self.xPosition))
 
-            else:
+            elif self.type == 'wagon':
                 for i in range(random.randint(1, 4)):
                     self.butins.append(Butin(game, random.choice(Wagon.butinTypes), self.xPosition))
 
