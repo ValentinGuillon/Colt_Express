@@ -86,7 +86,7 @@ class Game(Tk):
     imgRob = Image.open('png/menuSpace_button_rob.png')
 
     imgPaysage = Image.open("png/landscape.png")
-    imgMarshall = Image.open('png/marshall_v0.png') #width = 26%, height = 42%
+    imgMarshall = Image.open('png/marshall_v1.png') #width = 26%, height = 42%
 
     imgLoco = Image.open('png/loco_v2.png') #width = 200%
     imgWagon = Image.open('png/wagon_v2.png')
@@ -852,12 +852,14 @@ class Game(Tk):
 
 
         #ON DESSINE LE MARSHALL ==============================
+        widthCharacter = int(widthCharacter*1.2)
+        heightCharacter = int(heightCharacter*1.2)
         self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
 
         for wagon in self.wagons :
             if wagon.marshall == True:
-                xOffsetMarshall = xOffsetCharacter
-                yOffsetMarshall = yOffsetCharacter #réhaussement de 20%
+                xOffsetMarshall = widthWagon + (widthWagon//2) - (widthCharacter//2)
+                yOffsetMarshall = ((heightWagon-heightCharacter) - (heightWagon * 0.3)) * 0.9 #réhaussement de 20%
 
                 xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
                 yMarshallPosition = heightWagon + yOffsetMarshall
