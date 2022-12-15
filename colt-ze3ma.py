@@ -96,8 +96,8 @@ class Game(Tk):
     imgBijoux = Image.open("png/bijoux_v0.png") #width = 7%, height = 6%
     imgMagot = Image.open("png/magot_v1.png") #width = 35%, height = 20%
 
-    imgBody = Image.open("png/bandit_body_v0.png") #width = 26%, height = 42%
-    imgDetails = Image.open("png/bandit_details_v0.png") #width = 26%, height = 42%
+    imgBody = Image.open("png/bandit_body_v1.png") #width = 26%, height = 42%
+    imgDetails = Image.open("png/bandit_details_v1.png") #width = 26%, height = 42%
 
     imgIconMinution = Image.open("png/icone_munition_v1.png")
     imgIconBourse = Image.open("png/icone_bourse_v1.png")
