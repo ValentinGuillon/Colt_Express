@@ -802,77 +802,6 @@ class Game(Tk):
         #FIN === ON DESSINE LES WAGONS =====================
 
 
-
-        #ON DESSINE LES BANDITS ============================
-        #les Offset permet de placer un personnage au centre du wagon
-        xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
-        yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
-
-
-        for wagon in Game.wagons:
-            nbBandits = len(wagon.bandits)
-
-            if nbBandits == 0:
-                continue
-
-            # for i, bandit in enumerate(wagon.bandits):
-            for i in range(nbBandits):
-                bandit = wagon.bandits[i]
-
-                xBanditPosition = bandit.position['x']
-                yBanditPosition = bandit.position['y']
-                xOffsetBandit = xOffsetCharacter
-                yOffsetBandit = yOffsetCharacter
-
-                #décalage selon le nombre de bandits dans le même wagon
-                if (i % 2) == 1:
-                    xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
-
-                else:
-                    xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
-
-
-                #décalage selon l'étage
-                if yBanditPosition == 0: #sur le toit
-                    yOffsetBandit += heightWagon*0.4
-                    yOffsetBandit -= (heightWagon*0.01) * (i%3)
-                if yBanditPosition == 1: #dans le wagon
-                    yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
-
-
-                xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
-                yImgPosition = (yBanditPosition * heightWagon) + yOffsetBandit
-
-                bandit.img = Game.createBanditPng(widthCharacter, heightCharacter, COLORS[bandit.color])
-                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=bandit.img, anchor="nw")
-                self.imgsOnCanvasPlaySpace.append(img)
-
-        #FIN === ON DESSINE LES BANDITS ======================
-
-
-
-        #ON DESSINE LE MARSHALL ==============================
-        widthCharacter = int(widthCharacter*1.2)
-        heightCharacter = int(heightCharacter*1.2)
-        self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
-
-        for wagon in self.wagons :
-            if wagon.marshall == True:
-                xOffsetMarshall = widthWagon + (widthWagon//2) - (widthCharacter//2)
-                yOffsetMarshall = ((heightWagon-heightCharacter) - (heightWagon * 0.3)) * 0.9 #réhaussement de 20%
-
-                xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
-                yMarshallPosition = heightWagon + yOffsetMarshall
-
-
-                img = self.playSpace.create_image(xMarshallPosition, yMarshallPosition, image=self.imgMarshal, anchor="nw")
-                self.imgsOnCanvasPlaySpace.append(img)
-                break
-    
-        # FIN === ON DESSINE LE MARSHALL ======================
-                    
-
-
         #ON DESSINE LES BUTINS DANS LES WAGONS ==============================
         for wagon in Game.wagons:
             nbButins = len(wagon.butins)
@@ -1056,6 +985,76 @@ class Game(Tk):
         #         self.imgsOnCanvasPlaySpace.append(img)
 
         # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
+
+
+        #ON DESSINE LES BANDITS ============================
+        #les Offset permet de placer un personnage au centre du wagon
+        xOffsetCharacter = widthWagon + (widthWagon//2) - (widthCharacter//2)
+        yOffsetCharacter = (heightWagon-heightCharacter) - (heightWagon * 0.3) #hauteaur à l'intérieur du wagon
+
+
+        for wagon in Game.wagons:
+            nbBandits = len(wagon.bandits)
+
+            if nbBandits == 0:
+                continue
+
+            # for i, bandit in enumerate(wagon.bandits):
+            for i in range(nbBandits):
+                bandit = wagon.bandits[i]
+
+                xBanditPosition = bandit.position['x']
+                yBanditPosition = bandit.position['y']
+                xOffsetBandit = xOffsetCharacter
+                yOffsetBandit = yOffsetCharacter
+
+                #décalage selon le nombre de bandits dans le même wagon
+                if (i % 2) == 1:
+                    xOffsetBandit += ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
+
+                else:
+                    xOffsetBandit -= ((widthWagon // nbBandits) + ((i * (widthWagon // nbBandits)))) // 4
+
+
+                #décalage selon l'étage
+                if yBanditPosition == 0: #sur le toit
+                    yOffsetBandit += heightWagon*0.4
+                    yOffsetBandit -= (heightWagon*0.01) * (i%3)
+                if yBanditPosition == 1: #dans le wagon
+                    yOffsetBandit -= (heightWagon*0.01) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+
+
+                xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
+                yImgPosition = (yBanditPosition * heightWagon) + yOffsetBandit
+
+                bandit.img = Game.createBanditPng(widthCharacter, heightCharacter, COLORS[bandit.color])
+                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=bandit.img, anchor="nw")
+                self.imgsOnCanvasPlaySpace.append(img)
+
+        #FIN === ON DESSINE LES BANDITS ======================
+
+
+
+        #ON DESSINE LE MARSHALL ==============================
+        widthCharacter = int(widthCharacter*1.2)
+        heightCharacter = int(heightCharacter*1.2)
+        self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
+
+        for wagon in self.wagons :
+            if wagon.marshall == True:
+                xOffsetMarshall = widthWagon + (widthWagon//2) - (widthCharacter//2)
+                yOffsetMarshall = ((heightWagon-heightCharacter) - (heightWagon * 0.3)) * 0.9 #réhaussement de 20%
+
+                xMarshallPosition = (wagon.xPosition * widthWagon) + xOffsetMarshall
+                yMarshallPosition = heightWagon + yOffsetMarshall
+
+
+                img = self.playSpace.create_image(xMarshallPosition, yMarshallPosition, image=self.imgMarshal, anchor="nw")
+                self.imgsOnCanvasPlaySpace.append(img)
+                break
+    
+        # FIN === ON DESSINE LE MARSHALL ======================
+
 
 
         #ON DESSINE LES INVENTAIRES DES BANDITS ==============================
