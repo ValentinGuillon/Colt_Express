@@ -93,7 +93,7 @@ class Game(Tk):
     imgQueue = Image.open('png/queue_v2.png')
 
     imgBourse = Image.open("png/bourse_v2.png") #width = 13%, height = 11%
-    imgBijoux = Image.open("png/bijoux_v0.png") #width = 7%, height = 6%
+    imgBijoux = Image.open("png/bijoux_v1.png") #width = 7%, height = 6%
     imgMagot = Image.open("png/magot_v1.png") #width = 35%, height = 20%
 
     imgBody = Image.open("png/bandit_body_v1.png") #width = 26%, height = 42%
