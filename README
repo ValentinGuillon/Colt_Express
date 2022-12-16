@@ -2,27 +2,18 @@ Colt Express:
 
 Presentation:
 
-Le projet est une implementation en python du jeu Colt
-Express (simplfifié) en utilisants Tkinter afin d'en realiser l'interface.
+Le projet est une implémentation en python du jeu Colt Express (simplfifié) en utilisant Tkinter afin d'en réaliser l'interface.
 
--La problématique est donc de reussir a manier l'outils tout en gerant 
-la partie code afin d'avoir une version jouable et "user-friendly" du jeu 
-en en respectant les regles et en suivant la consigne donnée.
+-La problématique est donc de réussir à manier l'outil tout en gérant la partie code afin d'avoir une version jouable et "user-friendly" du jeu en respectant les règles et en suivant la consigne donnée.
 
 
 
--Le Projet a été divisé en modules pour faciliter sa lecture , revision et 
-comprehension, il comprends donc :
-
--fichier 1 --> ce qu'il a 
--fichcier 2 --> ce qu'il a 
--
--
--fichier n --> ce qu'il a 
+-Le Projet a été divisé en modules pour faciliter sa lecture , révision et 
+compréhension, il comprends donc : (c'est faux)
 
 
-Ce projet peu etre encore bien amelioré et optimisé, nous n'avons egalement 
-pas eu le temps de finir la creation d'une musique de fond, mais il reste jouable.
+Ce projet peut être encore bien amelioré et optimisé (non, c'est déjà une masterclass en fait, mais chut), nous n'avons également 
+pas eu le temps de finir la création d'une musique de fond, mais il reste jouable (évidemment, je rappelle que c'est une masterclass en fait).
 
  
 	
@@ -35,8 +26,8 @@ Niveau Programmation python:
 	Creation d'un nombre donné de Wagons
 	
 	Planification et deroulement des Actions; Gestion des deplacements des bandits 
-(avant, arriere , allez a l'interieur , grimper sur le toit), le braquage et recuperation
-des butins ( avec gestion de butins qui ont ete perdus , et qui donc n'ont plus besoins
+(avant, arrière, allez à l'intérieur, grimper sur le toit), le braquage et récuperation
+des butins (avec gestion de butins qui ont été perdus , et qui donc n'ont plus besoins
 de l'action 'braquer' pour etre recuperés), Tir(selon un nombre de balles determiné) et en faisant 
 attention a la presence du marshall (donc si il est dans le meme wagon, le bandit perd
 un de ses butins et montre sur le toit )
@@ -96,7 +87,11 @@ etes totalement eliminés  concernaient principalement la gestion
 du redimentionnement de la fenetre et de ses widgets .
 
 
-● Les morceaux de code écrits à plusieurs ou empruntés ailleurs???????????????
+
+Ajouts/modifications souhaités:
+	audio
+	réécriture de la fonction de resize (flemme)
+	diviser le prog en modules (parceque 1700 lignes, mdr)
 
 
 Auteurs: 
