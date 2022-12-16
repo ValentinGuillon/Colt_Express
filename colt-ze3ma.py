@@ -66,7 +66,10 @@ class Game(Tk):
     butins = [] # liste de classe Bandit
 
     tempActions = []
-    tempColor = "green"
+    tempColor =[]
+    for color in COLORS:
+        tempColor.append(color)
+    print(tempColor)
     tempName = "nameOeuf"
     
 
@@ -468,10 +471,12 @@ class Game(Tk):
 
 
     def addActions(self, action):
-        Game.tempActions.append(action)
-
+        #Game.tempActions.append(action)
+        newAction = Action(self, self.actionsFrame, action, len(self.tempActions))
+        self.tempActions.append(newAction)
         if len(Game.tempActions) < MAX_ACTIONS :
             if self.btnValidate["state"] == 'normal':
+                
                 self.btnValidate.config(state='disabled') #ce SERA BTN VALIDATE
                 for btn in self.btns:
                     btn.config(state="normal")
@@ -481,8 +486,48 @@ class Game(Tk):
             for btn in self.btns:
                 btn.config(state="disabled")
 
+        self.updateActionsBar()
         print(Game.tempActions)
+        
+    def removeAction(self, actionToRemove):
+        founded = False
+        for action in self.tempActions:
+            if founded:
+                action.column -= 1
+                continue
+            if action == actionToRemove:
+                founded = True
+        
+        if not founded:
+            print("error: action not removed")
+            return
 
+        self.tempActions.remove(actionToRemove)
+        #self.tempActions.remove(actionToRemove)
+        self.updateActionsBar()
+    
+    def updateActionsBar(self):
+        #clear actions bar
+        for widget in self.actionsFrame.grid_slaves(row=0):
+            widget.grid_remove()
+        
+        #fill it
+        for action in Game.tempActions:
+            action.grid(row=0, column=action.column)
+
+        #update "valider" button state
+        if len(self.tempActions) == MAX_ACTIONS:
+            self.btnValidate.config(state='normal')
+        else:
+            self.btnValidate.config(state='disabled')
+
+
+    def clearActionsBar(self):
+        for widget in self.actionsFrame.grid_slaves(row=0):
+            widget.grid_remove()
+        
+        self.tempActions.clear()
+        self.updateActionsBar()
 
     def validateActions(self):
         if self.turn == 1:
@@ -490,13 +535,19 @@ class Game(Tk):
             #print(f"regarde, elle est pas vide {Game.tempActions}")
             bandito = Bandit(self, self.entryName.get(),self.selected_color.get(), actions=Game.tempActions)
             self.bandits.append(bandito)
-            #print(aled.name, aled.color, aled.actions)
             
+            
+            self.tempColor.remove(self.selected_color.get())
+            print(self.tempColor)
             test = self.bandits[self.banditQuiChoisi]
             print(test.name, test.color, test.actions)
             self.entryName.delete(0,END)
             #self.updateCanvasImgs()
             print("hi")
+            
+            self.validationSpace.grid_forget()
+        
+            self.createValidationCanvas()
 
         else:
             self.bandits[self.banditQuiChoisi].actions = self.tempActions
@@ -518,11 +569,11 @@ class Game(Tk):
         else:
             #self.validationSpace.grid_forget()
             #self.createValidationCanvas()
-            self.btnAction.config(state='disabled') #ce SERA BTN VALIDATE
+            self.btnValidate.config(state='disabled') #ce SERA BTN VALIDATE
             for btn in self.btns:
                 btn.config(state="normal")
 
-        #self.validationSpace.grid_forget()
+        
         #self.logSpace.grid(row=9, column=0, columnspan=3)
 
     
@@ -545,7 +596,7 @@ class Game(Tk):
             self.btnValidate = Button(self.validationSpace, text='Validate')
             self.labelTurn.grid(row=0, sticky="nsew")
             self.labelName.grid(row=1, sticky="nsew")
-            self.canvasActions.grid(row=3, sticky="ew")
+            self.canvasActions.grid(row=3, sticky="nsew")
             self.btnValidate.grid(row=4, sticky="nsew")
 
             #create widgets (actions bar, entry for name, colors)
@@ -557,31 +608,49 @@ class Game(Tk):
             self.labelTurn = Label(self.validationSpace,textvariable= self.turn_num, justify=CENTER)
             self.entryName = Entry(self.validationSpace,justify=CENTER,borderwidth=2)
             self.entryName.insert(0,"Enter your Name")
-            self.canvasColor = Canvas(self.validationSpace, bg="red")
-            self.canvasColor.config(height=70, width = 225)
-            self.canvasActions = Canvas(self.validationSpace, bg="blue")
-            self.canvasActions.config(height=70, width = 225)
-            self.btnValidate = Button(self.validationSpace, text='Validate', command=self.validateActions)
+            self.colorFrame = Frame(self.validationSpace, bg ='red')
+            #self.colorFrame.config(height=70,width=225)
+            self.actionsFrame = Frame(self.validationSpace, bg='blue')
+            #self.canvasColor = Canvas(self.validationSpace, bg="red")
+            #self.canvasColor.config(height=70, width = 225)
+            #self.canvasActions = Canvas(self.validationSpace, bg="blue")
+            #self.canvasActions.config(height=70, width = 225)
+            self.btnValidate = Button(self.validationSpace, text='Validate', command=self.validateActions, state='disabled')
 
             self.labelTurn.grid(row=0, sticky="nsew", column = 0)
             self.entryName.grid(row=1, column = 0)
             
             self.entryName.bind("<FocusIn>",self.temp_text)
-            self.canvasColor.grid(row=2, sticky="nsew", column = 0)
-            self.canvasActions.grid(row=3, sticky="nsew", column = 0)
+            self.colorFrame.rowconfigure(0,weight=1)
+            for i in range(len(self.tempColor)):
+                self.colorFrame.columnconfigure(i,weight = 1)
+            self.colorFrame.grid(row=2, column=0, sticky="nsew")
+            self.actionsFrame.rowconfigure(0, weight=1)
+            for i in range(MAX_ACTIONS):
+                self.actionsFrame.columnconfigure(i, weight=1)
+
+            self.actionsFrame.grid(row=3, column=0, columnspan=5,sticky='nsew')
+            # self.canvasColor.grid(row=2, sticky="nsew", column = 0)
+            # self.canvasActions.grid(row=3, sticky="nsew", column = 0)
+            
+            
             self.btnValidate.grid(row=4, sticky="nsew", column = 0)
             
             #-----------Couleurs----------------
+            
             i = 0
             self.selected_color = StringVar()
-            for color in COLORS:
-                rb =Radiobutton(self.canvasColor, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue')
+            for color in self.tempColor:
+                #print(f'\nCouleur: {color}')
+                rb =Radiobutton(self.colorFrame, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue')
+                # rb =Radiobutton(self.canvasColor, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue')
                 rb.config(selectcolor='cadet blue')
                 self.selected_color.set(False)	 
-                rb.grid(row=0, column= i)
+                rb.grid(row=0, column= i,sticky="nsew")
                 i+=1 
                 
-            self.tempColor = self.selected_color
+                
+            #self.tempColor = self.selected_color
             #-------------Fin Couleurs -----------
         self.logSpace.grid_forget()
         self.validationSpace.grid(row=9, column=1, columnspan=3)
@@ -1493,7 +1562,77 @@ class Butin():
 
 
 
+class Action(Frame):
+    def __init__(self, game:Game, actionsFrame:Frame, value:str, column:int):
+        super().__init__(actionsFrame, bg='orange')
+        self.game:Game = game
+        self.column:int = column
+        self.value:str = value
 
+        self.action = Button(self, text=value, command=self.remove)
+        self.left = Button(self, text="<-", command=self.moveLeft)
+        self.right = Button(self, text="->", command=self.moveRight)
+
+        self.action.grid(columnspan=2)
+        self.left.grid(row=1)
+        self.right.grid(row=1, column=1)
+
+
+
+    def __str__(self):
+        return (f'{self.value}:{self.column}')
+
+
+
+    def remove(self):
+        for action in self.game.tempActions:
+            if action == self:
+                self.after(ms=1, func=lambda:self.game.removeAction(self))
+        
+                return
+
+
+
+    def moveRight(self):
+        if (self.column >= MAX_ACTIONS-1) or (self.column >= len(self.game.tempActions)-1):
+            print("Can't move right")
+            return
+
+
+        for i, action in enumerate(self.game.tempActions):
+            if action == self:
+                actionTo = self.game.tempActions[i+1]
+
+                #swap values
+                self.value, actionTo.value = actionTo.value, self.value
+
+                #update Action(s)
+                self.update()
+                actionTo.update()
+
+
+
+    def moveLeft(self):
+        if self.column <= 0:
+            print("Can't move left")
+            return
+
+
+        for i, action in enumerate(self.game.tempActions):
+            if action == self:
+                actionTo = self.game.tempActions[i-1]
+
+                 #swap values
+                self.value, actionTo.value = actionTo.value, self.value
+
+                #update Action(s)
+                self.update()
+                actionTo.update()
+
+
+
+    def update(self):
+        self.action.config(text=self.value)
 
 
 
