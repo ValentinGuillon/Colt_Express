@@ -25,44 +25,29 @@ Niveau Programmation python:
 
 	Creation d'un nombre donné de Wagons
 	
-	Planification et deroulement des Actions; Gestion des deplacements des bandits 
-(avant, arrière, allez à l'intérieur, grimper sur le toit), le braquage et récuperation
-des butins (avec gestion de butins qui ont été perdus , et qui donc n'ont plus besoins
-de l'action 'braquer' pour etre recuperés), Tir(selon un nombre de balles determiné) et en faisant 
-attention a la presence du marshall (donc si il est dans le meme wagon, le bandit perd
-un de ses butins et montre sur le toit )
+	Planification et déroulement des Actions; Gestion des déplacements des bandits (avant, arrière, allez à l'intérieur, grimper sur le toit), le braquage et récuperation des butins (avec gestion de butins qui ont été perdus , et qui donc n'ont plus besoins de l'action 'braquer' pour être recuperés), Tir(selon un nombre de balles determiné) et en faisant attention a la présence du marshall (donc si il est dans le meme wagon, le bandit perd un de ses butins et monte sur le toit)
 	
-	Deplacements aléatoires d'un marshall en partant de la locomotive:
-		D'abord considerer le Marshall comme boolée, present ou non dans un wagon,
-	puis donc le set a True (aprés l'avoir mis a False sur le precedants) de façon a ce qu'il 
-	'avance' ou 'recule' d'un wagon de façon aleatoire ,en ce utilisant  
-	le random. randint de python(dentre 0 et 1 , pour basculer entre les conditions) tout en faisant
-	attention au limites du train.
+	Déplacements aléatoires d'un marshall en partant de la locomotive:
+		D'abord considérer le Marshall comme booléne, présent ou non dans un wagon, puis le set a True (aprés l'avoir mis a False sur le précedents) de façon à se qu'il 'avance' ou 'recule' d'un wagon de façon aléatoire, en utilisant le random.randint de python (entre 0 et 1, pour basculer entre les conditions) tout en faisant attention aux limites du train.
 
-	Implementation d'un compte rendu en temps reel (log) des actions 
-effectuées .
+	Implémentation d'un compte rendu en temps reel (log) des actions effectuées.
 	Ajout de Butins des 3 sortes : Bourse{100,200}, Bijoux{500}, magot{1000}
 
 
 Niveau Programmation Interface:
-
-
-	Ajout des boutons des Actions , et celui qui les lances (boutton Action)
-	Mise a jours de l'affichage de chaque deplacement du bandit/Marshall ( on les 
-vois bouger).
-	Affichage en temps reel du compte-rendu su la sortie standard
+	Ajout des boutons des Actions, et celui qui les lancent (bouton Action)
+	Mise à jour de l'affichage de chaque déplacement du bandit/Marshall  (on les voit bouger).
 
 
 
-Respect des consignes de planification des actions 
+Respect des consignes de planification des actions
 
-Gestion du multijoueurs ( avec les consignes )
+Gestion du multijoueurs (avec les consignes)
 
 
 ●Bonus:
-	- Gestion de sauvegarde de partie 
-	-Menu principal donnant la possibilité de jouer une nouvelle partie ,en reprendre 
-un ancienne , voir les credits ou quitter .
+	- Gestion de sauvegarde de partie (imcomplet, il faut ajouter de nouvelles variables)
+	- Menu principal donnant la possibilité de jouer une nouvelle partie ,en reprendre un ancienne , voir les credits ou quitter .
 	-Choix des parametre de jeux au menu demarrer(Nb_joueurs , nb_balles.....)
 	- Gestion differentes des Actions (echanger ou supprimer)
 	-CHoix de couleurs de bandits et leurs creation en utilisant un system de layers
@@ -92,6 +77,7 @@ Ajouts/modifications souhaités:
 	audio
 	réécriture de la fonction de resize (flemme)
 	diviser le prog en modules (parceque 1700 lignes, mdr)
+	Ajout de butons ( un oublie a vrai dire ...)
 
 
 Auteurs: 
