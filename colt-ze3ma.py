@@ -1411,7 +1411,7 @@ class Bandit():
             self.position['y'] = 1
 
         
-        self.game.insertTextInLog(f"{self.name} has moved {action}\n",self.color)
+        self.game.insertTextInLog(f"{self.name} moves {action}\n",self.color)
 
         self.checkForButin()
 
