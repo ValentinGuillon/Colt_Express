@@ -556,8 +556,8 @@ class Game(Tk):
             self.bandits[self.banditQuiChoisi].actions = tempActions
 
             #reset Name and Color values of Validation Canvas
-            self.tempColor.remove(self.selected_color.get())
-            self.entryName.delete(0,END)
+            #self.tempColor.remove(self.selected_color.get())
+            #self.entryName.delete(0,END)
             
             #suppression et recréation du Validation Canvas
             self.validationSpace.grid_forget()
@@ -633,7 +633,7 @@ class Game(Tk):
             #-----------Couleurs----------------
             self.selected_color = StringVar()
             for i, color in enumerate(self.tempColor):
-                rb = Radiobutton(self.colorFrame, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue')
+                rb = Radiobutton(self.colorFrame, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue',selectcolor='cadet blue')
                 self.selected_color.set(False)	 
                 rb.grid(row=0, column= i,sticky="nsew")
 
@@ -1011,7 +1011,7 @@ class Game(Tk):
                             xOffsetButin -= (((widthWagon*0.6) // nbButins) + ((i * ((widthWagon*0.6) // nbButins)))) //2
 
                         #décalage y
-                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 1% * 0 ou 1 ou 2
+                        yOffsetButin -= (heightWagon*0.005) * (i%3) #réhaussement de 0.005% * 0 ou 1 ou 2
 
                     else: #bracable == True
                         #décalage selon le nombre de butins dans le même wagon
