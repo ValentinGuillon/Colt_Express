@@ -591,13 +591,19 @@ class Game(Tk):
         if self.turn > 1:
             self.labelTurn = Label(self.validationSpace, textvariable=self.turn_num, justify=CENTER)
             self.labelName = Label(self.validationSpace)
-            self.canvasActions = Canvas(self.validationSpace, bg="blue")
-            self.canvasActions.config(height=70, width = 225)
+            self.actionsFrame = Frame(self.validationSpace, bg='blue')
+            #self.canvasActions = Canvas(self.validationSpace, bg="blue")
+            #self.canvasActions.config(height=70, width = 225)
             self.btnValidate = Button(self.validationSpace, text='Validate')
             self.labelTurn.grid(row=0, sticky="nsew")
             self.labelName.grid(row=1, sticky="nsew")
-            self.canvasActions.grid(row=3, sticky="nsew")
+            #self.canvasActions.grid(row=3, sticky="nsew")
             self.btnValidate.grid(row=4, sticky="nsew")
+            self.actionsFrame.rowconfigure(0, weight=1)
+            for i in range(MAX_ACTIONS):
+                self.actionsFrame.columnconfigure(i, weight=1)
+
+            self.actionsFrame.grid(row=3, column=0, columnspan=5,sticky='nsew')
 
             #create widgets (actions bar, entry for name, colors)
 
