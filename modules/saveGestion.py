@@ -1,31 +1,70 @@
+"""
+SAVE STRUCTURE :
+
+nbPlayers, nbWagons, nbTurns, currentTurn, marshallDirection, preparation(bool), maxActions, nbButins
+(wagons:)
+index, type, marshall
+...
+(bandit:)
+name, color, x, y, actions..., nbBullets
+...
+(butins:)
+type, value, x, y, bracable
+...
+
+"""
+
 
 def loadSave():
+    gamedatas = []
+        # 0:number of players
+        # 1:number of turns
+        # 2:current turn
+        # 3:number of wagons
+        # 4:max number of actions
+        # 5:marshallDirection(str)
+        # 6:preparation(bool)
+        # 7:number of butins (dont return)
 
-    nbPlayers = 0
-    nbButinsTotal = 0 #value not returned
+
     wagons = []
     bandits = []
     butins = []
 
 
     #extract datas
-    i = 1
-    j = 0
+    filePart = 1 #1=game's datas, 2=wagons, 3=bandits, 4=butins
+    j = 0 #nb of line in part 2, 3 and 4
     with open('saves/save.txt', 'rt') as file:
         for line in file:
-            # print(i, line)
             data = ""
 
-            if i == 1: #nb players
-                nbPlayers = int(line)
-                i += 1
+            if filePart == 1: #nbPlayers, nbWagons, nbTurns, currentTurn, marshallDirection, preparation, nbButins(dont return), maxActions
+                for char in line:
+                    if char == '\n':
+                        gamedatas.append(''.join(data))
+                        break
+                    if char == ',':
+                        gamedatas.append(''.join(data))
+                        data = []
+                        continue
+                    data += char
 
-            elif i == 2: #nb butins
-                nbButinsTotal = int(line)
-                i += 1
+                #convert data
+                for i, val in enumerate(gamedatas):
+                    if val == 'True':
+                        val = True
+                    elif val == 'False':
+                        val = False
+
+                    gamedatas[i] = val
+                
+                filePart += 1
 
 
-            elif i == 3: #wagons
+
+
+            elif filePart == 2: #wagons
                 datas = []
                 for char in line:
                     if char == '\n':
@@ -33,19 +72,19 @@ def loadSave():
                         break
                     if char == ',':
                         datas.append(''.join(data))
-                        data = []
+                        data = ""
                         continue
                     data += char
                 
                 wagons.append(datas)
                 j += 1
 
-                if j == nbPlayers + 1:
-                    i += 1
+                if j == int(gamedatas[3]) + 1:
+                    filePart += 1
                     j = 0
 
 
-            elif i == 4: #bandits
+            elif filePart == 3: #bandits
                 datas = []
                 for char in line:
                     if char == '\n':
@@ -53,18 +92,19 @@ def loadSave():
                         break
                     if char == ',':
                         datas.append(''.join(data))
-                        data = []
+                        data = ""
                         continue
                     data += char
                 
                 bandits.append(datas)
                 j += 1
 
-                if j == nbPlayers:
-                    i += 1
+                if j == int(gamedatas[0]):
+                    filePart += 1
                     j = 0
 
-            elif i == 5: #butins
+
+            elif filePart == 4: #butins
                 datas = []
                 for char in line:
                     if char == '\n':
@@ -72,17 +112,16 @@ def loadSave():
                         break
                     if char == ',':
                         datas.append(''.join(data))
-                        data = []
+                        data = ""
                         continue
                     data += char
                 
                 butins.append(datas)
                 j += 1
 
-                if j == nbButinsTotal:
-                    i += 1
+                if j == int(gamedatas[-1]):
+                    filePart += 1
                     j = 0
-
 
 
 
@@ -115,18 +154,17 @@ def loadSave():
     
 
 
-    return nbPlayers, wagons, bandits, butins
+    return int(gamedatas[0]), int(gamedatas[1]), int(gamedatas[2]), int(gamedatas[3]), int(gamedatas[4]), gamedatas[5], gamedatas[6], wagons, bandits, butins
 
 
 
 
 
 
-def save(nbPlayers, wagons, bandits, butins):
+def save(nbPlayers:int, nbTurns:int, currentTurn:int, nbWagons:int, maxActions:int, marshallDirection:bool, preparationPhase:bool, wagons:list, bandits:list, butins:list):
 
     with open('saves/save.txt', 'w') as file:
-        file.write(f'{nbPlayers}\n')
-        file.write(f'{len(butins)}\n')
+        file.write(f'{nbPlayers},{nbTurns},{currentTurn},{nbWagons},{maxActions},{marshallDirection},{preparationPhase},{len(butins)}\n')
 
         for wagon in wagons:
             y = wagon.xPosition
@@ -141,7 +179,7 @@ def save(nbPlayers, wagons, bandits, butins):
             actions = ''
             for i, action in enumerate(bandit.actions):
                 actions += action
-                if i < len(bandit.actions):
+                if i < len(bandit.actions) -1:
                     actions += ','
             bullets = bandit.bullets
 
@@ -157,72 +195,50 @@ def save(nbPlayers, wagons, bandits, butins):
 
 
 
+def saveIsEmpty() -> bool:
+    with open('saves/save.txt', 'rt') as file:
+        for line in file:
+            for char in line:
+                if char == '\n':
+                    return True
+                else:
+                    return False
+
+    return True
 
 
-"""
-4
-10
-0,loco,False
-...
-Clément,green,4,0,up,shoot,left,down,rob,left,3
-...
-magot,1000,2,out,False
-...
-
-"""
+def emptySave():
+    with open('saves/save.txt', 'w') as file:
+        file.write(f'\n')
 
 
 
 
 
 
+# nbPlayers, nbTurns, currentTurn, nbWagons, nbActions, marshallDirection, preparation, wagons, bandits, butins  = loadSave()
 
-# b, c, d, e = loadSave()
 
+# print('nbPlayers =', nbPlayers)
+# print("nbTurns =", nbTurns)
+# print("currentTurn =", currentTurn)
+# print('nbWagons =', nbWagons)
+# print("marshallDirection =", marshallDirection)
+# print("preparation =", preparation)
+# print("nbActions =", nbActions)
+# print("nbButins =", len(butins))
 
-# print(b)
-
-# for n in c:
+# print('\nWagons================\n')
+# for n in wagons:
 #     print(n)
 # print()
 
-# for n in d:
+# print('\nBandits================\n')
+# for n in bandits:
 #     print(n)
 # print()
 
-# for n in e:
+# print('\nButins================\n')
+# for n in butins:
 #     print(n)
 # print()
-
-
-# print(d[0][4:-1])
-
-
-
-"""
-Wagon
-    self.xPosition = x
-    self.marshall = False
-    self.type = type #'loco' ou 'wagon' or 'queue'
-    self.bandits = []
-    self.butins = []
-
-Bandit
-    self.name = name
-    self.color = color
-    self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
-    self.actions = [] #comment on décrit une action ? (ex: 0=droite, ...5 = tirer)
-    self.game = game
-    self.img = None
-    self.butins = []
-    self.bullets = MAX_BULLETS
-
-Butin
-    self.game = game
-    self.type = type
-    self.value = random.choice(Butin.lootValues[type])
-    self.position = {'x':x, 'y':'in'} #y = 'in' or 'out' or '{banditName}'
-    # self.inOut = 1 #1 = interieur,0 = toit
-    self.bracable = True
-    self.img = None
-"""

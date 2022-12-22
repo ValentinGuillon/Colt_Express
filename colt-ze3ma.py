@@ -1,114 +1,59 @@
 import random
 from tkinter import *
-from PIL import Image, ImageTk #pour l'import et la modification d'images
+from typing import Literal
 import modules.saveGestion as saveGestion
-
-
-global NB_JOUEURS 
-global NB_WAGONS
-global NB_TOURS
-global MAX_ACTIONS
-global MAX_BULLETS
-global LOAD_SAVE
-global COLORS
-global WIDGET_COLORS
-
-
-NB_JOUEURS = 4
-NB_WAGONS = NB_JOUEURS
-NB_TOURS = 3
-MAX_ACTIONS = NB_JOUEURS * 2
-MAX_BULLETS = (NB_JOUEURS // 2) + 1
-
-LOAD_SAVE = FALSE
-
-COLORS = {"red":(255, 0, 0),
-          "orange":(255, 128, 0),
-          "yellow":(255, 255, 0),
-          "green":(0, 255, 0),
-          "blue":(0, 0, 255)}
-
-WIDGET_COLORS = {"red":"#b13001",
-                 "redLight":"#ca3904",
-                 "sand":"#c1880b",
-                 "train":"#723f02"}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+import modules.images as images
+from modules.wagon import Wagon
+from modules.bandit import Bandit
+from modules.butin import Butin
+from modules.action import Action
 
 
 
 
 
 class Game(Tk):
-    wagons = [] # liste de classe Wagon
-    bandits = [] # liste de classe Bandit
-    butins = [] # liste de classe Butin
+    #globales
+    NB_JOUEURS = 4
+    NB_WAGONS = 4
+    NB_TOURS = 3
+    MAX_ACTIONS = int(NB_JOUEURS * 1.5)
+    MAX_BULLETS = NB_JOUEURS * 3
+    MIN_BUTINS = 1
+    MAX_BUTINS = 4
+
+    LOAD_SAVE = FALSE
+
+    COLORS:dict[tuple[int]] = {
+        'red':    (255, 0, 0),
+        'orange': (255, 128, 0),
+        'yellow': (255, 255, 0),
+        'green':  (0, 255, 0),
+        'blue':   (0, 0, 255)}
+
+    WIDGET_COLORS:dict[str] = {
+        'red':           '#b13001',
+        'redLight':      '#ca3904',
+        'sand':          '#c1880b',
+        'train':         '#723f02',
+        'road':          '#e5b13f',
+        'moutainShadow': '#976700'}
+
+
+
+    wagons:Wagon = []
+    bandits:Bandit = []
+    butins:Bandit = []
 
     #lists used during preparation phase
-    tempName = "nameOeuf"
-    tempColor = []
-    tempActions = [] #liste de classe Action (qui permet de reconfigurer l'ordre des actions d'un bandit)
-
-    #fill tempColor
-    for color in COLORS:
-        tempColor.append(color)
+    tempName:str = ""
+    tempColor:list[str] = []
+    tempActions:list[Action] = [] #liste de classe Action (qui permet de reconfigurer l'ordre des actions d'un bandit)
 
 
-    
-    #listes "stockant" ce qui est dessiné sur un Canvas (afin de les pouvoir les supprimer par la suite)
-    imgsOnCanvasPlaySpace = []
-    imgsOnCanvasMenuSpace = []
+    #liste "stockant" ce qui est dessiné sur un Canvas (afin de les pouvoir les supprimer par la suite)
+    imgsOnCanvasPlaySpace:list[int] = []
 
-
-    #chargement de toutes les images
-    #certaines images ont un % en commentaire, % par rapport à un wagon
-    imgPaysage = Image.open("png/landscape.png")
-
-    imgRight = Image.open('png/menuSpace_button_arrow_right.png')
-    imgLeft = Image.open('png/menuSpace_button_arrow_left.png')
-    imgUp = Image.open('png/menuSpace_button_arrow_up.png')
-    imgDown = Image.open('png/menuSpace_button_arrow_down.png')
-    imgShoot = Image.open('png/menuSpace_button_shoot.png')
-    imgRob = Image.open('png/menuSpace_button_rob.png')
-
-    imgLoco = Image.open('png/loco_v2.png') #width = 200%
-    imgWagon = Image.open('png/wagon_v2.png')
-    imgQueue = Image.open('png/queue_v2.png')
-
-    imgBourse = Image.open("png/bourse_v2.png") #width = 13%, height = 11%
-    imgBijoux = Image.open("png/bijoux_v1.png") #width = 7%, height = 6%
-    imgMagot = Image.open("png/magot_v1.png") #width = 35%, height = 20%
-
-    imgMarshall = Image.open('png/marshall_v1.png') #width = 26%, height = 42%
-
-    imgBody = Image.open("png/bandit_body_v1.png") #width = 26%, height = 42%
-    imgDetails = Image.open("png/bandit_details_v1.png") #width = 26%, height = 42%
-
-    imgIconMinution = Image.open("png/icone_munition_v1.png")
-    imgIconBourse = Image.open("png/icone_bourse_v1.png")
-    imgIconBanditBody = Image.open("png/icone_bandit_body_v1.png")
-    imgIconBanditDetails = Image.open("png/icone_bandit_details_v1.png")
 
 
 
@@ -116,145 +61,452 @@ class Game(Tk):
         super().__init__()
 
         #window parameters
-        self.title("Colt Zeʁma")
-        self.geometry("900x415")
-        self.columnconfigure(0, weight = 1)
+        self.title('Colt Zeʁma')
+        self.geometry('900x415')
+        self.config(bg=Game.WIDGET_COLORS['sand'])
+
+        #configures row/column weight, to make Canvas expands inside all window's space
+        self.columnconfigure(0, weight=1)
         self.rowconfigure(0, weight=1)
 
-        #icon d'application
-        img = ImageTk.PhotoImage(Image.open('train.ico'))
+        #icon de l'application
+        img = images.createLoadedImg(128, 128, images.imgIcon)
         self.call('wm', 'iconphoto', self._w, img)
 
 
-        #var de choix des actions
+        #variables de choix des actions
         self.currentTurn = 1
         self.action = 1 #only used to insert in Log while Actions phase
         self.banditQuiChoisi = 0
+        self.marshallDirection = 'right'
 
 
-        # createMainMenuCanvas
-        self.createMainMenuCanvas()
+        # createMainMenu
+        self.createMainMenu()
 
 
 
-
-    def resizeMenusBackground(self, canvas):
-        self.img = Game.createLoadedImg(canvas.winfo_width(), canvas.winfo_height(), Game.imgPaysage)
+    #resizes the background of Menus when the window is resized
+    def resizeMenusBackground(self, canvas:Canvas):
+        self.img = images.createLoadedImg(canvas.winfo_width(), canvas.winfo_height(), images.imgPaysage)
         canvas.create_image(0, 0, image=self.img, anchor='nw')
+
+
+    def configWidgets(self, widgetType:Literal['Button', 'Label', 'Entry'], widgets:list[Widget]):
+        if widgetType == 'Button':
+            for btn in widgets:
+                btn.config(highlightthickness=0, border=2, bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'], activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'], disabledforeground=Game.WIDGET_COLORS['moutainShadow'])
+
+        elif widgetType == 'Label':
+            for label in widgets:
+                label.config(bg=Game.WIDGET_COLORS['road'], fg=Game.WIDGET_COLORS['train'])
+
+        elif widgetType == 'Entry':
+            for entry in widgets:
+                entry.config(border=1, highlightthickness=0, justify='right', width=5, bg=Game.WIDGET_COLORS['road'], fg=Game.WIDGET_COLORS['train'])
+        
+        else:
+            print(f'ERROR: in configWidgets:\n    "{widgetType}" doesnt exist (allowed: "Button", "Label", "Entry")')
+            exit()
 
 
     #MENU CANVAS CREATION ================================================
 
-    def createMainMenuCanvas(self):
-        self.canvasMainMenu = Canvas(self, bg='red')
+    def createMainMenu(self):
+        #menu Canvas
+        self.canvasMainMenu = Canvas(self)
         self.canvasMainMenu.grid(columnspan=2, sticky='nsew')
-
-        for i in [0, 2]:
-            self.canvasMainMenu.columnconfigure(i, weight = 1)
-        for i in [0, 5]:
-            self.canvasMainMenu.rowconfigure(i, weight = 1)
-
-        #mainMenu buttons
-        self.btnNew = Button(self.canvasMainMenu, text='New', command=self.createNewGameMenuCanvas)
-        self.btnLoad = Button(self.canvasMainMenu, text='Load', command=lambda:self.startGame(loadSave=True))
-        self.btncredits = Button(self.canvasMainMenu, text='Credits', command=self.createCreditsMenuCanvas)
-        self.btnExit = Button(self.canvasMainMenu, text='Exit', command=self.destroy)
-
-        self.btnNew.grid(column=1, row=1, sticky='nsew')
-        self.btnLoad.grid(column=1, row=2, sticky='nsew')
-        self.btncredits.grid(column=1, row=3, sticky='nsew')
-        self.btnExit.grid(column=1, row=4, sticky='nsew')
-
         self.canvasMainMenu.bind('<Configure>', lambda e: self.resizeMenusBackground(self.canvasMainMenu))
 
 
-    def createCreditsMenuCanvas(self):
+        #weight empty rows/columns
+        for i in [0, 4]:
+            self.canvasMainMenu.columnconfigure(i, weight = 1)
+        for i in [1, 3]:
+            self.canvasMainMenu.columnconfigure(i, weight = 1)
+        for i in [0, 9]:
+            self.canvasMainMenu.rowconfigure(i, weight = 3)
+
+        self.canvasMainMenu.rowconfigure(2, weight = 2)
+        self.canvasMainMenu.rowconfigure(5, weight = 1)
+        self.canvasMainMenu.rowconfigure(7, weight = 1)
+
+        #widgets creations
+        self.title = Label(self.canvasMainMenu, text='COLT ZEʁMA', font=60)
+        self.btnNew = Button(self.canvasMainMenu, text='New', command=self.createNewGameMenu)
+        self.btnLoad = Button(self.canvasMainMenu, text='Load', command=self.createLoadGameMenu)
+        self.btncredits = Button(self.canvasMainMenu, text='Credits', command=self.createCreditsMenu)
+        self.btnExit = Button(self.canvasMainMenu, text='Exit', command=self.destroy)
+
+
+        #widgets configuration
+        self.configWidgets('Label', [self.title])
+        self.configWidgets('Button', [self.btnNew, self.btnLoad, self.btncredits, self.btnExit])
+
+        if saveGestion.saveIsEmpty():
+            self.btnLoad.config(state='disabled')
+        else:
+            self.btnLoad.config(state='normal')
+
+        #widgets placement
+        self.title.grid(column=1, row=1, columnspan=3, sticky='nsew', ipady=10)
+        self.btnNew.grid(column=2, row=3, sticky='nsew')
+        self.btnLoad.grid(column=2, row=4, sticky='nsew')
+        self.btncredits.grid(column=2, row=6, sticky='nsew')
+        self.btnExit.grid(column=2, row=8, sticky='nsew')
+
+
+
+
+
+
+    def createCreditsMenu(self):
         self.canvasMainMenu.destroy()
-        self.creditsCanvas = Canvas(self, bg='green')
+
+        #menu Canvas
+        self.creditsCanvas = Canvas(self)
         self.creditsCanvas.grid(columnspan=2, sticky='nsew')
-
-        for i in [0, 2]:
-            self.creditsCanvas.columnconfigure(i, weight = 1)
-        for i in [0, 3]:
-            self.creditsCanvas.rowconfigure(i, weight = 1)
-
-        txt = 'Created by\n\nMaria MESSAOUD-NACER\nValentin GUILLON\n\n\nBased on the game\n"Colt Express"'
-        self.labelCredits = Label(self.creditsCanvas, text=txt, justify='center')
-        self.creditsBtnExit = Button(self.creditsCanvas, text='Return to Main Menu', command=self.exitCreditsMenu)
-
-        self.labelCredits.grid(row=1, column=1, pady=15)
-        self.creditsBtnExit.grid(row=2, column=1, pady=15)
-
         self.creditsCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.creditsCanvas))
 
-
-    def createLoadGameCanvas(self):
-        pass
-        #afficher un aperçu de se que contient la sauvegarde
-
-
-    def createNewGameMenuCanvas(self):
-        self.canvasMainMenu.destroy()
-        self.loadGameCanvas = Canvas(self, bg='green')
-        self.loadGameCanvas.grid(columnspan=2, sticky='nsew')
-
-        for i in [0, 3]:
-            self.loadGameCanvas.columnconfigure(i, weight = 1)
+        #weight of empty rows/columns
+        for i in [0, 2]:
+            self.creditsCanvas.columnconfigure(i, weight=1)
         for i in [0, 6]:
-            self.loadGameCanvas.rowconfigure(i, weight = 1)
-        
-        nbPlayers = IntVar()
-        nbTurns =  IntVar()
-        nbActions =  IntVar()
+            self.creditsCanvas.rowconfigure(i, weight=3)
+        self.creditsCanvas.rowconfigure(2, weight=2)
+        self.creditsCanvas.rowconfigure(4, weight=1)
 
-        nbPlayers.set(2)
-        nbTurns.set(3)
-        nbActions.set(3)
+        #widgets creation
+        creditText = 'Created by\n\nMaria MESSAOUD-NACER\nValentin GUILLON\n\n\nBased on the game\n"Colt Express"'
+        self.title = Label(self.creditsCanvas, text='CREDITS', font=60)
+        self.labelCredits = Label(self.creditsCanvas, text=creditText, justify='center')
+        self.creditsBtnExit = Button(self.creditsCanvas, text='Main Menu', command=lambda:self.returnToMainMenu([self.creditsCanvas]))
 
-        self.labelNbPlayers = Label(self.loadGameCanvas, text='Nombre de joueurs')
-        self.labelNbTurns = Label(self.loadGameCanvas, text='Nombre de tours')
-        self.labelNbActions = Label(self.loadGameCanvas, text="Nombre d'actions par tour")
-        self.entryNbPlayers = Entry(self.loadGameCanvas, textvariable=nbPlayers)
-        self.entryNbTurns = Entry(self.loadGameCanvas, textvariable=nbTurns)
-        self.entryNbActions = Entry(self.loadGameCanvas, textvariable=nbActions)
-        self.launchNewGame = Button(self.loadGameCanvas, text='Start', command=lambda:self.startGame(nbPlayers.get(), nbTurns.get(), nbActions.get()))
-        self.btnExitNewGameMenu = Button(self.loadGameCanvas, text='Return to Main Menu', command=self.exitNewGameMenu)
+        #widgets default configuration
+        self.configWidgets('Label', [self.title, self.labelCredits])
+        self.configWidgets('Button', [self.creditsBtnExit])
 
-        self.labelNbPlayers.grid(row=1, column=1, sticky='e')
-        self.labelNbTurns.grid(row=2, column=1, sticky='e')
-        self.labelNbActions.grid(row=3, column=1, sticky='e')
-        self.entryNbPlayers.grid(row=1, column=2, sticky='w')
-        self.entryNbTurns.grid(row=2, column=2, sticky='w')
-        self.entryNbActions.grid(row=3, column=2, sticky='w')
-        self.launchNewGame.grid(row=4, column=1, columnspan=2, sticky='ew')
-        self.btnExitNewGameMenu.grid(row=5, column=1, columnspan=2, sticky='ew')
+        #widgets placement
+        self.title.grid(column=1, row=1, sticky='nsew', ipady=10)
+        self.labelCredits.grid(row=3, column=1, pady=15, ipadx=15, ipady=10)
+        self.creditsBtnExit.grid(row=5, column=1, pady=15)
 
+
+
+
+    def createLoadGameMenu(self):
+        #afficher un aperçu de ce que contient la sauvegarde
+        self.canvasMainMenu.destroy()
+
+        #menuCanvas
+        self.loadGameCanvas = Canvas(self)
+        self.loadGameCanvas.grid(columnspan=2, sticky='nsew')
         self.loadGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.loadGameCanvas))
 
+        #weight empty rows/columns
+        for i in [0, 6]:
+            self.loadGameCanvas.columnconfigure(i, weight = 4)
+        for i in [1, 5]:
+            self.loadGameCanvas.columnconfigure(i, weight = 3)
+        for i in [2, 4]:
+            self.loadGameCanvas.columnconfigure(i, weight = 1)
+        self.loadGameCanvas.columnconfigure(3, weight = 1)
+
+        for i in [0, 8]:
+            self.loadGameCanvas.rowconfigure(i, weight = 4)
+        self.loadGameCanvas.rowconfigure(2, weight = 3)
+        self.loadGameCanvas.rowconfigure(4, weight = 1)
+        self.loadGameCanvas.rowconfigure(6, weight = 2)
 
 
-    def createEndGameMenuCanvas(self, text):
+        #Canvas for Label(s) and Entry(s)
+        self.gameInfosSpace = Frame(self.loadGameCanvas, bg=Game.WIDGET_COLORS['road'])
+        self.gameInfosSpace.grid(row=3, column=1, columnspan=2, sticky='news', ipady=10)
+        self.playersInfosSpace = Frame(self.loadGameCanvas, bg=Game.WIDGET_COLORS['road'])
+        self.playersInfosSpace.grid(row=3, column=4, columnspan=2, sticky='news', ipady=10)
+
+
+        #load saved game's data
+        _, nbTurns, currentTurn, nbWagons, maxActions, _, preparation, _, tempBandits, tempButins = saveGestion.loadSave()
+
+        #on compte les butins de chaque bandits
+        nbButinsOfBandits = []
+        for banditElements in tempBandits:
+            name = banditElements[0]
+            ammount = 0
+            for butinElements in tempButins:
+                if butinElements[3] == name:
+                    ammount += 1
+            nbButinsOfBandits.append(ammount)
+
+        #weight empty rows/columns
+            #game's datas Space
+        for i in [0, 4]:
+            self.gameInfosSpace.columnconfigure(i, weight = 1)
+        self.gameInfosSpace.columnconfigure(2, weight = 3)
+        for i in [0, 2, 7]:
+            self.gameInfosSpace.rowconfigure(i, weight = 1)
+
+            #players' infos Space
+        for i in [0, 4]:
+            self.playersInfosSpace.columnconfigure(i, weight = 1)
+        self.playersInfosSpace.columnconfigure(2, weight = 3)
+        for i in [0, 2, 2+len(tempBandits)+1]:
+            self.playersInfosSpace.rowconfigure(i, weight = 1)
+
+
+        #widgets creation
+        self.title = Label(self.loadGameCanvas, text='LOAD GAME', font=60)
+        self.launchLoadedGame = Button(self.loadGameCanvas, text='Load', command=lambda:self.startGame(self.loadGameCanvas, loadSave=True))
+        self.btnExitNewGameMenu = Button(self.loadGameCanvas, text='Main Menu', command=lambda:self.returnToMainMenu([self.loadGameCanvas]))
+
+            #game's datas Space
+        self.titleGameDatas = Label(self.gameInfosSpace, text="GAME'S INFOS")
+        self.labelNbTurns = Label(self.gameInfosSpace, text=f'Turn {currentTurn}/{nbTurns}')
+        self.labelPhase = Label(self.gameInfosSpace)
+        self.labelNbWagons = Label(self.gameInfosSpace, text=f'{nbWagons} wagons')
+        self.labelNbActions = Label(self.gameInfosSpace, text=f'{maxActions} actions by turns')
+
+            #players' infos Space
+        self.titlePlayersInfos = Label(self.playersInfosSpace, text='PLAYERS')
+
+        self.loadGamePlayersLabels:list[Label] = []
+        for i, banditElements in enumerate(tempBandits):
+            #banditElement = [<name>, <color>, <x>, <y>, <action>..., <bullets>]
+            name = banditElements[0]
+            nbButins = nbButinsOfBandits[i]
+            nbBullets = banditElements[-1]
+            text = f'{name}: {nbButins} butins, {nbBullets} bullets'
+
+            labelPlayer = Label(self.playersInfosSpace, text=text)
+            self.configWidgets('Label', [labelPlayer])
+            labelPlayer.config(fg=banditElements[1])
+
+
+            self.loadGamePlayersLabels.append(labelPlayer)
+
+
+        #widgets default configurations
+        if preparation:
+            self.labelPhase.config(text='Phase: Preparation')
+        else:
+            self.labelPhase.config(text='Phase: Action')
+
+        self.configWidgets('Label', [self.title, self.titleGameDatas, self.labelNbTurns, self.labelPhase, self.labelNbWagons, self.labelNbActions, self.titlePlayersInfos])
+        self.configWidgets('Button', [self.launchLoadedGame, self.btnExitNewGameMenu])
+
+
+        #widgets placement
+        self.title.grid(row=1, column=1, columnspan=5, sticky='nsew', ipady=10)
+        self.launchLoadedGame.grid(row=5, column=2, columnspan=3, sticky='ew')
+        self.btnExitNewGameMenu.grid(row=7, column=2, columnspan=3, sticky='ew')
+
+            #game's datas Space
+        self.titleGameDatas.grid(row=1, column=1, columnspan=3, sticky='news')
+        self.labelNbTurns.grid(row=3, column=2, sticky='news')
+        self.labelPhase.grid(row=4, column=2, sticky='news')
+        self.labelNbWagons.grid(row=5, column=2, sticky='news')
+        self.labelNbActions.grid(row=6, column=2, sticky='news')
+
+            #players' infos Space
+        self.titlePlayersInfos.grid(row=1, column=1, columnspan=3, sticky='news')
+
+        add = 2
+        for i, label in enumerate(self.loadGamePlayersLabels, start=1):
+            label.grid(row=add+i, column=2, sticky='news')
+
+
+
+
+
+
+
+    def createNewGameMenu(self):
+        self.canvasMainMenu.destroy()
+
+        #menuCanvas
+        self.newGameCanvas = Canvas(self)
+        self.newGameCanvas.grid(columnspan=2, sticky='nsew')
+        self.newGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.newGameCanvas))
+
+        #weight empty rows/columns
+        for i in [0, 4]:
+            self.newGameCanvas.columnconfigure(i, weight = 4)
+        for i in [1, 3]:
+            self.newGameCanvas.columnconfigure(i, weight = 1)
+        for i in [0, 8]:
+            self.newGameCanvas.rowconfigure(i, weight = 4)
+        self.newGameCanvas.rowconfigure(2, weight = 3)
+        self.newGameCanvas.rowconfigure(4, weight = 1)
+        self.newGameCanvas.rowconfigure(6, weight = 2)
+
+
+        #Canvas for Label(s) and Entry(s)
+        self.labEntrySpace = Frame(self.newGameCanvas, bg=Game.WIDGET_COLORS['road'])
+        self.labEntrySpace.grid(row=3, column=1, columnspan=3, sticky='news', ipady=10)
+
+        #weight empty rows/columns
+        for i in [0, 6]:
+            self.labEntrySpace.columnconfigure(i, weight = 1)
+        for i in [0, 8]:
+            self.labEntrySpace.rowconfigure(i, weight = 1)
+
+        #variable for game's datas
+        nbPlayers = IntVar()
+        nbWagons = IntVar()
+        nbTurns = IntVar()
+        nbActions = IntVar()
+        minButins = IntVar()
+        maxButins = IntVar()
+        nbBullets = IntVar()
+        nbPlayers.set(4)
+        nbWagons.set(4)
+        nbTurns.set(6)
+        nbActions.set(6)
+        minButins.set(1)
+        maxButins.set(4)
+        nbBullets.set(12)
+
+        #widgets creation
+        self.title = Label(self.newGameCanvas, text='NEW GAME', font=60)
+
+        self.labelNbPlayers = Label(self.labEntrySpace, text=' joueurs')
+        self.labelNbWagons = Label(self.labEntrySpace, text=' wagons')
+        self.labelNbTurns = Label(self.labEntrySpace, text=' tours')
+        self.labelNbActions = Label(self.labEntrySpace, text=' actions par tour')
+        self.labelMinButins = Label(self.labEntrySpace, text=' butins par wagon (min)')
+        self.labelMaxButins = Label(self.labEntrySpace, text=' butins par wagon (max)')
+        self.labelNbBullets = Label(self.labEntrySpace, text=' bullets')
+
+        self.entryNbPlayers = Entry(self.labEntrySpace, textvariable=nbPlayers)
+        self.entryNbWagons = Entry(self.labEntrySpace, textvariable=nbWagons)
+        self.entryNbTurns = Entry(self.labEntrySpace, textvariable=nbTurns)
+        self.entryNbActions = Entry(self.labEntrySpace, textvariable=nbActions)
+        self.entryMinButins = Entry(self.labEntrySpace, textvariable=minButins)
+        self.entryMaxButins = Entry(self.labEntrySpace, textvariable=maxButins)
+        self.entryNbBullets = Entry(self.labEntrySpace, textvariable=nbBullets)
+
+        self.launchNewGame = Button(self.newGameCanvas, text='Start', command=lambda:self.startGame(self.newGameCanvas, nbPlayers.get(), nbWagons.get(), nbTurns.get(), nbActions.get(), minButins.get(), maxButins.get(), nbBullets.get()))
+        self.btnExitNewGameMenu = Button(self.newGameCanvas, text='Return to Main Menu', command=lambda:self.returnToMainMenu([self.newGameCanvas]))
+
+        #widgets default configurations
+        self.configWidgets('Label', [self.title, self.labelNbPlayers, self.labelNbWagons, self.labelNbTurns, self.labelNbActions, self.labelMinButins, self.labelMaxButins, self.labelNbBullets])
+        self.configWidgets('Entry', [self.entryNbPlayers, self.entryNbWagons, self.entryNbTurns, self.entryNbActions, self.entryMinButins, self.entryMaxButins, self.entryNbBullets])
+        self.configWidgets('Button', [self.launchNewGame, self.btnExitNewGameMenu])
+
+
+        #widgets placement
+        self.title.grid(row=1, column=1, columnspan=3, sticky='nsew', ipady=10)
+
+        self.labelNbPlayers.grid(row=1, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelNbWagons.grid(row=2, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelNbTurns.grid(row=3, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelNbActions.grid(row=4, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelMinButins.grid(row=5, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelMaxButins.grid(row=6, column=3, columnspan=2, sticky='w', pady=2)
+        self.labelNbBullets.grid(row=7, column=3, columnspan=2, sticky='w', pady=2)
+
+        self.entryNbPlayers.grid(row=1, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryNbWagons.grid(row=2, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryNbTurns.grid(row=3, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryNbActions.grid(row=4, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryMinButins.grid(row=5, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryMaxButins.grid(row=6, column=1, columnspan=2, sticky='e', pady=2)
+        self.entryNbBullets.grid(row=7, column=1, columnspan=2, sticky='e', pady=2)
+
+        self.launchNewGame.grid(row=5, column=2, sticky='ew')
+        self.btnExitNewGameMenu.grid(row=7, column=2, sticky='ew')
+
+
+
+    def createEndGameMenu(self, indexWinners:list[int], playersNameAndResult:list[list[str]]):
         self.playSpace.destroy()
         self.menuSpace.destroy()
 
-        self.endGameMenu = Canvas(self, bg='red')
-        self.endGameMenu.grid(columnspan=2, sticky='nsew')
+        #menu Canvas
+        self.endGameMenuCanvas = Canvas(self, bg='red')
+        self.endGameMenuCanvas.grid(columnspan=2, sticky='nsew')
+        self.endGameMenuCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.endGameMenuCanvas))
 
-        for i in [0, 2]:
-            self.endGameMenu.columnconfigure(i, weight = 1)
+        #weight empty rows/columns
         for i in [0, 4]:
-            self.endGameMenu.rowconfigure(i, weight = 1)
+            self.endGameMenuCanvas.columnconfigure(i, weight=4)
+        for i in [1, 3]:
+            self.endGameMenuCanvas.columnconfigure(i, weight=1)
+        for i in [0, 6]:
+            self.endGameMenuCanvas.rowconfigure(i, weight=4)
+        self.endGameMenuCanvas.rowconfigure(2, weight=2)
+        self.endGameMenuCanvas.rowconfigure(4, weight=1)
 
-        #mainMenu buttons
-        self.label = Label(self.endGameMenu, text=text, justify=CENTER)
-        self.btnExitToMainMenu = Button(self.endGameMenu, text='Return to Main Menu', command=self.exitEndGameMenu)
-        self.btnExit = Button(self.endGameMenu, text='Exit', command=self.destroy)
+        #Canvas for Label(s) and Entry(s)
+        self.resultSpace = Frame(self.endGameMenuCanvas, bg=Game.WIDGET_COLORS['road'])
+        self.resultSpace.grid(row=1, column=1, columnspan=3, sticky='news', ipady=10)
+        nbRows = 1 + 1 + len(indexWinners) + 1 + 1 + Game.NB_JOUEURS + 1 #empty + winnerLabel + Xlabels + empty + resultsLabel + empty
 
-        self.label.grid(column=1, row=1, sticky='nsew')
-        self.btnExitToMainMenu.grid(column=1, row=2, sticky='nsew')
-        self.btnExit.grid(column=1, row=3, sticky='nsew')
+        #weight empty rows/columns
+        for i in [0, 5]:
+            self.resultSpace.columnconfigure(i, weight = 1)
+        for i in [0, nbRows]:
+            self.resultSpace.rowconfigure(i, weight = 2)
+        self.resultSpace.rowconfigure((2 + len(indexWinners)) - 1, weight=2)
 
-        self.endGameMenu.bind('<Configure>', lambda e: self.resizeMenusBackground(self.endGameMenu))
+
+        #widgets creations
+        nameLabels:list[Label] = []
+        resultLabels:list[Label] = []
+
+        self.winnerLabel = Label(self.resultSpace, justify=CENTER)
+        self.ResultLabel = Label(self.resultSpace, text='Results', justify=CENTER)
+
+        for iWinner in indexWinners:
+            nameLabel = Label(self.resultSpace, text=playersNameAndResult[0][iWinner], justify='right')
+            resultLabel = Label(self.resultSpace, text=playersNameAndResult[1][iWinner], justify='left')
+            nameLabels.append(nameLabel)
+            resultLabels.append(resultLabel)
+        
+        for iPlayer in range(Game.NB_JOUEURS):
+            nameLabel = Label(self.resultSpace, text=playersNameAndResult[0][iPlayer], justify='right')
+            resultLabel = Label(self.resultSpace, text=playersNameAndResult[1][iPlayer], justify='left')
+            nameLabels.append(nameLabel)
+            resultLabels.append(resultLabel)
+
+
+        self.btnExitToMainMenu = Button(self.endGameMenuCanvas, text='Return to Main Menu', command=lambda:self.returnToMainMenu([self.endGameMenuCanvas]))
+        self.btnExit = Button(self.endGameMenuCanvas, text='Exit', command=self.destroy)
+
+
+        #widgets configuration
+        if len(indexWinners) > 1:
+            self.winnerLabel.config(text='Winners are')
+        else:
+            self.winnerLabel.config(text='Winner is')
+
+        self.configWidgets('Label', [self.winnerLabel, self.ResultLabel, *nameLabels, *resultLabels])
+        self.configWidgets('Button', [self.btnExitToMainMenu, self.btnExit])
+
+        self.winnerLabel.config(bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'])
+        self.ResultLabel.config(bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'])
+
+
+        #widgets placement
+        self.winnerLabel.grid(row=1, column=1, columnspan=2, sticky='news')
+        self.ResultLabel.grid(row=2+len(indexWinners), column=1, columnspan=2, sticky='news')
+
+        add = 2
+        for indexLabel in range(0, len(indexWinners)):
+            nameLabels[indexLabel].grid(row=add+indexLabel, column=1, sticky='e')
+            resultLabels[indexLabel].grid(row=add+indexLabel, column=2, sticky='w')
+
+        add += Game.NB_JOUEURS + 2
+        for indexLabel in range(0, Game.NB_JOUEURS):
+            nameLabels[indexLabel + len(indexWinners)].grid(row=add+indexLabel, column=1, sticky='e')
+            resultLabels[indexLabel + len(indexWinners)].grid(row=add+indexLabel, column=2, sticky='w')
+        
+
+
+        self.btnExitToMainMenu.grid(column=2, row=3, sticky='nsew')
+        self.btnExit.grid(column=2, row=5, sticky='nsew')
+
 
     #FIN === MENU CANVAS CREATION =====================================
 
@@ -262,40 +514,249 @@ class Game(Tk):
 
     #CHANGE MENU ======================================================
 
-    def exitCreditsMenu(self):
-        self.creditsCanvas.destroy()
-        self.createMainMenuCanvas()
+    def returnToMainMenu(self, canvas:list[Canvas]):
+        for cnv in canvas:
+            cnv.destroy()
+        self.createMainMenu()
 
-
-    def exitNewGameMenu(self):
-        self.loadGameCanvas.destroy()
-        self.createMainMenuCanvas()
-
-    def exitEndGameMenu(self):
-        self.endGameMenu.destroy()
-        self.createMainMenuCanvas()
+    def destroyWidgets(self, widgets:list[Widget]):
+        for widget in widgets:
+            widget.destroy()
 
     #CHANGE MENU ======================================================
 
+    def configActionButton(self, phase:Literal['preparation', 'action']):
+        if phase == 'preparation':
+            self.btnAction.config(state='disabled', border=0, bg=Game.WIDGET_COLORS['redLight'], disabledforeground=Game.WIDGET_COLORS['road'])
+        elif phase == 'action':
+            self.btnAction.config(state='normal', border=2, bg=Game.WIDGET_COLORS['train'], disabledforeground=Game.WIDGET_COLORS['moutainShadow'], fg=Game.WIDGET_COLORS['road'], activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'])
+        else:
+            print(f'ERROR: in configActionButton:\n   "{phase}" doesnt exist (allowed: "preparation", "action")')
+            exit()
+
+    def clearEntry(self):
+        self.entryName.delete(0, END)
+
+ 
+    #VALIDATION/LOG/OTIONS CANVAS CREATION =======================================
+
+    #the next two fonctions are used to force the Frame (self.color) to always expand on same width
+    def fillColorSpace(self, colors):
+        for i, color in enumerate(colors):
+            rb = Radiobutton(self.colorSpace, text=color, value=color, variable=self.selected_color, fg=color)
+            rb.config(bg='cadet blue', selectcolor='cadet blue', highlightthickness=0, activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'])
+            rb.grid(row=0, column=i, sticky='nsew')
+
+    def clearColorSpace(self):
+        for radioButton in self.colorSpace.grid_slaves(row=0):
+            radioButton.destroy()
+        self.after(ms=100, func=lambda:self.fillColorSpace(self.tempColor))
+
+    def fillActionsSpace(self):
+        for _ in range(Game.MAX_ACTIONS):
+            self.addActionToTempActions('osef')
+
+        self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
+
+        self.after(ms=100, func=self.clearTempActions)
+
+
+
+    def createValidationSpace(self):
+        self.logSpace.grid_forget()
+
+        #create Frame
+        self.validationSpace = Canvas(self.menuSpace, bg=Game.WIDGET_COLORS['sand'], highlightthickness=0, border=0)
+        for i in [0, 2]:
+            self.validationSpace.columnconfigure(i, weight=1)
+        for i in [0, 6]:
+            self.validationSpace.rowconfigure(i, weight=1)
+        self.validationSpace.grid(row=8, column=0, columnspan=5, sticky='news')
+
+
+        self.nbTurnForLabel = StringVar()
+        self.nbTurnForLabel.set(f'Turn {self.currentTurn}/{Game.NB_TOURS}')
+
+
+        #create widgets (label, entry, colorsSpace, ActionsSpace, button)
+        self.labelTurn = Label(self.validationSpace, textvariable=self.nbTurnForLabel)
+        self.actionsSpace = Frame(self.validationSpace,bg=Game.WIDGET_COLORS['train'])
+        self.btnValidate = Button(self.validationSpace, text='Validate', command=self.appendActionsToBandit, state='disabled')
+
+        #widgets configuration
+        self.labelTurn.config(justify='center', bg=Game.WIDGET_COLORS['sand'], fg=Game.WIDGET_COLORS['train'])
+        self.actionsSpace.config(highlightthickness=2, border=0, highlightbackground=Game.WIDGET_COLORS['train'])
+        self.btnValidate.config(highlightthickness=0, border=2, bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'], activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'], disabledforeground=Game.WIDGET_COLORS['moutainShadow'])
+
+        self.actionsSpace.rowconfigure(0, weight=1)
+        for i in range(Game.MAX_ACTIONS):
+            self.actionsSpace.columnconfigure(i, weight=1)
+
+        #widgets placement
+        self.labelTurn.grid(row=1, column=0, pady=2)
+        self.actionsSpace.grid(row=4, column=0, sticky='ew', pady=2)
+        self.btnValidate.grid(row=5, column=0, pady=2)
+
+
+        #add widgets for the first turn (Frame for colors (RadioButtons) and Entry for Name)
+        if self.currentTurn == 1:
+            self.selected_color = StringVar()
+            self.selected_color.set(False)
+
+            #create widgets (label, entry, colorsSpace, ActionsSpace, button)
+            self.entryName = Entry(self.validationSpace, width=40, justify='center', borderwidth=2)
+            self.colorSpace = Frame(self.validationSpace)
+
+            #widgets configuration
+            self.configWidgets('Entry', [self.entryName])
+            self.entryName.config(width=40, justify='center')
+            self.entryName.insert(0, '<Enter your name>')
+            self.entryName.bind('<FocusIn>', lambda e:self.clearEntry())
+
+            self.colorSpace.rowconfigure(0, weight=1)
+            for i in range(len(self.tempColor)):
+                self.colorSpace.columnconfigure(i, weight=1)
+
+            #temporary fill colorSpace
+            self.fillColorSpace(list(Game.COLORS.keys()))
+            self.after(ms=100, func=self.clearColorSpace)
+
+            #widgets placement
+            self.entryName.grid(row=2, column=0, pady=2)
+            self.colorSpace.grid(row=3, column=0, sticky='ew', pady=2)
+
+
+        #add widgets for all other turns (2 Label for turn and Name)
+        elif self.currentTurn > 1: #on n'a pas besoin de redonner un nom et choisir un couleur
+            self.banditNameForLabel = StringVar()
+            self.banditNameForLabel.set(f'{self.bandits[self.banditQuiChoisi].name}')
+
+            #widgets creations
+            self.labelName = Label(self.validationSpace, textvariable=self.banditNameForLabel, justify='center')
+
+            #widgets configurations
+            self.labelName.config(justify='center', bg=Game.bandits[self.banditQuiChoisi].color, fg=Game.WIDGET_COLORS['train'])
+
+            #widgets placements
+            self.labelName.grid(row=2, rowspan=2, sticky='ew', pady=2)
+
+
+        #place and remove an Action (so that actionsSpace expand in height)
+        self.after(ms=100, func=self.fillActionsSpace)
+    
+
+
+    def createCanvasLog(self):
+        self.logSpace = Canvas(self.menuSpace, border=0)
+        self.logSpace.grid(row=8, column=0, columnspan=5)
+
+        for i in [0, 3]:
+            self.logSpace.columnconfigure(i, weight=1)
+        for i in [0, 3]:
+            self.logSpace.rowconfigure(i, weight=1)
+
+
+        #widgets creation
+        self.logLabel = Label(self.logSpace, text='History', font=('Ariel', 12), fg=Game.WIDGET_COLORS['sand'], bg=Game.WIDGET_COLORS['train'])
+        self.logText = Text(self.logSpace, font=('Ariel', 10), highlightthickness=1, border=0, highlightbackground=Game.WIDGET_COLORS['train'], bg=Game.WIDGET_COLORS['sand'])
+        logScrollbal = Scrollbar(self.logSpace, orient=VERTICAL, bg=Game.WIDGET_COLORS['train'], highlightthickness=1, border=0, highlightbackground=Game.WIDGET_COLORS['train'], activebackground=Game.WIDGET_COLORS['red'], troughcolor=Game.WIDGET_COLORS['sand'], width=15)
+
+
+        #widgets configuration
+        logScrollbal.config(command=self.logText.yview)
+        self.logText.config(yscrollcommand=logScrollbal.set)
+
+        self.logText.config(state=DISABLED)
+
+
+        #widgets placement
+        self.logLabel.grid(row=1, column=1, columnspan=2, sticky='nsew')
+        self.logText.grid(row=2, column=1, sticky='nsew')
+        logScrollbal.grid(row=2, column=2, sticky='NS')
+
+
+
+    def createCanvasOptions(self):
+        self.optionsSpace = Canvas(self, bg=Game.WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=Game.WIDGET_COLORS['red'])
+        self.optionsSpace.grid(row=0, column=1, sticky='news')
+
+        for i in [0, 3]:
+            self.optionsSpace.columnconfigure(i, weight=1)
+        for i in [0, 8]:
+            self.optionsSpace.rowconfigure(i, weight=4)
+        for i in [2, 4, 6]:
+            self.optionsSpace.rowconfigure(i, weight=1)
+
+        #widgets creations
+        self.labelPause = Label(self.playSpace, text="PAUSE", font=40)
+        self.btnClose = Button(self.optionsSpace, text='Return to Game', command=lambda:self.destroyWidgets([self.optionsSpace, self.labelPause]))
+        self.btnSave = Button(self.optionsSpace, text='Save', command=self.confirmSaveGame)
+        self.btnReturnToMainMenu = Button(self.optionsSpace, text='Main Menu', command=self.confirmReturnToMainMenu)
+        self.btnExit = Button(self.optionsSpace, text='Exit', command=self.confirmExitGame)
+
+        #widgets configuration
+        for i in [0, 2]:
+            self.playSpace.columnconfigure(i, weight=1)
+            self.playSpace.rowconfigure(i, weight=1)
+        self.playSpace.rowconfigure(2, weight=6)
+
+        self.configWidgets('Label', [self.labelPause])
+        self.configWidgets('Button', [self.btnClose, self.btnSave, self.btnReturnToMainMenu, self.btnExit])
+
+        #widgets placement
+        self.labelPause.grid(row=1, column=1)
+
+        self.btnClose.grid(row=1, column=1, columnspan=2)
+        self.btnSave.grid(row=3, column=1, columnspan=2, sticky='we')
+        self.btnReturnToMainMenu.grid(row=5, column=1, columnspan=2, sticky='we')
+        self.btnExit.grid(row=7, column=1, columnspan=2, sticky='we')
+
+        if not len(self.bandits) == Game.NB_JOUEURS:
+            self.btnSave.config(state='disabled')
+        else:
+            self.btnSave.config(state='normal')
+    
+    #FIN === VALIDATION/LOG/OTIONS CANVAS CREATION =================================
+
 
     #mise à jour des variables globales (avant de continuer à process)
-    def startGame(self, nbPlayers=4, nbTurns=3, nbActions=6, loadSave=False):
+    def startGame(self, canvasToDestroy:Canvas, nbPlayers=4, nbWagons=4, nbTurns=3, nbActions=6, minButins=1, maxButins=4, nbBullets=12, loadSave=False):
+        canvasToDestroy.destroy()
+
+        #reset variables
+        self.wagons.clear()
+        self.bandits.clear()
+        self.butins.clear()
+        self.tempName = ""
+        self.tempColor.clear()
+        self.tempActions.clear()
+
+
+        #fill tempColor
+        for color in Game.COLORS:
+            Game.tempColor.append(color)
+
+
+        #update globales
         if loadSave:
-            global LOAD_SAVE
-            LOAD_SAVE = True
+            Game.LOAD_SAVE = True
 
         else:
-            global NB_JOUEURS
-            global NB_WAGONS
-            global NB_TOURS
-            global MAX_ACTIONS
-            global MAX_BULLETS
+            Game.LOAD_SAVE = False
 
-            NB_JOUEURS = nbPlayers
-            NB_WAGONS = NB_JOUEURS
-            NB_TOURS = nbTurns
-            MAX_ACTIONS = nbActions
-            MAX_BULLETS = (nbPlayers // 2) + 1
+            Game.NB_JOUEURS = nbPlayers
+            Game.NB_WAGONS = nbWagons
+            Game.NB_TOURS = nbTurns
+            Game.MAX_ACTIONS = nbActions
+            Game.MIN_BUTINS = minButins
+            Game.MAX_BUTINS = maxButins
+            Game.MAX_BULLETS = nbBullets
+
+            self.currentTurn = 1
+
+
+        self.action = 1 #only used to insert in Log while Actions phase
+        self.banditQuiChoisi = 0
         
         self.continueInit()
         
@@ -310,54 +771,63 @@ class Game(Tk):
 
 
         #=== PLAY SPACE ====================================
-        self.playSpace = Canvas(self, highlightthickness=0)
-        self.playSpace.grid(row = 0, column= 0, sticky='nsew')
+        self.playSpace = Canvas(self, highlightthickness=0, bg=Game.WIDGET_COLORS['train'])
+        self.playSpace.grid(row=0, column=0, sticky='nsew')
+
+        #resize des images de l'interface lorsque la fenêtre est redimensionnée
+        self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
 
         #=== FIN PLAY SPACE ================================
 
 
         #=== MENU SPACE ====================================
-        self.menuSpace = Canvas(self, bg=WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=WIDGET_COLORS['red'])
+        self.menuSpace = Canvas(self, bg=Game.WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=Game.WIDGET_COLORS['red'])
         self.menuSpace.grid(row = 0, column= 1, sticky='nsew')
 
-        for i in range(6):
+        for i in [0, 5, 7]:
             self.menuSpace.rowconfigure(i, weight=1)
 
-        for i in range(3):
+        for i in [0, 4]:
             self.menuSpace.columnconfigure(i, weight=1)
 
 
-        self.btns = []
+        self.menuSpaceBtns = []
 
         #boutons
-        self.btnAction = Button(self.menuSpace, text="Action", command=self.executeTurnStep1on4, bg=WIDGET_COLORS['red'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'], disabledforeground='black')
-        self.btnRight = Button(self.menuSpace, text="->", command=lambda:self.addActionToTempActions('right'))
-        self.btnLeft = Button(self.menuSpace, text="<-", command=lambda:self.addActionToTempActions('left'))
-        self.btnUp = Button(self.menuSpace, text="Up", command=lambda:self.addActionToTempActions('up'))
-        self.btnDown = Button(self.menuSpace, text="Down", command=lambda:self.addActionToTempActions('down'))
-        self.btnShoot = Button(self.menuSpace, text="Shoot", command=lambda:self.addActionToTempActions('shoot'))
-        self.btnSteal = Button(self.menuSpace, text="Rob", command=lambda:self.addActionToTempActions('rob'))
-        
-        self.btns.append(self.btnRight)
-        self.btns.append(self.btnLeft)
-        self.btns.append(self.btnUp)
-        self.btns.append(self.btnDown)
-        self.btns.append(self.btnShoot)
-        self.btns.append(self.btnSteal)
+        self.btnAction = Button(self.menuSpace, text='Action', command=self.executeTurn, highlightthickness=0)
+        self.btnOptions = Button(self.menuSpace, text='+', command=self.createCanvasOptions)
 
-        #set all buttons's attributes (except "btnAction")
-        for btn in self.btns:
-            btn.config(bg=WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['red'])
+        self.btnRight = Button(self.menuSpace, text='->', command=lambda:self.addActionToTempActions('right'))
+        self.btnLeft = Button(self.menuSpace, text='<-', command=lambda:self.addActionToTempActions('left'))
+        self.btnUp = Button(self.menuSpace, text='Up', command=lambda:self.addActionToTempActions('up'))
+        self.btnDown = Button(self.menuSpace, text='Down', command=lambda:self.addActionToTempActions('down'))
+        self.btnShoot = Button(self.menuSpace, text='Shoot', command=lambda:self.addActionToTempActions('shoot'))
+        self.btnSteal = Button(self.menuSpace, text='Rob', command=lambda:self.addActionToTempActions('rob'))
+        
+
+        self.menuSpaceBtns.append(self.btnRight)
+        self.menuSpaceBtns.append(self.btnLeft)
+        self.menuSpaceBtns.append(self.btnUp)
+        self.menuSpaceBtns.append(self.btnDown)
+        self.menuSpaceBtns.append(self.btnShoot)
+        self.menuSpaceBtns.append(self.btnSteal)
+
+        #config buttons (except 'btnAction')
+        self.configWidgets('Button', [self.btnOptions])
+        for btn in self.menuSpaceBtns:
+            btn.config(bg=Game.WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=Game.WIDGET_COLORS['red'])
 
 
         #placement des buttons
-        self.btnAction.grid(row=5, column=1, padx=5, pady=10)
-        self.btnRight.grid(row=1, column=2, rowspan=2)
-        self.btnLeft.grid(row=1, column=0, rowspan=2)
-        self.btnUp.grid(row=0, column=1)
-        self.btnDown.grid(row=3, column=1)
-        self.btnShoot.grid(row=1, column=1)
-        self.btnSteal.grid(row=2, column=1)
+        self.btnAction.grid(row=6, column=2, padx=5, pady=10)
+        self.btnOptions.grid(row=1, column=3, sticky='ne')
+
+        self.btnRight.grid(row=2, column=3, rowspan=2)
+        self.btnLeft.grid(row=2, column=1, rowspan=2)
+        self.btnUp.grid(row=1, column=2)
+        self.btnDown.grid(row=4, column=2)
+        self.btnShoot.grid(row=2, column=2)
+        self.btnSteal.grid(row=3, column=2)
 
 
         #actions history
@@ -367,19 +837,18 @@ class Game(Tk):
 
 
 
-        #créations des wagons, personnages et butins
-        global NB_JOUEURS
+        #création des wagons, personnages et butins
 
         #create from new game
-        if not LOAD_SAVE:
+        if not Game.LOAD_SAVE:
             #création des wagons
-            for y in range(NB_WAGONS + 1):
+            for y in range(Game.NB_WAGONS + 1):
                 #loco
                 if y == 0:
                     self.wagons.append(Wagon(self, y, 'loco'))
                     continue
                 #queue
-                if y == NB_WAGONS:
+                if y == Game.NB_WAGONS:
                     self.wagons.append(Wagon(self, y, 'queue'))
                     continue
                 #wagon
@@ -389,14 +858,26 @@ class Game(Tk):
             #ajout du marshall
             self.wagons[0].marshall = True
 
-            self.btnAction.config(state='disabled', text='Choose your actions...', bg=WIDGET_COLORS['red'])
-            self.createValidationCanvas()
+            self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
+            self.configActionButton('preparation')
+            self.createValidationSpace()
 
 
         #create from loaded game
         else:
             #import save
-            NB_JOUEURS, tempWagons, tempBandits, tempButins = saveGestion.loadSave()
+            Game.NB_JOUEURS, Game.NB_TOURS, self.currentTurn, Game.NB_WAGONS, Game.MAX_ACTIONS, self.marshallDirection, preparation, tempWagons, tempBandits, tempButins = saveGestion.loadSave()
+
+
+        # 0:number of players-------
+        # 1:number of turns---------
+        # 2:current turn---------
+        # 3:number of wagons---------
+        # 4:max number of actions---------
+        # 5:preparation(bool)
+        # 6:number of butins (dont return)
+
+
 
             #load Wagon(s)
             for wagonElement in tempWagons:
@@ -408,22 +889,22 @@ class Game(Tk):
                 self.wagons.append(loadedWagon)
 
             #load Bandit(s)
-            for banditElement in tempBandits:
-                name = banditElement[0]
-                color = banditElement[1]
-                xPos, yPos = banditElement[2], banditElement[3]
-                actions = banditElement[4:-1]
-                bullets = banditElement[-1]
+            for banditElements in tempBandits:
+                name = banditElements[0]
+                color = banditElements[1]
+                xPos, yPos = banditElements[2], banditElements[3]
+                actions = banditElements[4:-1]
+                bullets = banditElements[-1]
 
                 loadedBandit = Bandit(self, name, color, position=(xPos, yPos), actions=actions, bullets=bullets)
                 self.bandits.append(loadedBandit)
 
             #load Butin(s)
-            for butinElement in tempButins:
-                type = butinElement[0]
-                value = butinElement[1]
-                xPos, yPos = butinElement[2], butinElement[3]
-                bracable = butinElement[4]
+            for butinElements in tempButins:
+                type = butinElements[0]
+                value = butinElements[1]
+                xPos, yPos = butinElements[2], butinElements[3]
+                bracable = butinElements[4]
 
                 Butin(self, type, None, value=value, position=(xPos, yPos), bracable=bracable)
                 # le Butin s'auto append dans self.butins
@@ -441,44 +922,136 @@ class Game(Tk):
                         if bandit.name == butin.position['y']:
                             bandit.butins.append(butin)
                             break
+
+
+
+            if preparation:
+                self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
+                self.configActionButton('preparation')
+                self.createValidationSpace()
+            else:
+                self.btnAction.config(text='Action !')
+                self.configActionButton('action')
+
+                self.insertTextInLog('\n\nGame succesfully loaded\n')
+                self.insertTextInLog(f'\n\n\n=== Turn {self.currentTurn}/{Game.NB_TOURS}===\n')
             
-            for btn in self.btns:
-                btn.config(state='disabled')
+            self.action = Game.MAX_ACTIONS - len(Game.bandits[0].actions) + 1
 
-
-
-
-        #resize des images de l'interface lorsque la fenêtre est redimensionnée
-        self.playSpace.bind('<Configure>', lambda e: self.updateCanvasImgs())
-
-
-
+    """
+    
+    self.btnClose
+    self.btnSave
+    self.btnReturnToMainMenu
+    self.btnExit
+    """
 
     def saveGame(self):
-        saveGestion.save(NB_JOUEURS, self.wagons, self.bandits, self.butins)
+        if len(self.bandits[-1].actions) == 0:
+            preparation = True
+        else:
+            preparation = False
+
+        saveGestion.save(Game.NB_JOUEURS, Game.NB_TOURS, self.currentTurn, Game.NB_WAGONS, Game.MAX_ACTIONS, self.marshallDirection, preparation, self.wagons, self.bandits, self.butins)
+
+        self.destroyWidgets([self.optionsSpace, self.labelPause])
+
+        self.insertTextInLog('\n\nGame succesfully saved\n')
 
 
 
-    def addActionToTempActions(self, action):
-        actionbtn = Action(self, self.actionsFrame, action, len(Game.tempActions))
+    def confirmSaveGame(self):
+        self.btnSave.grid_forget()
+        
+        self.btnClose.config(state='disabled')
+        self.btnReturnToMainMenu.config(state='disabled')
+        self.btnExit.config(state='disabled')
+
+        self.btnYes = Button(self.optionsSpace, text='Yes', command=self.saveGame)
+        self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnSave, 3))
+
+        self.configWidgets('Button', [self.btnYes, self.btnNo])
+
+        self.btnYes.grid(row=3, column=1, sticky='we')
+        self.btnNo.grid(row=3, column=2, sticky='we')
+
+
+
+    def confirmReturnToMainMenu(self):
+        self.btnReturnToMainMenu.grid_forget()
+        
+        self.btnClose.config(state='disabled')
+        self.btnSave.config(state='disabled')
+        self.btnExit.config(state='disabled')
+
+        self.btnYes = Button(self.optionsSpace, text='Yes', command=lambda:self.returnToMainMenu([self.playSpace, self.menuSpace, self.optionsSpace, self.labelPause]))
+        self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnReturnToMainMenu, 5))
+
+        self.configWidgets('Button', [self.btnYes, self.btnNo])
+
+        self.btnYes.grid(row=5, column=1, sticky='we')
+        self.btnNo.grid(row=5, column=2, sticky='we')
+    
+
+
+    def confirmExitGame(self):
+        self.btnExit.grid_forget()
+        
+        self.btnClose.config(state='disabled')
+        self.btnSave.config(state='disabled')
+        self.btnReturnToMainMenu.config(state='disabled')
+
+        self.btnYes = Button(self.optionsSpace, text='Yes', command=self.destroy)
+        self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnExit, 7))
+
+        self.configWidgets('Button', [self.btnYes, self.btnNo])
+
+        self.btnYes.grid(row=7, column=1, sticky='we')
+        self.btnNo.grid(row=7, column=2, sticky='we')
+    
+
+
+    def cancelConfirmation(self, btn:Button, row:int):
+        self.destroyWidgets([self.btnYes, self.btnNo])
+        
+        self.btnClose.config(state='normal')
+        self.btnReturnToMainMenu.config(state='normal')
+        self.btnExit.config(state='normal')
+
+
+        if not len(self.bandits) == Game.NB_JOUEURS:
+            self.btnSave.config(state='disabled')
+        else:
+            self.btnSave.config(state='normal')
+
+
+        btn.grid(row=row, column=1, columnspan=2, sticky='we')
+
+
+
+
+
+    def addActionToTempActions(self, action:str):
+        actionbtn = Action(self, self.actionsSpace, action, len(Game.tempActions))
         Game.tempActions.append(actionbtn)
 
-        if len(Game.tempActions) < MAX_ACTIONS : #il manque des actions
-            #on désactive btn "Valide" et on active les btn actions
-            self.btnValidate.config(state='disabled')
-            for btn in self.btns:
-                btn.config(state="normal")
+        #si toutes les actions ont été données
+        if len(Game.tempActions) == Game.MAX_ACTIONS:
+            if self.currentTurn == 1:
+                #check if Name or Color datas are missing
+                if self.entryName.get() in ["", '<Enter your name>'] or not self.selected_color.get() in Game.tempColor:
+                    self.btnAction.config(text='Name or Color are missing')
+            
+            else:
+                self.btnAction.config(text='Press "Validate"')
 
-        else:
-            self.btnValidate.config(state='normal')
-            for btn in self.btns:
-                btn.config(state="disabled")
 
         self.updateActionsBar()
+        
 
 
 
-    def removeAction(self, actionToRemove):
+    def removeAction(self, actionToRemove:Action):
         founded = False
         for action in Game.tempActions:
             if founded:
@@ -488,320 +1061,278 @@ class Game(Tk):
                 founded = True
 
         if not founded:
-            print("ERROR: action not removed")
-            return
+            print('ERROR: in removeAction:\n  action not found')
+            exit()
 
         Game.tempActions.remove(actionToRemove)
+        self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
         self.updateActionsBar()
 
 
 
     def updateActionsBar(self):
         #clear actions bar
-        for widget in self.actionsFrame.grid_slaves(row=0):
+        for widget in self.actionsSpace.grid_slaves(row=0):
             widget.grid_remove()
         
         #fill it
         for action in Game.tempActions:
             action.grid(row=0, column=action.column)
+            action.drawImg()
 
         #update buttons state
-        if len(Game.tempActions) == MAX_ACTIONS: #nombre d'actions atteint
+        if len(Game.tempActions) == Game.MAX_ACTIONS: #nombre d'actions atteint
             self.btnValidate.config(state='normal')
-            for btn in self.btns:
+            for btn in self.menuSpaceBtns:
                 btn.configure(state='disabled')
         else: #il n'y a pas assez d'actiions
             self.btnValidate.config(state='disabled')
-            for btn in self.btns:
+            for btn in self.menuSpaceBtns:
                 btn.configure(state='normal')
 
 
 
-    def clearActionsBar(self):
-        for widget in self.actionsFrame.grid_slaves(row=0):
+    def clearTempActions(self):
+        for widget in self.actionsSpace.grid_slaves(row=0):
             widget.grid_remove()
-        
+
         Game.tempActions.clear()
         self.updateActionsBar()
 
 
 
     def appendActionsToBandit(self):
+        #check if all data are given on the first turn
         if self.currentTurn == 1:
             #do nothing if name or color are missing
-            if self.entryName.get() in ["", "<Enter your name>"]:
-                print("Name are missing")
+            if self.entryName.get() in ["", '<Enter your name>']:
+                self.btnAction.config(text='Name is missing')
                 return
             if not self.selected_color.get() in Game.tempColor:
-                print("Color are missing")
+                self.btnAction.config(text='Color is missing')
                 return
 
+
+        #préparation des actions à donner au Bandit (parceque Bandit reçoit une list(str), et non une list(Action))
         tempActions = []
         for actionBtn in Game.tempActions:
             tempActions.append(actionBtn.value)
 
+
+        #check of new Bandits must be create, or if we must add actions in already existing Bandits
         if self.currentTurn == 1: #on créé un nouveau Bandit
             bandit = Bandit(self, self.entryName.get(), self.selected_color.get(), actions=tempActions)
             self.bandits.append(bandit)
 
-            #reset Name and Color values of Validation Canvas
-            self.tempColor.remove(self.selected_color.get())
-            self.entryName.delete(0,END)
-            
-            #suppression et recréation du Validation Canvas
-            self.validationSpace.grid_forget()
-            self.createValidationCanvas()
-
         else: #append les actions dans un bandit
             self.bandits[self.banditQuiChoisi].actions = tempActions
 
-            #reset Name and Color values of Validation Canvas
-            #self.tempColor.remove(self.selected_color.get())
-            #self.entryName.delete(0,END)
-            
-            #suppression et recréation du Validation Canvas
-            self.validationSpace.grid_forget()
-            self.createValidationCanvas()
 
         self.banditQuiChoisi += 1
-
         Game.tempActions.clear()
 
 
-        if self.banditQuiChoisi == NB_JOUEURS: #tous les joueurs ont selectionnés leurs actions
-            self.btnAction.config(state='normal', text='Action !', bg=WIDGET_COLORS['sand'])
-            for btn in self.btns:
-                btn.config(state="disabled")
+        if self.banditQuiChoisi == Game.NB_JOUEURS: #tous les joueurs ont selectionnés leurs actions
+            self.btnAction.config(state='normal', text='Action !')
+            self.configActionButton('action')
+            for btn in self.menuSpaceBtns:
+                btn.config(state='disabled')
 
             self.banditQuiChoisi = 0
+            self.action = 1
             self.validationSpace.grid_forget()
-            self.logSpace.grid(row=7, column=0, columnspan=3)
+            self.logSpace.grid(row=8, column=0, columnspan=5)
+
+            self.insertTextInLog(f'\n\n\n=== Turn {self.currentTurn} ===\n')
             
 
         else: #d'autres joueurs doivent encore choisir leur actions
             self.btnValidate.config(state='disabled')
-            for btn in self.btns:
-                btn.config(state="normal")
+            for btn in self.menuSpaceBtns:
+                btn.config(state='normal')
+
+            #reset Name and Color values of Validation Canvas
+            if self.currentTurn == 1:
+                self.tempColor.remove(self.selected_color.get())
+                self.entryName.delete(0,END)
+
+            #suppression et recréation du Validation Canvas
+            self.validationSpace.grid_forget()
+            self.createValidationSpace()
+
+            if self.currentTurn > 1:
+                self.labelName.config(bg=Game.bandits[self.banditQuiChoisi].color)
+                # self.labelName.config(bg=Game.COLORS[Game.bandits[self.banditQuiChoisi].color]) #remettre après avoir fait une fonction qui converti un color tuple en color html:
 
     
 
-    def clearEntry(self):
-        self.entryName.delete(0, END)
-
- 
-    #VALIDATION/LOG CANVAS CREATION ================================================
-
-    def createValidationCanvas(self):
-        self.validationSpace = Canvas(self.menuSpace, border=0)
-        for i in range(6):
-            self.validationSpace.rowconfigure(i, weight=1)
 
 
-        self.nbTurnForLabel = StringVar()
-        self.nbTurnForLabel.set(f"Turn {self.currentTurn}/{NB_TOURS}")
+    def moveMarshall(self):
+        xWagonPosition = 0 #position du wagon où se trouve le Marshall
+        for wagon in self.wagons:
+            if wagon.marshall == True:
+                xWagonPosition = wagon.xPosition
+                break
+
+        #Marshall en tête de train
+        if xWagonPosition == 0:
+            self.marshallDirection = 'right'
+            self.wagons[xWagonPosition].marshall = False
+            self.wagons[xWagonPosition + 1].marshall = True
+            return
+
+        #Marshall en queue de train
+        elif xWagonPosition == Game.NB_WAGONS:
+            self.marshallDirection = 'left'
+            self.wagons[xWagonPosition].marshall = False
+            self.wagons[xWagonPosition - 1].marshall = True
+            return
+
+        #Marshall ni en tête/queue du train, donc on le déplace aléatoirement
+        directions = []
+        for _ in range(8):
+            directions.append(self.marshallDirection)
+        if self.marshallDirection == 'right':
+            for _ in range(2):
+                directions.append('left')
+        elif self.marshallDirection == 'left':
+            for _ in range(2):
+                directions.append('right')
 
 
+        direction = random.choice(directions)
 
-        if self.currentTurn == 1: #c'est le premier tout, il faut créer les bandits
-            #create widgets (actions bar, label for bandit name)
-            self.labelTurn = Label(self.validationSpace, textvariable=self.nbTurnForLabel, justify=CENTER)
-            self.entryName = Entry(self.validationSpace, justify=CENTER, borderwidth=2)
-            self.entryName.insert(0, "<Enter your name>")
-            self.colorFrame = Frame(self.validationSpace, bg='red')
-            self.actionsFrame = Frame(self.validationSpace, bg=WIDGET_COLORS['sand'])
-            self.btnValidate = Button(self.validationSpace, text='Validate', command=self.appendActionsToBandit, state='disabled')
+        if direction == 'right':
+            self.marshallDirection = 'right'
+            self.wagons[xWagonPosition].marshall = False
+            self.wagons[xWagonPosition + 1].marshall = True
 
-            self.labelTurn.grid(row=0, sticky="nsew", column = 0)
-            self.entryName.grid(row=1, column = 0)
-            
-            self.entryName.bind("<FocusIn>", lambda e:self.clearEntry())
-
-            self.colorFrame.rowconfigure(0,weight=1)
-            for i in range(len(self.tempColor)):
-                self.colorFrame.columnconfigure(i,weight = 1)
-            self.colorFrame.grid(row=2, column=0, sticky="nsew")
-            self.actionsFrame.rowconfigure(0, weight=1)
-            for i in range(MAX_ACTIONS):
-                self.actionsFrame.columnconfigure(i, weight=1)
-
-            self.actionsFrame.grid(row=3, column=0, sticky='nsew')
-            
-            
-            self.btnValidate.grid(row=4, sticky="nsew", column = 0)
-
-
-            #-----------Couleurs----------------
-            self.selected_color = StringVar()
-            for i, color in enumerate(self.tempColor):
-                rb = Radiobutton(self.colorFrame, text = color, value = color , variable = self.selected_color, fg=color,bg='cadet blue',selectcolor='cadet blue')
-                self.selected_color.set(False)	 
-                rb.grid(row=0, column= i,sticky="nsew")
-
-
-            #-------------Fin Couleurs -----------
-
-
-        elif self.currentTurn > 1: #on n'a pas besoin de redonner un nom et choisir un couleur
-            #create widgets (actions bar, entry for name, colors)
-
-            self.banditNameForLabel = StringVar()
-            self.banditNameForLabel.set(f"{self.bandits[self.banditQuiChoisi].name}")
-            self.labelTurn = Label(self.validationSpace, textvariable=self.nbTurnForLabel, justify=CENTER)
-            self.labelName = Label(self.validationSpace, textvariable=self.banditNameForLabel, justify=CENTER)
-            self.actionsFrame = Frame(self.validationSpace, bg=WIDGET_COLORS['sand'])
-            self.btnValidate = Button(self.validationSpace, text='Validate', command=self.appendActionsToBandit, state='disabled')
-
-            self.labelTurn.grid(row=0, sticky="nsew")
-            self.labelName.grid(row=1, sticky="nsew")
-            self.actionsFrame.grid(row=3, column=0,sticky='nsew')
-            self.btnValidate.grid(row=4, sticky="nsew")
-
-            self.actionsFrame.rowconfigure(0, weight=1)
-            for i in range(MAX_ACTIONS):
-                self.actionsFrame.columnconfigure(i, weight=1)
-            
-
-
-        self.logSpace.grid_forget()
-        self.validationSpace.grid(row=7, column=0, columnspan=3)
-
-
-        #place and remove an Action (so that actionsFrame expand in height)
-        self.addActionToTempActions('osef')
-        self.after(ms=200, func=self.clearActionsBar)
-    
-
-
-    def createCanvasLog(self):
-        self.logSpace = Canvas(self.menuSpace, border=0)
-        self.logSpace.rowconfigure(0, weight=1)
-        self.logSpace.rowconfigure(3, weight=1)
-        self.logSpace.columnconfigure(0, weight=1)
-        self.logSpace.columnconfigure(3, weight=1)
-
-
-        self.lbLog = Label(self.logSpace, text="History", font=("Ariel", 12), fg=WIDGET_COLORS["sand"], bg=WIDGET_COLORS["train"])
-        self.log = Text(self.logSpace, font=("Ariel", 10), highlightthickness=1, border=0, highlightbackground=WIDGET_COLORS['train'], bg=WIDGET_COLORS["sand"])
-        vbar = Scrollbar(self.logSpace, orient=VERTICAL, bg=WIDGET_COLORS['train'], highlightthickness=1, border=0, highlightbackground=WIDGET_COLORS['train'], activebackground=WIDGET_COLORS['red'], troughcolor=WIDGET_COLORS['sand'], width=15)
-
-        vbar.config(command=self.log.yview)
-        self.log.config(yscrollcommand=vbar.set)
-
-        self.log.insert(END,"Be fairplay,\nDon't look others' actions\n")
-        self.log.config(state=DISABLED)
-
-        #placement du log
-        self.logSpace.grid(row=7, column=0, columnspan=3)
-        self.lbLog.grid(row=1, column=1, columnspan=2, sticky="nsew")
-        self.log.grid(row=2, column=1, sticky="nsew")
-        vbar.grid(row=2, column=2, sticky='NS')
-    
-    #FIN === VALIDATION/LOG CANVAS CREATION ========================================
+        elif direction == 'left':
+            self.marshallDirection = 'left'
+            self.wagons[xWagonPosition].marshall = False
+            self.wagons[xWagonPosition - 1].marshall = True
 
 
 
-    def insertTextInLog(self, text, color="black"):
-        colorize = "color-" + color
-        self.log.config(state="normal")
-        self.log.tag_configure(colorize, foreground=color)
-        self.log.insert(END, text,colorize)
-        self.log.see(END)
-        self.log.config(state="disabled")
 
 
 
-    def executeTurnStep1on4(self):
-        self.btnAction.config(state='disabled', text='Wait...', bg=WIDGET_COLORS['red'])
 
-        self.insertTextInLog(f"\nTurn {self.currentTurn} :\n")
-        self.insertTextInLog(f"Action {self.action} :\n")
-        self.action += 1
-
-        #execute l'action de chaque bandit
-        for bandit in Game.bandits:
-            bandit.testRandomAction()
-
-
-        self.updateCanvasImgs()
-
-        self.after(ms=100, func=self.executeTurnStep2on4)
-
-
-    def executeTurnStep2on4(self):
-        #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
-        for bandit in Game.bandits:
-            bandit.checkMarshallPresence()
-
-        #update du Canvas
-        self.updateCanvasImgs()
-
-        self.after(ms=500, func=self.executeTurnStep3on4)
-
-
-    def executeTurnStep3on4(self):
-        #déplace le marshall
-        self.moveMarshall()
-
-        #update du Canvas
-        self.updateCanvasImgs()
-
-        self.after(ms=100, func=self.executeTurnStep4on4)
+    def insertTextInLog(self, text:str, color='black'):
+        colorize = 'color-' + color
+        self.logText.config(state='normal')
+        self.logText.tag_configure(colorize, foreground=color)
+        self.logText.insert(END, text, colorize)
+        self.logText.see(END)
+        self.logText.config(state='disabled')
 
 
 
-    def executeTurnStep4on4(self):
-        #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
-        for bandit in Game.bandits:
-            bandit.checkMarshallPresence()
 
-        #update du Canvas
-        self.updateCanvasImgs()
-        self.btnAction.config(state='normal', text='Action !', bg=WIDGET_COLORS['sand'])
-        
-        if not len(self.bandits[0].actions):
-            if self.currentTurn == NB_TOURS:
+    def executeTurn(self, step=1):
+        if step == 1:
+            #check if its the end of the turn/game
+            if self.btnAction['text'] == 'End Game !':
                 self.determineWinner()
                 return
 
-            self.currentTurn += 1
-            self.createValidationCanvas()
+            elif self.btnAction['text'] == 'End Turn !':
+                self.action = 1
+                self.currentTurn += 1
+                self.createValidationSpace()
 
-            self.btnAction.config(state='disabled', text='Choose your actions', bg=WIDGET_COLORS['red'])
-            for btn in self.btns:
-                btn.config(state="normal")
+                self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
+                self.configActionButton('preparation')
+
+                for btn in self.menuSpaceBtns:
+                    btn.config(state='disabled')
+                return
+
+
+            
+            #temporary disable Action button
+            self.btnAction.config(state='disabled', text='Wait...')
+
+            #add recap turn/action state in Log
+            self.insertTextInLog(f'\nTurn {self.currentTurn}/{Game.NB_TOURS}\n')
+            self.insertTextInLog(f'Action {self.action}/{Game.MAX_ACTIONS}\n')
+            self.action += 1
+
+            #execute l'action de chaque bandit
+            for bandit in Game.bandits:
+                bandit.executeAction()
+
+            self.updateCanvasImgs()
+
+            self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
+        
+
+        elif step == 2:
+            #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
+            for bandit in Game.bandits:
+                bandit.checkMarshallPresence()
+
+            #update du Canvas
+            self.updateCanvasImgs()
+
+            self.after(ms=500, func=lambda:self.executeTurn(step=step+1))
+
+
+        elif step == 3:
+            #déplace le marshall
+            self.moveMarshall()
+
+            #update du Canvas
+            self.updateCanvasImgs()
+
+            self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
+
+
+        elif step == 4:
+            #verifie pour chaque bandit s'il le Marshall est au même endroit (déplace le bandit si oui)
+            for bandit in Game.bandits:
+                bandit.checkMarshallPresence()
+
+            #update du Canvas
+            self.updateCanvasImgs()
+            self.btnAction.config(state='normal', text='Action !')
+
+            #check if its the end of the turn/game
+            if not len(self.bandits[0].actions):
+                if self.currentTurn == Game.NB_TOURS: #end of game
+                    self.btnAction.config(text='End Game !')
+
+                #end of turn
+                else:
+                    self.btnAction.config(text='End Turn !')
+
 
 
 
 
     def determineWinner(self):
-        indexWinners = []
-        moneyAmount = 0
+        indexWinners:list[int] = []
+        highestMoneyAmount = 0
+        playersNameAndResult:list[list[str]] = [[], []]
 
-        endGameMessage = "Results:\n"
         for i, bandit in enumerate(self.bandits):
-            endGameMessage += bandit.formatedStr() + '\n'
+            playersNameAndResult[0].append(bandit.name)
+            playersNameAndResult[1].append(bandit.formatedStr())
+
             tempMoneyAmount = 0
             for butin in bandit.butins:
                 tempMoneyAmount += butin.value
 
-            if tempMoneyAmount == moneyAmount:
+            if tempMoneyAmount == highestMoneyAmount:
                 indexWinners.append(i)
-            elif tempMoneyAmount > moneyAmount:
+            elif tempMoneyAmount > highestMoneyAmount:
                 indexWinners.clear()
                 indexWinners.append(i)
-        
+                highestMoneyAmount = tempMoneyAmount
 
-
-        if len(indexWinners) < 1:
-            endGameMessage += "Winner are \n"
-            for banditIndex in indexWinners:
-                endGameMessage += self.bandits[banditIndex].formatedStr() + '\n'
-        elif len(indexWinners) == 1:
-            endGameMessage += "Winner is \n"
-            endGameMessage += self.bandits[0].formatedStr() + '\n'
-        
-
-        self.createEndGameMenuCanvas(endGameMessage)
+        saveGestion.emptySave()
+        self.createEndGameMenu(indexWinners, playersNameAndResult)
 
 
 
@@ -813,13 +1344,28 @@ class Game(Tk):
 
 
 
-    def createInventoryCanvas(self, bandit, widthplaySpace, heightplaySpace, index:int):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def createInventoryCanvas(self, bandit:Bandit, widthplaySpace:int, heightplaySpace:int, xOffset:int, yOffset:int, index:int):
         #taille de l'inventaire
         widthInventorySize = widthplaySpace//8
         heightInventorySize = heightplaySpace//4
 
         #position de l'inventaire
-        xPlacementPosition = ((widthplaySpace//NB_JOUEURS)*index) + (((widthplaySpace//NB_JOUEURS)//2) - widthInventorySize//2)
+        xPlacementPosition = ((widthplaySpace//Game.NB_JOUEURS)*index) + (((widthplaySpace//Game.NB_JOUEURS)//2) - widthInventorySize//2)
         yPlacementPosition = int(heightplaySpace*0.71)
 
         #taille des icones (de la tête du bandit en réalité, les autres sont 2* plus petit)
@@ -828,16 +1374,16 @@ class Game(Tk):
 
 
         #création des images
-        bandit.imgHead = Game.createBanditPng(widthIcon, heightIcon, COLORS[bandit.color], justHead=True)
-        bandit.imgMunition = Game.createLoadedImg(widthIcon//2, heightIcon//2, Game.imgIconMinution)
-        bandit.imgBourse = Game.createLoadedImg(widthIcon//2, heightIcon//2, Game.imgIconBourse)
+        bandit.imgHead = images.createBanditPng(widthIcon, heightIcon, Game.COLORS[bandit.color], justHead=True)
+        bandit.imgMunition = images.createLoadedImg(widthIcon//2, heightIcon//2, images.imgIconMinution)
+        bandit.imgBourse = images.createLoadedImg(widthIcon//2, heightIcon//2, images.imgIconBourse)
         nbMunitions = bandit.bullets
         nbBourses = len(bandit.butins)
 
         #placement des images
-        img1 = self.playSpace.create_image(xPlacementPosition, yPlacementPosition, image=bandit.imgHead, anchor="nw")
-        img2 = self.playSpace.create_image(xPlacementPosition, yPlacementPosition + heightIcon, image=bandit.imgMunition, anchor="nw")
-        img3 = self.playSpace.create_image(xPlacementPosition + (widthIcon//2), yPlacementPosition + heightIcon, image=bandit.imgBourse, anchor="nw")
+        imgHead = self.playSpace.create_image(xOffset + xPlacementPosition, yOffset + yPlacementPosition, image=bandit.imgHead, anchor='nw')
+        imgBullet = self.playSpace.create_image(xOffset + xPlacementPosition, yOffset + yPlacementPosition + heightIcon, image=bandit.imgMunition, anchor='nw')
+        imgBourse = self.playSpace.create_image(xOffset + (xPlacementPosition + (widthIcon//2)), yOffset + yPlacementPosition + heightIcon, image=bandit.imgBourse, anchor='nw')
 
         #placement du texte
         xTextOffset = widthIcon//4
@@ -845,18 +1391,19 @@ class Game(Tk):
 
         x = xPlacementPosition + ((xTextOffset) - (xTextOffset*0.2))
         y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
-        img4 = self.playSpace.create_text(x, y, text=str(nbMunitions), anchor='nw')
+        imgNbBullets = self.playSpace.create_text(xOffset + x, yOffset + y, text=str(nbMunitions), anchor='nw')
 
         x = xPlacementPosition + (((widthIcon//2) + xTextOffset) - (xTextOffset*0.2))
         y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
-        img5 = self.playSpace.create_text(x, y, text=str(nbBourses), anchor='nw')
+        imgNbBourses = self.playSpace.create_text(xOffset + x, yOffset + y, text=str(nbBourses), anchor='nw')
 
         #mise des dessins dans la liste globale
-        self.imgsOnCanvasPlaySpace.append(img1)
-        self.imgsOnCanvasPlaySpace.append(img2)
-        self.imgsOnCanvasPlaySpace.append(img3)
-        self.imgsOnCanvasPlaySpace.append(img4)
-        self.imgsOnCanvasPlaySpace.append(img5)
+        self.imgsOnCanvasPlaySpace.append(imgHead)
+        self.imgsOnCanvasPlaySpace.append(imgBullet)
+        self.imgsOnCanvasPlaySpace.append(imgBourse)
+        self.imgsOnCanvasPlaySpace.append(imgNbBullets)
+        self.imgsOnCanvasPlaySpace.append(imgNbBourses)
+
 
 
 
@@ -865,20 +1412,35 @@ class Game(Tk):
         #ON VIDE LE CANVAS ===================================
         for img in self.imgsOnCanvasPlaySpace:
             self.playSpace.delete(img)
-        for img in self.imgsOnCanvasMenuSpace:
-            self.menuSpace.delete(img)
         self.imgsOnCanvasPlaySpace.clear()
-        self.imgsOnCanvasMenuSpace.clear()
 
 
-
-        #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
         #taille du Canvas
         widthCanvas = self.playSpace.winfo_width()
         heightCanvas = self.playSpace.winfo_height()
+        xOffsetCanvas = 0
+        yOffsetCanvas = 0
+
+        widthRatio = Game.NB_WAGONS + 2
+        heightRatio = 3
+
+        #check ratio respect
+        width = widthCanvas // widthRatio
+        height = heightCanvas // heightRatio
+
+        if width > height: #etiré dans la largeur
+            widthCanvas = int(height * widthRatio)
+            xOffsetCanvas = (self.playSpace.winfo_width()//2) - (widthCanvas //2)
+
+        elif width < height: #etiré dans la hauteur
+            heightCanvas = int(width * heightRatio)
+            yOffsetCanvas = (self.playSpace.winfo_height()//2) - (heightCanvas //2)
+
+
+        #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
 
         #taille d'un Wagon
-        widthWagon = widthCanvas // (NB_WAGONS+1+1)
+        widthWagon = widthCanvas // (Game.NB_WAGONS+1+1)
         heightWagon = heightCanvas // 3
         #taille des personnages (marshall and Bandit)
         widthCharacter = int (widthWagon *0.26)
@@ -893,22 +1455,23 @@ class Game(Tk):
         heightMagot = int(heightWagon *  0.20)
 
         #taille des images de boutons
-        sizeButton = ((heightCanvas//3) * 2) // 7
+        # sizeButton = ((heightCanvas//3) * 2) // 7
+        sizeButton = (self.menuSpace.winfo_height() // 2) // 6
 
 
 
         #MENU SPACE =========================================
         #resize du log
-        self.log.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
+        self.logText.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
 
         #images des boutons
-        self.imgTest = Game.createLoadedImg(sizeButton, sizeButton, Game.imgWagon)
-        self.imgBtnRight = Game.createLoadedImg(sizeButton, sizeButton, Game.imgRight)
-        self.imgBtnLeft = Game.createLoadedImg(sizeButton, sizeButton, Game.imgLeft)
-        self.imgBtnUp = Game.createLoadedImg(sizeButton, sizeButton, Game.imgUp)
-        self.imgBtnDown = Game.createLoadedImg(sizeButton, sizeButton, Game.imgDown)
-        self.imgBtnShoot = Game.createLoadedImg(sizeButton, sizeButton, Game.imgShoot)
-        self.imgBtnRob = Game.createLoadedImg(sizeButton, sizeButton, Game.imgRob)
+        self.imgTest = images.createLoadedImg(sizeButton, sizeButton, images.imgWagon)
+        self.imgBtnRight = images.createLoadedImg(sizeButton, sizeButton, images.imgRight)
+        self.imgBtnLeft = images.createLoadedImg(sizeButton, sizeButton, images.imgLeft)
+        self.imgBtnUp = images.createLoadedImg(sizeButton, sizeButton, images.imgUp)
+        self.imgBtnDown = images.createLoadedImg(sizeButton, sizeButton, images.imgDown)
+        self.imgBtnShoot = images.createLoadedImg(sizeButton, sizeButton, images.imgShoot)
+        self.imgBtnRob = images.createLoadedImg(sizeButton, sizeButton, images.imgRob)
 
         self.btnRight.config(image=self.imgBtnRight)
         self.btnLeft.config(image=self.imgBtnLeft)
@@ -918,31 +1481,31 @@ class Game(Tk):
         self.btnSteal.config(image=self.imgBtnRob)
 
 
-        #var "img" will be used as a create_image() container
+        #var 'img' will be used as a create_image() container
 
         #ON DESSINE LE BACKGROUND ============================
-        self.imgPaysage = Game.createLoadedImg(widthCanvas, heightCanvas, Game.imgPaysage)
-        img = self.playSpace.create_image(0, 0, image=self.imgPaysage, anchor="nw")
+        self.imgPaysage = images.createLoadedImg(widthCanvas, heightCanvas, images.imgPaysage)
+        img = self.playSpace.create_image(xOffsetCanvas, yOffsetCanvas, image=self.imgPaysage, anchor='nw')
         self.imgsOnCanvasPlaySpace.append(img)
 
 
 
         #ON DESSINE LES WAGONS ==============================
-        self.imgLoco = Game.createLoadedImg(widthWagon*2, heightWagon, Game.imgLoco)
-        self.imgWagon = Game.createLoadedImg(widthWagon, heightWagon, Game.imgWagon)
-        self.imgQueue = Game.createLoadedImg(widthWagon, heightWagon, Game.imgQueue)
+        self.imgLoco = images.createLoadedImg(widthWagon*2, heightWagon, images.imgLoco)
+        self.imgWagon = images.createLoadedImg(widthWagon, heightWagon, images.imgWagon)
+        self.imgQueue = images.createLoadedImg(widthWagon, heightWagon, images.imgQueue)
 
         #loco
-        img = self.playSpace.create_image(0, heightWagon, image=self.imgLoco, anchor="nw")
+        img = self.playSpace.create_image(xOffsetCanvas, yOffsetCanvas + heightWagon, image=self.imgLoco, anchor='nw')
         self.imgsOnCanvasPlaySpace.append(img)
 
         #wagon
-        for xWagonPosition in range(1, NB_WAGONS):
-            img = self.playSpace.create_image((xWagonPosition +1)*widthWagon, heightWagon, image=self.imgWagon, anchor="nw")
+        for xWagonPosition in range(1, Game.NB_WAGONS):
+            img = self.playSpace.create_image(xOffsetCanvas + ((xWagonPosition +1)*widthWagon), yOffsetCanvas + heightWagon, image=self.imgWagon, anchor='nw')
             self.imgsOnCanvasPlaySpace.append(img)
 
         #queue
-        img = self.playSpace.create_image((NB_WAGONS +1)*widthWagon, heightWagon, image=self.imgQueue, anchor="nw")
+        img = self.playSpace.create_image(xOffsetCanvas + ((Game.NB_WAGONS +1)*widthWagon), yOffsetCanvas + heightWagon, image=self.imgQueue, anchor='nw')
         self.imgsOnCanvasPlaySpace.append(img)
 
         #FIN === ON DESSINE LES WAGONS =====================
@@ -974,12 +1537,12 @@ class Game(Tk):
                 elif yButinPosition == 'out':
                     yImgPosition = yOffsetButin + (heightWagon * 0.40)
                 else:
-                    print("ERROR: the butin is in a wagon's list, but is own by a bandit")
-                    continue
+                    print('ERROR: in updateCanvasImgs (butin, loop for magot):\n  the butin is in a wagon\'s list, but is own by a bandit')
+                    exit()
 
 
-                butin.img = Game.createLoadedImg(widthMagot, heightMagot, self.imgMagot)
-                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=butin.img, anchor="nw")
+                butin.img = images.createLoadedImg(widthMagot, heightMagot, images.imgMagot, flip=butin.flipImg)
+                img = self.playSpace.create_image(xOffsetCanvas + xImgPosition, yOffsetCanvas + yImgPosition, image=butin.img, anchor='nw')
                 self.imgsOnCanvasPlaySpace.append(img)
 
                 break
@@ -1033,8 +1596,8 @@ class Game(Tk):
                     elif yButinPosition == 'out':
                         yImgPosition = yOffsetButin + (heightWagon * 0.38)
                     else:
-                        print("ERROR: the butin is in a wagon's list, but is own by a bandit")
-                        continue
+                        print('ERROR: in updateCanvasImgs: (butin, loop for other then magot, bijoux)\n  the butin is in a wagon\'s list, but is own by a bandit')
+                        exit()
 
                     
 
@@ -1076,18 +1639,18 @@ class Game(Tk):
                     elif yButinPosition == 'out':
                         yImgPosition = yOffsetButin + (heightWagon * 0.38)
                     else:
-                        print("ERROR: the butin is in a wagon's list, but is own by a bandit")
-                        continue
+                        print('ERROR: in updateCanvasImgs: (butin, loop for other then magot, bourse)\n  the butin is in a wagon\'s list, but is own by a bandit')
+                        exit()
                 
 
 
 
                 if butin.type == 'bijoux':
-                    butin.img = Game.createLoadedImg(widthBijoux, heightBijoux, self.imgBijoux)
+                    butin.img = images.createLoadedImg(widthBijoux, heightBijoux, images.imgBijoux, flip=butin.flipImg)
                 elif butin.type == 'bourse':
-                    butin.img = Game.createLoadedImg(widthBourse, heightBourse, self.imgBourse)
+                    butin.img = images.createLoadedImg(widthBourse, heightBourse, images.imgBourse, flip=butin.flipImg)
 
-                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=butin.img, anchor="nw")
+                img = self.playSpace.create_image(xOffsetCanvas + xImgPosition, yOffsetCanvas + yImgPosition, image=butin.img, anchor='nw')
                 self.imgsOnCanvasPlaySpace.append(img)
 
         # FIN === ON DESSINE LES BUTINS DANS LES WAGONS ======================
@@ -1133,8 +1696,8 @@ class Game(Tk):
                 xImgPosition = (xBanditPosition * widthWagon) + xOffsetBandit
                 yImgPosition = (yBanditPosition * heightWagon) + yOffsetBandit
 
-                bandit.img = Game.createBanditPng(widthCharacter, heightCharacter, COLORS[bandit.color])
-                img = self.playSpace.create_image(xImgPosition, yImgPosition, image=bandit.img, anchor="nw")
+                bandit.img = images.createBanditPng(widthCharacter, heightCharacter, Game.COLORS[bandit.color], flip=bandit.flipImg)
+                img = self.playSpace.create_image(xOffsetCanvas + xImgPosition, yOffsetCanvas + yImgPosition, image=bandit.img, anchor='nw')
                 self.imgsOnCanvasPlaySpace.append(img)
 
         #FIN === ON DESSINE LES BANDITS ======================
@@ -1144,7 +1707,10 @@ class Game(Tk):
         #ON DESSINE LE MARSHALL ==============================
         widthCharacter = int(widthCharacter*1.2)
         heightCharacter = int(heightCharacter*1.2)
-        self.imgMarshal = Game.createLoadedImg(widthCharacter,heightCharacter, Game.imgMarshall)
+
+        self.imgMarshal = images.createLoadedImg(widthCharacter,heightCharacter, images.imgMarshall)
+        if self.marshallDirection == 'left':
+            self.imgMarshal = images.createLoadedImg(widthCharacter,heightCharacter, images.imgMarshall, flip=True)
 
         for wagon in self.wagons :
             if wagon.marshall == True:
@@ -1155,7 +1721,7 @@ class Game(Tk):
                 yMarshallPosition = heightWagon + yOffsetMarshall
 
 
-                img = self.playSpace.create_image(xMarshallPosition, yMarshallPosition, image=self.imgMarshal, anchor="nw")
+                img = self.playSpace.create_image(xOffsetCanvas + xMarshallPosition, yOffsetCanvas + yMarshallPosition, image=self.imgMarshal, anchor='nw')
                 self.imgsOnCanvasPlaySpace.append(img)
                 break
     
@@ -1166,567 +1732,10 @@ class Game(Tk):
         #ON DESSINE LES INVENTAIRES DES BANDITS ==============================
 
         for i, bandit in enumerate(self.bandits):
-            self.createInventoryCanvas(bandit, widthCanvas, heightCanvas, i)
+            self.createInventoryCanvas(bandit, widthCanvas, heightCanvas, xOffsetCanvas, yOffsetCanvas, i)
 
         #FIN === ON DESSINE LES INVENTAIRES DES BANDITS ======================
     
-
-    @staticmethod
-    def createLoadedImg(width, height, loadedImg):
-        loadedImg = loadedImg.resize((width, height))
-        return ImageTk.PhotoImage(loadedImg)
-
-
-    @staticmethod
-    def createBanditPng(width, height, color, justHead=False):
-        body = Game.imgBody
-        details = Game.imgDetails
-
-        if justHead:
-            body = Game.imgIconBanditBody
-            details = Game.imgIconBanditDetails
-            body = body.resize((width, height))
-            details = details.resize((width, height))
-        else:
-            body = Game.imgBody
-            details = Game.imgDetails
-            body = body.resize((width, height))
-            details = details.resize((width, height))
-
-        #on modifie la couleur de chaque pixel du png 
-        for y in range(details.height):
-            for x in range(details.width):
-                if details.getpixel((x, y)) != (0, 0, 0, 0): #est un pixel transparent
-                    tempColor = (color[0], color[1], color[2], details.getpixel((x, y))[3])
-                    details.putpixel((x, y), value=tempColor)
-
-        img = Image.alpha_composite(body, details)
-        return ImageTk.PhotoImage(img)
-
-
-
-
-    def moveMarshall(self):
-        xWagonPosition = 0 #position du wagon où se trouve le Marshall
-        for wagon in self.wagons:
-            if wagon.marshall == True:
-                xWagonPosition = wagon.xPosition
-                break
-
-        #Marshall en tête de train
-        if xWagonPosition == 0:
-            self.wagons[xWagonPosition].marshall = False
-            self.wagons[xWagonPosition + 1].marshall = True
-
-        #Marshall en queue de train
-        elif xWagonPosition == NB_WAGONS:
-            self.wagons[xWagonPosition].marshall = False
-            self.wagons[xWagonPosition - 1].marshall = True
-
-        #Marshall ni en tête/queue du train, donc on le déplace aléatoirement
-        elif (random.randint(0,1)):
-            self.wagons[xWagonPosition].marshall = False
-            self.wagons[xWagonPosition + 1].marshall = True
-
-        else:
-            self.wagons[xWagonPosition].marshall = False
-            self.wagons[xWagonPosition - 1].marshall = True
-            
-            
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Wagon():
-    butinTypes = ['bourse', 'bijoux'] #'magot' only apply for type == 'loco'
-
-
-    def __init__(self, game:Game, x:int, type:str, marshall:bool=None):
-        self.xPosition = x
-        self.marshall = False
-        self.type = type #'loco' ou 'wagon' or 'queue'
-        self.bandits = []
-        self.butins = []
-
-
-        if LOAD_SAVE: #load from a save
-            self.marshall = marshall
-
-        else:
-            #replissage de butins, en fonction de type
-            if self.type == 'loco':
-                self.butins.append(Butin(game, 'magot', self.xPosition))
-
-            elif self.type == 'wagon':
-                for i in range(random.randint(1, 4)):
-                    self.butins.append(Butin(game, random.choice(Wagon.butinTypes), self.xPosition))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Bandit():
-    def __init__(self, game:Game, name:str, color:str, position:tuple=None, actions:list=None, bullets:int=None):
-        self.name = name
-        self.color = color
-        self.position = {'x':NB_WAGONS, 'y':1} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
-        self.actions = actions.copy() #action = 'right', 'left', 'up', 'down', 'shoot' or 'rob'
-        self.game = game
-        self.img = None
-        self.butins = []
-        self.bullets = MAX_BULLETS
-
-
-
-        if not LOAD_SAVE:
-            #on ajoute le bandit dans la liste bandits du bon wagon (en queue de train)
-            self.game.wagons[NB_WAGONS].bandits.append(self)
-
-        else: #load from save
-            self.position['x'] = position[0]
-            self.position['y'] = position[1]
-            self.actions = actions
-            self.bullets = bullets
-            self.game.wagons[self.position['x']].bandits.append(self)
-
-
-    def formatedStr(self):
-        somme = 0
-        for butin in self.butins:
-            somme += butin.value
-
-        return f'{self.name} ({somme}$ in {len(self.butins)} butins)\n'
-
-
-    def testRandomAction(self):
-        if not len(self.actions):
-            act = ['right', 'left', 'up', 'down', 'shoot', 'rob']
-            self.actions.append(random.choice(act))
-        self.executeAction()
-
-
-
-    #execute the action at index 0 in self.actions
-    def executeAction(self):
-        if not len(self.actions):
-            self.game.insertTextInLog(f"{self.name} has no actions\n",self.color)
-            return
-
-        if self.actions[0] in ['right', 'left', 'up', 'down']:
-            self.deplacement(self.actions[0])
-        elif self.actions[0] == 'shoot':
-            self.shoot()
-        elif self.actions[0] == 'rob':
-            self.rob()
-
-        self.actions.pop(0)
-
-
-
-    def deplacement(self, action:str):
-        xBanditPosition = self.position['x']
-        yBanditPosition = self.position['y']
-        banditName = self.name
-
-        if action == 'right':
-            if xBanditPosition == NB_WAGONS:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
-                return
-
-            #on retire le bandit du wagon actuel
-            for i, bandit in enumerate(self.game.wagons[xBanditPosition].bandits):
-                if not bandit.name == banditName:
-                    continue
-                self.game.wagons[xBanditPosition].bandits.pop(i)
-
-            #on ajoute le bandit dans le wagon destination
-            self.game.wagons[xBanditPosition+1].bandits.append(self)
-
-            self.position['x'] += 1
-
-
-        if action == 'left':
-            if xBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
-                return
-
-            #on retire le bandit du wagon actuel
-            for i, bandit in enumerate(self.game.wagons[xBanditPosition].bandits):
-                if not bandit.name == banditName:
-                    continue
-                self.game.wagons[xBanditPosition].bandits.pop(i)
-
-            #on ajoute le bandit dans le wagon destination
-            self.game.wagons[xBanditPosition-1].bandits.append(self)
-
-            self.position['x'] -= 1
-
-
-        if action == 'up':
-            if yBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
-                return
-            self.position['y'] = 0
-
-        if action == 'down':
-            if yBanditPosition == 1:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n",self.color)
-                return
-            self.position['y'] = 1
-
-        
-        self.game.insertTextInLog(f"{self.name} moves {action}\n",self.color)
-
-        self.checkForButin()
-
-
-
-    def checkMarshallPresence(self):
-        #si le bandit est sur le toit
-        if self.position['y'] == 0:
-            return
-
-        #si le Marshall est dans le même wagon
-        if self.game.wagons[self.position['x']].marshall == True:
-            self.getHitByMarshall()
-
-
-
-    #tire sur un Bandit, aléatoirement, à la même position
-    def shoot(self):
-        self.game.insertTextInLog(f"{self.name} prepare to shoot\n",self.color)
-
-        if self.bullets == 0:
-            self.game.insertTextInLog(f"{self.name} has no more bullets\n",self.color)
-            return
-
-
-        nb_targets = 0
-
-        #on compte le nombre de cible possible (nombre de bandit dans le même wagon ET au même étage)
-        for bandit in self.game.wagons[self.position['x']].bandits:
-            if bandit.name == self.name:
-                continue
-
-            if bandit.position['y'] == self.position['y']:
-                nb_targets += 1
-
-        if nb_targets == 0:
-            self.game.insertTextInLog(f"{self.name} has no targets to shoot\n",self.color)
-            return
-
-
-        #on tire sur un bandit
-        target = None
-        while(1):
-            target = random.choice(self.game.wagons[self.position['x']].bandits)
-            if target.name == self.name:
-                continue
-
-            if target.position['y'] == self.position['y']: #a valuable target has been found
-                break
-
-
-        self.bullets -= 1
-        target.getHitByBandit(self.name)
-
-
-
-    #vole un butin, aléatoirement, sur sa position
-    def rob(self):
-        self.game.insertTextInLog(f"{self.name} rob\n",self.color)
-
-        wagon = self.game.wagons[self.position['x']]
-
-        if len(wagon.butins) == 0:
-            self.game.insertTextInLog(f"There is no loot here\n")
-            return
-
-        if self.position['y'] == 0:
-            self.game.insertTextInLog(f"You have to be inside the wagon to rob\n")
-            return
-
-        robbedButin = wagon.butins.pop(len(wagon.butins) - 1)
-        self.butins.append(robbedButin)
-        robbedButin.bracable = False
-        robbedButin.position['y'] = self.name
-        self.game.insertTextInLog(f"{self.name} robbed {robbedButin.type}({robbedButin.value})\n",self.color)
-
-
-
-    #perd un butin, aléatoirement
-    def getHitByBandit(self, ennemyName:str):
-        self.game.insertTextInLog(f"{self.name} get hit by {ennemyName}\n",self.color)#couleure de l'ennemy a ajouter 
-
-
-        if len(self.butins) == 0: #le bandit n'a pas de butins{self.name}
-            return
-
-        #on retire un butin du bandit, aléatoirement
-        lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-        if self.position['y'] == 0:
-            lostButin.position['y'] = 'out'
-        elif self.position['y'] == 1:
-            lostButin.position['y'] = 'int'
-        #qu'on rajoute dans la liste butins du wagon du bandit
-        self.game.wagons[self.position['x']].butins.append(lostButin)
-        self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n",self.color)
-
-
-
-    #perd un butin, aléatoirement, et monte sur le toit
-    def getHitByMarshall(self):
-        self.game.insertTextInLog(f"{self.name} get hit by the Marshall\n",self.color)
-
-
-        if len(self.butins):
-            #on retire un butin du bandit
-            lostButin = self.butins.pop(random.randint(0, len(self.butins) - 1))
-
-            if self.position['y'] == 0:
-                lostButin.position['y'] = 'out'
-            elif self.position['y'] == 1:
-                lostButin.position['y'] = 'int'
-
-            #qu'on rajoute dans le wagon
-            self.game.wagons[self.position['x']].butins.append(lostButin)
-            self.game.insertTextInLog(f"{self.name} lost {lostButin.type}({lostButin.value})\n",self.color)
-
-        #le bandit monte sur le toit
-        self.position['y'] = 0
-        self.game.insertTextInLog(f"{self.name} move on the roof\n",self.color)
-
-
-    def checkForButin(self):
-        wagon = self.game.wagons[self.position['x']]
-
-        for i, butin in enumerate(wagon.butins):
-            if butin.bracable == False:
-                if self.position['x'] == wagon.xPosition: 
-                    robbedButin = wagon.butins.pop(i)
-                    self.butins.append(robbedButin)
-                    self.game.insertTextInLog(f"{self.name} got {robbedButin.type}({robbedButin.value})\n",self.color)
-
-
-
-
-    def butinAtSamePosition(self, butin):
-        pos:str = butin.position['y']
-
-        if pos == 'out' and self.position['y'] == 0:
-            return True
-        if pos == 'int' and self.position['y'] == 1:
-            return True
-
-        return False
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-class Butin():
-    lootValues = {'bourse':[100,200], 'bijoux' : [500], 'magot' : [1000]}
-
-    def __init__(self, game:Game, type:str, x:int, value:int=None, position:tuple=None, bracable:bool=None):
-        self.game = game
-        self.type = type
-        self.value = random.choice(Butin.lootValues[type])
-        self.position = {'x':x, 'y':'in'} #y = 'in' or 'out' or '{banditName}'
-        # self.inOut = 1 #1 = interieur,0 = toit
-        self.bracable = True
-        self.img = None
-
-        if LOAD_SAVE: #load from save
-            self.value = value
-            self.position['x'] = position[0]
-            self.position['y'] = position[1]
-            self.bracable = bracable
-
-        self.game.butins.append(self)
-
-
-
-
-
-
-
-
-
-class Action(Frame):
-    def __init__(self, game:Game, actionsFrame:Frame, value:str, column:int):
-        super().__init__(actionsFrame, bg='orange')
-        self.game:Game = game
-        self.column:int = column
-        self.value:str = value
-
-        self.action = Button(self, text=value, command=self.remove, bg=WIDGET_COLORS['sand'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['redLight'])
-        self.left = Button(self, text="<-", command=self.moveLeft, bg=WIDGET_COLORS['sand'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['redLight'])
-        self.right = Button(self, text="->", command=self.moveRight, bg=WIDGET_COLORS['sand'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['redLight'])
-
-
-        if not value == 'osef':
-            self.widthAction = (game.playSpace.winfo_width()//4) // MAX_ACTIONS
-            self.heightAction = int(game.playSpace.winfo_height()*0.15)
-            self.setImgAction()
-            self.imgLeft = Game.createLoadedImg(self.widthAction//2, int(self.heightAction//3), self.game.imgLeft)
-            self.imgRight = Game.createLoadedImg(self.widthAction//2, int(self.heightAction//3), self.game.imgRight)
-
-            self.action.config(image=self.imgAction)
-            self.left.config(image=self.imgLeft)
-            self.right.config(image=self.imgRight)
-
-
-        self.action.grid(columnspan=2, sticky='ew')
-        self.left.grid(row=1)
-        self.right.grid(row=1, column=1)
-
-
-
-
-
-    def chooseTheGoodImg(self):
-        if self.value == 'right':
-            return self.game.imgRight
-        elif self.value == 'left':
-            return self.game.imgLeft
-        elif self.value == 'up':
-            return self.game.imgUp
-        elif self.value == 'down':
-            return self.game.imgDown
-        elif self.value == 'shoot':
-            return self.game.imgShoot
-        elif self.value == 'rob':
-            return self.game.imgRob
-
-
-    def setImgAction(self):
-        self.action.destroy()
-        self.imgAction = Game.createLoadedImg(self.widthAction, int((self.heightAction//3)*2), self.chooseTheGoodImg())
-        self.action = Button(self, text=self.value, command=self.remove, image=self.imgAction, bg=WIDGET_COLORS['sand'], border=0, highlightthickness=0, activebackground=WIDGET_COLORS['redLight'])
-        self.action.grid(row=0, columnspan=2, sticky='ew')
-
-
-    def remove(self):
-        for action in self.game.tempActions:
-            if action == self:
-                self.game.removeAction(self)
-                return
-
-
-    #swap value between this Action and the right one
-    def moveRight(self):
-        if (self.column >= MAX_ACTIONS-1) or (self.column >= len(self.game.tempActions)-1):
-            print("Can't move right")
-            return
-
-
-        for i, action in enumerate(self.game.tempActions):
-            if action == self:
-                actionTo = self.game.tempActions[i+1]
-
-                #swap values
-                self.value, actionTo.value = actionTo.value, self.value
-                # self.action, actionTo.action = actionTo.action, self.action
-
-                #update Action(s)
-                self.update()
-                actionTo.update()
-                self.setImgAction()
-                actionTo.setImgAction()
-
-
-
-    #swap value between this Action and the left one
-    def moveLeft(self):
-        if self.column <= 0:
-            print("Can't move left")
-            return
-
-
-        for i, action in enumerate(self.game.tempActions):
-            if action == self:
-                actionTo = self.game.tempActions[i-1]
-
-                 #swap values
-                self.value, actionTo.value = actionTo.value, self.value
-
-                #update Action(s)
-                self.update()
-                actionTo.update()
-                self.setImgAction()
-                actionTo.setImgAction()
-
-
-
-    def update(self):
-        self.action.config(text=self.value)
-
-
-
-
-
-
-
-
-
-
 
 
 
