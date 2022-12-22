@@ -545,10 +545,13 @@ class Game(Tk):
         for i, color in enumerate(colors):
             rb = Radiobutton(self.colorSpace, text=color, value=color, variable=self.selected_color, fg=color)
             rb.config(bg='cadet blue', selectcolor='cadet blue', highlightthickness=0, activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'])
-            rb.grid(row=0, column=i, sticky='nsew')
+            if i == len(colors)-1 and i%2 == 0:
+                rb.grid(row=i%2, column=i//2, rowspan=2, sticky='nsew')
+            else:
+                rb.grid(row=i%2, column=i//2, sticky='nsew')
 
     def clearColorSpace(self):
-        for radioButton in self.colorSpace.grid_slaves(row=0):
+        for radioButton in self.colorSpace.grid_slaves():
             radioButton.destroy()
         self.after(ms=100, func=lambda:self.fillColorSpace(self.tempColor))
 
@@ -605,7 +608,7 @@ class Game(Tk):
 
             #create widgets (label, entry, colorsSpace, ActionsSpace, button)
             self.entryName = Entry(self.validationSpace, width=40, justify='center', borderwidth=2)
-            self.colorSpace = Frame(self.validationSpace)
+            self.colorSpace = Frame(self.validationSpace, bg='cadet blue')
 
             #widgets configuration
             self.configWidgets('Entry', [self.entryName])
@@ -613,9 +616,12 @@ class Game(Tk):
             self.entryName.insert(0, '<Enter your name>')
             self.entryName.bind('<FocusIn>', lambda e:self.clearEntry())
 
-            self.colorSpace.rowconfigure(0, weight=1)
-            for i in range(len(self.tempColor)):
+            for i in [0, 1]:
+                self.colorSpace.rowconfigure(i, weight=1)
+            for i in range((len(self.tempColor) // 2)):
                 self.colorSpace.columnconfigure(i, weight=1)
+            if len(self.tempColor) % 2 == 1:
+                self.colorSpace.columnconfigure((len(self.tempColor)//2), weight=1)
 
             #temporary fill colorSpace
             self.fillColorSpace(list(Game.COLORS.keys()))
