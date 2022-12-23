@@ -51,16 +51,18 @@ def createBanditPng(width:int, height:int, color:tuple[int], justHead:bool=False
     if justHead:
         body = imgIconBanditBody
         details = imgIconBanditDetails
+        body = body.resize((width, height), Image.NEAREST)
+        details = details.resize((width, height), Image.NEAREST)
     else:
         body = imgBody
         details = imgDetails
+        body = body.resize((width, height))
+        details = details.resize((width, height))
     
     if flip:
         body = body.transpose(Image.FLIP_LEFT_RIGHT)
         details = details.transpose(Image.FLIP_LEFT_RIGHT)
 
-    body = body.resize((width, height))
-    details = details.resize((width, height))
 
 
     #on modifie la couleur de chaque pixel du png 
