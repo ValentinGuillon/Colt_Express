@@ -3,6 +3,8 @@ from tkinter import *
 from typing import Literal
 import modules.saveGestion as saveGestion
 import modules.images as images
+import modules.menus as menus
+import modules.widgets as widgets
 from modules.wagon import Wagon
 from modules.bandit import Bandit
 from modules.butin import Butin
@@ -82,463 +84,18 @@ class Game(Tk):
 
 
         # createMainMenu
-        self.createMainMenu()
+        menus.createMainMenu(self)
 
 
 
-    #resizes the background of Menus when the window is resized
-    def resizeMenusBackground(self, canvas:Canvas):
-        self.img = images.createLoadedImg(canvas.winfo_width(), canvas.winfo_height(), images.imgPaysage)
-        canvas.create_image(0, 0, image=self.img, anchor='nw')
 
 
-    def configWidgets(self, widgetType:Literal['Button', 'Label', 'Entry'], widgets:list[Widget]):
-        if widgetType == 'Button':
-            for btn in widgets:
-                btn.config(highlightthickness=0, border=2, bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'], activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'], disabledforeground=Game.WIDGET_COLORS['moutainShadow'])
-
-        elif widgetType == 'Label':
-            for label in widgets:
-                label.config(bg=Game.WIDGET_COLORS['road'], fg=Game.WIDGET_COLORS['train'])
-
-        elif widgetType == 'Entry':
-            for entry in widgets:
-                entry.config(border=1, highlightthickness=0, justify='right', width=5, bg=Game.WIDGET_COLORS['road'], fg=Game.WIDGET_COLORS['train'])
-        
-        else:
-            print(f'ERROR: in configWidgets:\n    "{widgetType}" doesnt exist (allowed: "Button", "Label", "Entry")')
-            exit()
-
-
-    #MENU CANVAS CREATION ================================================
-
-    def createMainMenu(self):
-        #menu Canvas
-        self.canvasMainMenu = Canvas(self)
-        self.canvasMainMenu.grid(columnspan=2, sticky='nsew')
-        self.canvasMainMenu.bind('<Configure>', lambda e: self.resizeMenusBackground(self.canvasMainMenu))
-
-
-        #weight empty rows/columns
-        for i in [0, 4]:
-            self.canvasMainMenu.columnconfigure(i, weight = 1)
-        for i in [1, 3]:
-            self.canvasMainMenu.columnconfigure(i, weight = 1)
-        for i in [0, 9]:
-            self.canvasMainMenu.rowconfigure(i, weight = 3)
-
-        self.canvasMainMenu.rowconfigure(2, weight = 2)
-        self.canvasMainMenu.rowconfigure(5, weight = 1)
-        self.canvasMainMenu.rowconfigure(7, weight = 1)
-
-        #widgets creations
-        self.title = Label(self.canvasMainMenu, text='COLT ZEʁMA', font=60)
-        self.btnNew = Button(self.canvasMainMenu, text='New', command=self.createNewGameMenu)
-        self.btnLoad = Button(self.canvasMainMenu, text='Load', command=self.createLoadGameMenu)
-        self.btncredits = Button(self.canvasMainMenu, text='Credits', command=self.createCreditsMenu)
-        self.btnExit = Button(self.canvasMainMenu, text='Exit', command=self.destroy)
-
-
-        #widgets configuration
-        self.configWidgets('Label', [self.title])
-        self.configWidgets('Button', [self.btnNew, self.btnLoad, self.btncredits, self.btnExit])
-
-        if saveGestion.saveIsEmpty():
-            self.btnLoad.config(state='disabled')
-        else:
-            self.btnLoad.config(state='normal')
-
-        #widgets placement
-        self.title.grid(column=1, row=1, columnspan=3, sticky='nsew', ipady=10)
-        self.btnNew.grid(column=2, row=3, sticky='nsew')
-        self.btnLoad.grid(column=2, row=4, sticky='nsew')
-        self.btncredits.grid(column=2, row=6, sticky='nsew')
-        self.btnExit.grid(column=2, row=8, sticky='nsew')
-
-
-
-
-
-
-    def createCreditsMenu(self):
-        self.canvasMainMenu.destroy()
-
-        #menu Canvas
-        self.creditsCanvas = Canvas(self)
-        self.creditsCanvas.grid(columnspan=2, sticky='nsew')
-        self.creditsCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.creditsCanvas))
-
-        #weight of empty rows/columns
-        for i in [0, 2]:
-            self.creditsCanvas.columnconfigure(i, weight=1)
-        for i in [0, 6]:
-            self.creditsCanvas.rowconfigure(i, weight=3)
-        self.creditsCanvas.rowconfigure(2, weight=2)
-        self.creditsCanvas.rowconfigure(4, weight=1)
-
-        #widgets creation
-        creditText = 'Created by\n\nMaria MESSAOUD-NACER\nValentin GUILLON\n\n\nBased on the game\n"Colt Express"'
-        self.title = Label(self.creditsCanvas, text='CREDITS', font=60)
-        self.labelCredits = Label(self.creditsCanvas, text=creditText, justify='center')
-        self.creditsBtnExit = Button(self.creditsCanvas, text='Main Menu', command=lambda:self.returnToMainMenu([self.creditsCanvas]))
-
-        #widgets default configuration
-        self.configWidgets('Label', [self.title, self.labelCredits])
-        self.configWidgets('Button', [self.creditsBtnExit])
-
-        #widgets placement
-        self.title.grid(column=1, row=1, sticky='nsew', ipady=10)
-        self.labelCredits.grid(row=3, column=1, pady=15, ipadx=15, ipady=10)
-        self.creditsBtnExit.grid(row=5, column=1, pady=15)
-
-
-
-
-    def createLoadGameMenu(self):
-        #afficher un aperçu de ce que contient la sauvegarde
-        self.canvasMainMenu.destroy()
-
-        #menuCanvas
-        self.loadGameCanvas = Canvas(self)
-        self.loadGameCanvas.grid(columnspan=2, sticky='nsew')
-        self.loadGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.loadGameCanvas))
-
-        #weight empty rows/columns
-        for i in [0, 6]:
-            self.loadGameCanvas.columnconfigure(i, weight = 4)
-        for i in [1, 5]:
-            self.loadGameCanvas.columnconfigure(i, weight = 3)
-        for i in [2, 4]:
-            self.loadGameCanvas.columnconfigure(i, weight = 1)
-        self.loadGameCanvas.columnconfigure(3, weight = 1)
-
-        for i in [0, 8]:
-            self.loadGameCanvas.rowconfigure(i, weight = 4)
-        self.loadGameCanvas.rowconfigure(2, weight = 3)
-        self.loadGameCanvas.rowconfigure(4, weight = 1)
-        self.loadGameCanvas.rowconfigure(6, weight = 2)
-
-
-        #Canvas for Label(s) and Entry(s)
-        self.gameInfosSpace = Frame(self.loadGameCanvas, bg=Game.WIDGET_COLORS['road'])
-        self.gameInfosSpace.grid(row=3, column=1, columnspan=2, sticky='news', ipady=10)
-        self.playersInfosSpace = Frame(self.loadGameCanvas, bg=Game.WIDGET_COLORS['road'])
-        self.playersInfosSpace.grid(row=3, column=4, columnspan=2, sticky='news', ipady=10)
-
-
-        #load saved game's data
-        _, nbTurns, currentTurn, nbWagons, maxActions, _, preparation, _, tempBandits, tempButins = saveGestion.loadSave()
-
-        #on compte les butins de chaque bandits
-        nbButinsOfBandits = []
-        for banditElements in tempBandits:
-            name = banditElements[0]
-            ammount = 0
-            for butinElements in tempButins:
-                if butinElements[3] == name:
-                    ammount += 1
-            nbButinsOfBandits.append(ammount)
-
-        #weight empty rows/columns
-            #game's datas Space
-        for i in [0, 4]:
-            self.gameInfosSpace.columnconfigure(i, weight = 1)
-        self.gameInfosSpace.columnconfigure(2, weight = 3)
-        for i in [0, 2, 7]:
-            self.gameInfosSpace.rowconfigure(i, weight = 1)
-
-            #players' infos Space
-        for i in [0, 4]:
-            self.playersInfosSpace.columnconfigure(i, weight = 1)
-        self.playersInfosSpace.columnconfigure(2, weight = 3)
-        for i in [0, 2, 2+len(tempBandits)+1]:
-            self.playersInfosSpace.rowconfigure(i, weight = 1)
-
-
-        #widgets creation
-        self.title = Label(self.loadGameCanvas, text='LOAD GAME', font=60)
-        self.launchLoadedGame = Button(self.loadGameCanvas, text='Load', command=lambda:self.startGame(self.loadGameCanvas, loadSave=True))
-        self.btnExitNewGameMenu = Button(self.loadGameCanvas, text='Main Menu', command=lambda:self.returnToMainMenu([self.loadGameCanvas]))
-
-            #game's datas Space
-        self.titleGameDatas = Label(self.gameInfosSpace, text="GAME'S INFOS")
-        self.labelNbTurns = Label(self.gameInfosSpace, text=f'Turn {currentTurn}/{nbTurns}')
-        self.labelPhase = Label(self.gameInfosSpace)
-        self.labelNbWagons = Label(self.gameInfosSpace, text=f'{nbWagons} wagons')
-        self.labelNbActions = Label(self.gameInfosSpace, text=f'{maxActions} actions by turns')
-
-            #players' infos Space
-        self.titlePlayersInfos = Label(self.playersInfosSpace, text='PLAYERS')
-
-        self.loadGamePlayersLabels:list[Label] = []
-        for i, banditElements in enumerate(tempBandits):
-            #banditElement = [<name>, <color>, <x>, <y>, <action>..., <bullets>]
-            name = banditElements[0]
-            nbButins = nbButinsOfBandits[i]
-            nbBullets = banditElements[-1]
-            text = f'{name}: {nbButins} butins, {nbBullets} bullets'
-
-            labelPlayer = Label(self.playersInfosSpace, text=text)
-            self.configWidgets('Label', [labelPlayer])
-            labelPlayer.config(fg=banditElements[1])
-
-
-            self.loadGamePlayersLabels.append(labelPlayer)
-
-
-        #widgets default configurations
-        if preparation:
-            self.labelPhase.config(text='Phase: Preparation')
-        else:
-            self.labelPhase.config(text='Phase: Action')
-
-        self.configWidgets('Label', [self.title, self.titleGameDatas, self.labelNbTurns, self.labelPhase, self.labelNbWagons, self.labelNbActions, self.titlePlayersInfos])
-        self.configWidgets('Button', [self.launchLoadedGame, self.btnExitNewGameMenu])
-
-
-        #widgets placement
-        self.title.grid(row=1, column=1, columnspan=5, sticky='nsew', ipady=10)
-        self.launchLoadedGame.grid(row=5, column=2, columnspan=3, sticky='ew')
-        self.btnExitNewGameMenu.grid(row=7, column=2, columnspan=3, sticky='ew')
-
-            #game's datas Space
-        self.titleGameDatas.grid(row=1, column=1, columnspan=3, sticky='news')
-        self.labelNbTurns.grid(row=3, column=2, sticky='news')
-        self.labelPhase.grid(row=4, column=2, sticky='news')
-        self.labelNbWagons.grid(row=5, column=2, sticky='news')
-        self.labelNbActions.grid(row=6, column=2, sticky='news')
-
-            #players' infos Space
-        self.titlePlayersInfos.grid(row=1, column=1, columnspan=3, sticky='news')
-
-        add = 2
-        for i, label in enumerate(self.loadGamePlayersLabels, start=1):
-            label.grid(row=add+i, column=2, sticky='news')
-
-
-
-
-
-
-
-    def createNewGameMenu(self):
-        self.canvasMainMenu.destroy()
-
-        #menuCanvas
-        self.newGameCanvas = Canvas(self)
-        self.newGameCanvas.grid(columnspan=2, sticky='nsew')
-        self.newGameCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.newGameCanvas))
-
-        #weight empty rows/columns
-        for i in [0, 4]:
-            self.newGameCanvas.columnconfigure(i, weight = 4)
-        for i in [1, 3]:
-            self.newGameCanvas.columnconfigure(i, weight = 1)
-        for i in [0, 8]:
-            self.newGameCanvas.rowconfigure(i, weight = 4)
-        self.newGameCanvas.rowconfigure(2, weight = 3)
-        self.newGameCanvas.rowconfigure(4, weight = 1)
-        self.newGameCanvas.rowconfigure(6, weight = 2)
-
-
-        #Canvas for Label(s) and Entry(s)
-        self.labEntrySpace = Frame(self.newGameCanvas, bg=Game.WIDGET_COLORS['road'])
-        self.labEntrySpace.grid(row=3, column=1, columnspan=3, sticky='news', ipady=10)
-
-        #weight empty rows/columns
-        for i in [0, 6]:
-            self.labEntrySpace.columnconfigure(i, weight = 1)
-        for i in [0, 8]:
-            self.labEntrySpace.rowconfigure(i, weight = 1)
-
-        #variable for game's datas
-        nbPlayers = IntVar()
-        nbWagons = IntVar()
-        nbTurns = IntVar()
-        nbActions = IntVar()
-        minButins = IntVar()
-        maxButins = IntVar()
-        nbBullets = IntVar()
-        nbPlayers.set(4)
-        nbWagons.set(4)
-        nbTurns.set(6)
-        nbActions.set(6)
-        minButins.set(1)
-        maxButins.set(4)
-        nbBullets.set(12)
-
-        #widgets creation
-        self.title = Label(self.newGameCanvas, text='NEW GAME', font=60)
-
-        self.labelNbPlayers = Label(self.labEntrySpace, text=' joueurs')
-        self.labelNbWagons = Label(self.labEntrySpace, text=' wagons')
-        self.labelNbTurns = Label(self.labEntrySpace, text=' tours')
-        self.labelNbActions = Label(self.labEntrySpace, text=' actions par tour')
-        self.labelMinButins = Label(self.labEntrySpace, text=' butins par wagon (min)')
-        self.labelMaxButins = Label(self.labEntrySpace, text=' butins par wagon (max)')
-        self.labelNbBullets = Label(self.labEntrySpace, text=' bullets')
-
-        self.entryNbPlayers = Entry(self.labEntrySpace, textvariable=nbPlayers)
-        self.entryNbWagons = Entry(self.labEntrySpace, textvariable=nbWagons)
-        self.entryNbTurns = Entry(self.labEntrySpace, textvariable=nbTurns)
-        self.entryNbActions = Entry(self.labEntrySpace, textvariable=nbActions)
-        self.entryMinButins = Entry(self.labEntrySpace, textvariable=minButins)
-        self.entryMaxButins = Entry(self.labEntrySpace, textvariable=maxButins)
-        self.entryNbBullets = Entry(self.labEntrySpace, textvariable=nbBullets)
-
-        self.launchNewGame = Button(self.newGameCanvas, text='Start', command=lambda:self.startGame(self.newGameCanvas, nbPlayers.get(), nbWagons.get(), nbTurns.get(), nbActions.get(), minButins.get(), maxButins.get(), nbBullets.get()))
-        self.btnExitNewGameMenu = Button(self.newGameCanvas, text='Return to Main Menu', command=lambda:self.returnToMainMenu([self.newGameCanvas]))
-
-        #widgets default configurations
-        self.configWidgets('Label', [self.title, self.labelNbPlayers, self.labelNbWagons, self.labelNbTurns, self.labelNbActions, self.labelMinButins, self.labelMaxButins, self.labelNbBullets])
-        self.configWidgets('Entry', [self.entryNbPlayers, self.entryNbWagons, self.entryNbTurns, self.entryNbActions, self.entryMinButins, self.entryMaxButins, self.entryNbBullets])
-        self.configWidgets('Button', [self.launchNewGame, self.btnExitNewGameMenu])
-
-
-        #widgets placement
-        self.title.grid(row=1, column=1, columnspan=3, sticky='nsew', ipady=10)
-
-        self.labelNbPlayers.grid(row=1, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelNbWagons.grid(row=2, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelNbTurns.grid(row=3, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelNbActions.grid(row=4, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelMinButins.grid(row=5, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelMaxButins.grid(row=6, column=3, columnspan=2, sticky='w', pady=2)
-        self.labelNbBullets.grid(row=7, column=3, columnspan=2, sticky='w', pady=2)
-
-        self.entryNbPlayers.grid(row=1, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryNbWagons.grid(row=2, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryNbTurns.grid(row=3, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryNbActions.grid(row=4, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryMinButins.grid(row=5, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryMaxButins.grid(row=6, column=1, columnspan=2, sticky='e', pady=2)
-        self.entryNbBullets.grid(row=7, column=1, columnspan=2, sticky='e', pady=2)
-
-        self.launchNewGame.grid(row=5, column=2, sticky='ew')
-        self.btnExitNewGameMenu.grid(row=7, column=2, sticky='ew')
-
-
-
-    def createEndGameMenu(self, indexWinners:list[int], playersNameAndResult:list[list[str]]):
-        self.playSpace.destroy()
-        self.menuSpace.destroy()
-
-        #menu Canvas
-        self.endGameMenuCanvas = Canvas(self, bg='red')
-        self.endGameMenuCanvas.grid(columnspan=2, sticky='nsew')
-        self.endGameMenuCanvas.bind('<Configure>', lambda e: self.resizeMenusBackground(self.endGameMenuCanvas))
-
-        #weight empty rows/columns
-        for i in [0, 4]:
-            self.endGameMenuCanvas.columnconfigure(i, weight=4)
-        for i in [1, 3]:
-            self.endGameMenuCanvas.columnconfigure(i, weight=1)
-        for i in [0, 6]:
-            self.endGameMenuCanvas.rowconfigure(i, weight=4)
-        self.endGameMenuCanvas.rowconfigure(2, weight=2)
-        self.endGameMenuCanvas.rowconfigure(4, weight=1)
-
-        #Canvas for Label(s) and Entry(s)
-        self.resultSpace = Frame(self.endGameMenuCanvas, bg=Game.WIDGET_COLORS['road'])
-        self.resultSpace.grid(row=1, column=1, columnspan=3, sticky='news', ipady=10)
-        nbRows = 1 + 1 + len(indexWinners) + 1 + 1 + Game.NB_JOUEURS + 1 #empty + winnerLabel + Xlabels + empty + resultsLabel + empty
-
-        #weight empty rows/columns
-        for i in [0, 5]:
-            self.resultSpace.columnconfigure(i, weight = 1)
-        for i in [0, nbRows]:
-            self.resultSpace.rowconfigure(i, weight = 2)
-        self.resultSpace.rowconfigure((2 + len(indexWinners)) - 1, weight=2)
-
-
-        #widgets creations
-        nameLabels:list[Label] = []
-        resultLabels:list[Label] = []
-
-        self.winnerLabel = Label(self.resultSpace, justify=CENTER)
-        self.ResultLabel = Label(self.resultSpace, text='Results', justify=CENTER)
-
-        for iWinner in indexWinners:
-            nameLabel = Label(self.resultSpace, text=playersNameAndResult[0][iWinner], justify='right')
-            resultLabel = Label(self.resultSpace, text=playersNameAndResult[1][iWinner], justify='left')
-            nameLabels.append(nameLabel)
-            resultLabels.append(resultLabel)
-        
-        for iPlayer in range(Game.NB_JOUEURS):
-            nameLabel = Label(self.resultSpace, text=playersNameAndResult[0][iPlayer], justify='right')
-            resultLabel = Label(self.resultSpace, text=playersNameAndResult[1][iPlayer], justify='left')
-            nameLabels.append(nameLabel)
-            resultLabels.append(resultLabel)
-
-
-        self.btnExitToMainMenu = Button(self.endGameMenuCanvas, text='Return to Main Menu', command=lambda:self.returnToMainMenu([self.endGameMenuCanvas]))
-        self.btnExit = Button(self.endGameMenuCanvas, text='Exit', command=self.destroy)
-
-
-        #widgets configuration
-        if len(indexWinners) > 1:
-            self.winnerLabel.config(text='Winners are')
-        else:
-            self.winnerLabel.config(text='Winner is')
-
-        self.configWidgets('Label', [self.winnerLabel, self.ResultLabel, *nameLabels, *resultLabels])
-        self.configWidgets('Button', [self.btnExitToMainMenu, self.btnExit])
-
-        self.winnerLabel.config(bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'])
-        self.ResultLabel.config(bg=Game.WIDGET_COLORS['train'], fg=Game.WIDGET_COLORS['road'])
-
-
-        #widgets placement
-        self.winnerLabel.grid(row=1, column=1, columnspan=2, sticky='news')
-        self.ResultLabel.grid(row=2+len(indexWinners), column=1, columnspan=2, sticky='news')
-
-        add = 2
-        for indexLabel in range(0, len(indexWinners)):
-            nameLabels[indexLabel].grid(row=add+indexLabel, column=1, sticky='e')
-            resultLabels[indexLabel].grid(row=add+indexLabel, column=2, sticky='w')
-
-        add += Game.NB_JOUEURS + 2
-        for indexLabel in range(0, Game.NB_JOUEURS):
-            nameLabels[indexLabel + len(indexWinners)].grid(row=add+indexLabel, column=1, sticky='e')
-            resultLabels[indexLabel + len(indexWinners)].grid(row=add+indexLabel, column=2, sticky='w')
-        
-
-
-        self.btnExitToMainMenu.grid(column=2, row=3, sticky='nsew')
-        self.btnExit.grid(column=2, row=5, sticky='nsew')
-
-
-    #FIN === MENU CANVAS CREATION =====================================
-
-
-
-    #CHANGE MENU ======================================================
-
-    def returnToMainMenu(self, canvas:list[Canvas]):
-        for cnv in canvas:
-            cnv.destroy()
-        self.createMainMenu()
-
-    def destroyWidgets(self, widgets:list[Widget]):
-        for widget in widgets:
-            widget.destroy()
-
-    #CHANGE MENU ======================================================
-
-    def configActionButton(self, phase:Literal['preparation', 'action']):
-        if phase == 'preparation':
-            self.btnAction.config(state='disabled', border=0, bg=Game.WIDGET_COLORS['redLight'], disabledforeground=Game.WIDGET_COLORS['road'])
-        elif phase == 'action':
-            self.btnAction.config(state='normal', border=2, bg=Game.WIDGET_COLORS['train'], disabledforeground=Game.WIDGET_COLORS['moutainShadow'], fg=Game.WIDGET_COLORS['road'], activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'])
-        else:
-            print(f'ERROR: in configActionButton:\n   "{phase}" doesnt exist (allowed: "preparation", "action")')
-            exit()
+    #VALIDATION/LOG/OTIONS CANVAS CREATION =======================================
 
     def clearEntry(self):
         self.entryName.delete(0, END)
 
- 
-    #VALIDATION/LOG/OTIONS CANVAS CREATION =======================================
+
 
     #the next two fonctions are used to force the Frame (self.color) to always expand on same width
     def fillColorSpace(self, colors):
@@ -550,10 +107,12 @@ class Game(Tk):
             else:
                 rb.grid(row=i%2, column=i//2, sticky='nsew')
 
+
     def clearColorSpace(self):
         for radioButton in self.colorSpace.grid_slaves():
             radioButton.destroy()
         self.after(ms=100, func=lambda:self.fillColorSpace(self.tempColor))
+
 
     def fillActionsSpace(self):
         for _ in range(Game.MAX_ACTIONS):
@@ -611,7 +170,7 @@ class Game(Tk):
             self.colorSpace = Frame(self.validationSpace, bg='cadet blue')
 
             #widgets configuration
-            self.configWidgets('Entry', [self.entryName])
+            widgets.configWidgets(self, 'Entry', [self.entryName])
             self.entryName.config(width=40, justify='center')
             self.entryName.insert(0, '<Enter your name>')
             self.entryName.bind('<FocusIn>', lambda e:self.clearEntry())
@@ -652,6 +211,7 @@ class Game(Tk):
     
 
 
+
     def createCanvasLog(self):
         self.logSpace = Canvas(self.menuSpace, border=0)
         self.logSpace.grid(row=8, column=0, columnspan=5)
@@ -682,6 +242,7 @@ class Game(Tk):
 
 
 
+
     def createCanvasOptions(self):
         self.optionsSpace = Canvas(self, bg=Game.WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=Game.WIDGET_COLORS['red'])
         self.optionsSpace.grid(row=0, column=1, sticky='news')
@@ -695,7 +256,7 @@ class Game(Tk):
 
         #widgets creations
         self.labelPause = Label(self.playSpace, text="PAUSE", font=40)
-        self.btnClose = Button(self.optionsSpace, text='Return to Game', command=lambda:self.destroyWidgets([self.optionsSpace, self.labelPause]))
+        self.btnClose = Button(self.optionsSpace, text='Return to Game', command=lambda:widgets.destroyWidgets([self.optionsSpace, self.labelPause]))
         self.btnSave = Button(self.optionsSpace, text='Save', command=self.confirmSaveGame)
         self.btnReturnToMainMenu = Button(self.optionsSpace, text='Main Menu', command=self.confirmReturnToMainMenu)
         self.btnExit = Button(self.optionsSpace, text='Exit', command=self.confirmExitGame)
@@ -706,8 +267,8 @@ class Game(Tk):
             self.playSpace.rowconfigure(i, weight=1)
         self.playSpace.rowconfigure(2, weight=6)
 
-        self.configWidgets('Label', [self.labelPause])
-        self.configWidgets('Button', [self.btnClose, self.btnSave, self.btnReturnToMainMenu, self.btnExit])
+        widgets.configWidgets(self, 'Label', [self.labelPause])
+        widgets.configWidgets(self, 'Button', [self.btnClose, self.btnSave, self.btnReturnToMainMenu, self.btnExit])
 
         #widgets placement
         self.labelPause.grid(row=1, column=1)
@@ -723,6 +284,7 @@ class Game(Tk):
             self.btnSave.config(state='normal')
     
     #FIN === VALIDATION/LOG/OTIONS CANVAS CREATION =================================
+
 
 
     #mise à jour des variables globales (avant de continuer à process)
@@ -819,7 +381,7 @@ class Game(Tk):
         self.menuSpaceBtns.append(self.btnSteal)
 
         #config buttons (except 'btnAction')
-        self.configWidgets('Button', [self.btnOptions])
+        widgets.configWidgets(self, 'Button', [self.btnOptions])
         for btn in self.menuSpaceBtns:
             btn.config(bg=Game.WIDGET_COLORS['redLight'], border=0, highlightthickness=0, activebackground=Game.WIDGET_COLORS['red'])
 
@@ -865,7 +427,7 @@ class Game(Tk):
             self.wagons[0].marshall = True
 
             self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
-            self.configActionButton('preparation')
+            widgets.configActionButton(self, 'preparation')
             self.createValidationSpace()
 
 
@@ -933,11 +495,11 @@ class Game(Tk):
 
             if preparation:
                 self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
-                self.configActionButton('preparation')
+                widgets.configActionButton(self, 'preparation')
                 self.createValidationSpace()
             else:
                 self.btnAction.config(text='Action !')
-                self.configActionButton('action')
+                widgets.configActionButton(self, 'action')
 
                 self.insertTextInLog('\n\nGame succesfully loaded\n')
                 self.insertTextInLog(f'\n\n\n=== Turn {self.currentTurn}/{Game.NB_TOURS}===\n')
@@ -960,7 +522,7 @@ class Game(Tk):
 
         saveGestion.save(Game.NB_JOUEURS, Game.NB_TOURS, self.currentTurn, Game.NB_WAGONS, Game.MAX_ACTIONS, self.marshallDirection, preparation, self.wagons, self.bandits, self.butins)
 
-        self.destroyWidgets([self.optionsSpace, self.labelPause])
+        widgets.destroyWidgets([self.optionsSpace, self.labelPause])
 
         self.insertTextInLog('\n\nGame succesfully saved\n')
 
@@ -976,7 +538,7 @@ class Game(Tk):
         self.btnYes = Button(self.optionsSpace, text='Yes', command=self.saveGame)
         self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnSave, 3))
 
-        self.configWidgets('Button', [self.btnYes, self.btnNo])
+        widgets.configWidgets(self, 'Button', [self.btnYes, self.btnNo])
 
         self.btnYes.grid(row=3, column=1, sticky='we')
         self.btnNo.grid(row=3, column=2, sticky='we')
@@ -990,10 +552,10 @@ class Game(Tk):
         self.btnSave.config(state='disabled')
         self.btnExit.config(state='disabled')
 
-        self.btnYes = Button(self.optionsSpace, text='Yes', command=lambda:self.returnToMainMenu([self.playSpace, self.menuSpace, self.optionsSpace, self.labelPause]))
+        self.btnYes = Button(self.optionsSpace, text='Yes', command=lambda:menus.returnToMainMenu(self, [self.playSpace, self.menuSpace, self.optionsSpace, self.labelPause]))
         self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnReturnToMainMenu, 5))
 
-        self.configWidgets('Button', [self.btnYes, self.btnNo])
+        widgets.configWidgets(self, 'Button', [self.btnYes, self.btnNo])
 
         self.btnYes.grid(row=5, column=1, sticky='we')
         self.btnNo.grid(row=5, column=2, sticky='we')
@@ -1010,7 +572,7 @@ class Game(Tk):
         self.btnYes = Button(self.optionsSpace, text='Yes', command=self.destroy)
         self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnExit, 7))
 
-        self.configWidgets('Button', [self.btnYes, self.btnNo])
+        widgets.configWidgets(self, 'Button', [self.btnYes, self.btnNo])
 
         self.btnYes.grid(row=7, column=1, sticky='we')
         self.btnNo.grid(row=7, column=2, sticky='we')
@@ -1018,7 +580,7 @@ class Game(Tk):
 
 
     def cancelConfirmation(self, btn:Button, row:int):
-        self.destroyWidgets([self.btnYes, self.btnNo])
+        widgets.destroyWidgets([self.btnYes, self.btnNo])
         
         self.btnClose.config(state='normal')
         self.btnReturnToMainMenu.config(state='normal')
@@ -1140,7 +702,7 @@ class Game(Tk):
 
         if self.banditQuiChoisi == Game.NB_JOUEURS: #tous les joueurs ont selectionnés leurs actions
             self.btnAction.config(state='normal', text='Action !')
-            self.configActionButton('action')
+            widgets.configActionButton(self, 'action')
             for btn in self.menuSpaceBtns:
                 btn.config(state='disabled')
 
@@ -1249,7 +811,7 @@ class Game(Tk):
                 self.createValidationSpace()
 
                 self.btnAction.config(text=f'Choose {Game.MAX_ACTIONS} actions...')
-                self.configActionButton('preparation')
+                widgets.configActionButton(self, 'preparation')
 
                 for btn in self.menuSpaceBtns:
                     btn.config(state='disabled')
@@ -1337,8 +899,8 @@ class Game(Tk):
                 indexWinners.append(i)
                 highestMoneyAmount = tempMoneyAmount
 
-        saveGestion.emptySave()
-        self.createEndGameMenu(indexWinners, playersNameAndResult)
+        # saveGestion.emptySave()
+        menus.createEndGameMenu(self, indexWinners, playersNameAndResult)
 
 
 
@@ -1468,7 +1030,8 @@ class Game(Tk):
 
         #MENU SPACE =========================================
         #resize du log
-        self.logText.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
+        if len(self.bandits) and len(self.bandits[0].actions):
+            self.logText.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
 
         #images des boutons
         self.imgTest = images.createLoadedImg(sizeButton, sizeButton, images.imgWagon)
