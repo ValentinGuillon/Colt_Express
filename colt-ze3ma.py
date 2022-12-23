@@ -930,7 +930,7 @@ class Game(Tk):
 
 
 
-    def createInventoryCanvas(self, bandit:Bandit, widthplaySpace:int, heightplaySpace:int, xOffset:int, yOffset:int, index:int):
+    def createInventoryCanvas(self, bandit:Bandit, widthplaySpace:int, heightplaySpace:int, xOffset:int, index:int):
         #taille de l'inventaire
         widthInventorySize = widthplaySpace//8
         heightInventorySize = heightplaySpace//4
@@ -952,9 +952,9 @@ class Game(Tk):
         nbBourses = len(bandit.butins)
 
         #placement des images
-        imgHead = self.playSpace.create_image(xOffset + xPlacementPosition, yOffset + yPlacementPosition, image=bandit.imgHead, anchor='nw')
-        imgBullet = self.playSpace.create_image(xOffset + xPlacementPosition, yOffset + yPlacementPosition + heightIcon, image=bandit.imgMunition, anchor='nw')
-        imgBourse = self.playSpace.create_image(xOffset + (xPlacementPosition + (widthIcon//2)), yOffset + yPlacementPosition + heightIcon, image=bandit.imgBourse, anchor='nw')
+        imgHead = self.playSpace.create_image(xOffset + xPlacementPosition, yPlacementPosition, image=bandit.imgHead, anchor='nw')
+        imgBullet = self.playSpace.create_image(xOffset + xPlacementPosition, yPlacementPosition + heightIcon, image=bandit.imgMunition, anchor='nw')
+        imgBourse = self.playSpace.create_image(xOffset + (xPlacementPosition + (widthIcon//2)), yPlacementPosition + heightIcon, image=bandit.imgBourse, anchor='nw')
 
         #placement du texte
         xTextOffset = widthIcon//4
@@ -962,11 +962,11 @@ class Game(Tk):
 
         x = xPlacementPosition + ((xTextOffset) - (xTextOffset*0.2))
         y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
-        imgNbBullets = self.playSpace.create_text(xOffset + x, yOffset + y, text=str(nbMunitions), anchor='nw')
+        imgNbBullets = self.playSpace.create_text(xOffset + x, y, text=str(nbMunitions), anchor='nw')
 
         x = xPlacementPosition + (((widthIcon//2) + xTextOffset) - (xTextOffset*0.2))
         y = yPlacementPosition + (((heightIcon//2)*3) + (yTextOffset*0.2))
-        imgNbBourses = self.playSpace.create_text(xOffset + x, yOffset + y, text=str(nbBourses), anchor='nw')
+        imgNbBourses = self.playSpace.create_text(xOffset + x, y, text=str(nbBourses), anchor='nw')
 
         #mise des dessins dans la liste globale
         self.imgsOnCanvasPlaySpace.append(imgHead)
@@ -989,6 +989,8 @@ class Game(Tk):
         #taille du Canvas
         widthCanvas = self.playSpace.winfo_width()
         heightCanvas = self.playSpace.winfo_height()
+        widthDrawingSpace = widthCanvas
+        heightDrawingSpace = heightCanvas
         xOffsetCanvas = 0
         yOffsetCanvas = 0
 
@@ -999,20 +1001,29 @@ class Game(Tk):
         width = widthCanvas // widthRatio
         height = heightCanvas // heightRatio
 
+        self.imgBackgroundSafe = None
+
         if width > height: #etiré dans la largeur
-            widthCanvas = int(height * widthRatio)
-            xOffsetCanvas = (self.playSpace.winfo_width()//2) - (widthCanvas //2)
+            # self.imgBackgroundSafe = images.createLoadedImg(widthDrawingSpace, heightDrawingSpace, images.imgPaysageSafeHeight)
+            
+            widthDrawingSpace = int(height * widthRatio)
+            xOffsetCanvas = (self.playSpace.winfo_width()//2) - (widthDrawingSpace //2)
 
         elif width < height: #etiré dans la hauteur
-            heightCanvas = int(width * heightRatio)
-            yOffsetCanvas = (self.playSpace.winfo_height()//2) - (heightCanvas //2)
+            self.imgBackgroundSafe = images.createLoadedImg(widthDrawingSpace, heightDrawingSpace, images.imgPaysageSafeHeight)
+
+            heightDrawingSpace = int(width * heightRatio)
+            yOffsetCanvas = (self.playSpace.winfo_height()//2) - (heightDrawingSpace //2)
+
+        img = self.playSpace.create_image(0, 0, image=self.imgBackgroundSafe, anchor='nw')
+        self.imgsOnCanvasPlaySpace.append(img)
 
 
         #ON DÉFINI LES TAILLES DE TOUTES LES IMAGES ==========
 
         #taille d'un Wagon
-        widthWagon = widthCanvas // (Game.NB_WAGONS+1+1)
-        heightWagon = heightCanvas // 3
+        widthWagon = widthDrawingSpace // (Game.NB_WAGONS+1+1)
+        heightWagon = heightDrawingSpace // 3
         #taille des personnages (marshall and Bandit)
         widthCharacter = int (widthWagon *0.26)
         heightCharacter = int (heightWagon *0.42)
@@ -1026,7 +1037,7 @@ class Game(Tk):
         heightMagot = int(heightWagon *  0.20)
 
         #taille des images de boutons
-        # sizeButton = ((heightCanvas//3) * 2) // 7
+        # sizeButton = ((heightDrawingSpace//3) * 2) // 7
         sizeButton = (self.menuSpace.winfo_height() // 2) // 6
 
 
@@ -1034,7 +1045,7 @@ class Game(Tk):
         #MENU SPACE =========================================
         #resize du log
         if len(self.bandits) and len(self.bandits[0].actions):
-            self.logText.config(width=widthCanvas//20, height=int((heightCanvas//2)*0.08))
+            self.logText.config(width=widthDrawingSpace//20, height=int((heightDrawingSpace//2)*0.08))
 
         #images des boutons
         self.imgTest = images.createLoadedImg(sizeButton, sizeButton, images.imgWagon)
@@ -1056,7 +1067,7 @@ class Game(Tk):
         #var 'img' will be used as a create_image() container
 
         #ON DESSINE LE BACKGROUND ============================
-        self.imgPaysage = images.createLoadedImg(widthCanvas, heightCanvas, images.imgPaysage)
+        self.imgPaysage = images.createLoadedImg(widthDrawingSpace, heightDrawingSpace, images.imgPaysage)
         img = self.playSpace.create_image(xOffsetCanvas, yOffsetCanvas, image=self.imgPaysage, anchor='nw')
         self.imgsOnCanvasPlaySpace.append(img)
 
@@ -1304,7 +1315,7 @@ class Game(Tk):
         #ON DESSINE LES INVENTAIRES DES BANDITS ==============================
 
         for i, bandit in enumerate(self.bandits):
-            self.createInventoryCanvas(bandit, widthCanvas, heightCanvas, xOffsetCanvas, yOffsetCanvas, i)
+            self.createInventoryCanvas(bandit, widthDrawingSpace, heightCanvas, xOffsetCanvas, i)
 
         #FIN === ON DESSINE LES INVENTAIRES DES BANDITS ======================
     

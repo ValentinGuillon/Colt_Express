@@ -5,6 +5,7 @@ from PIL import ImageTk, Image
 imgIcon = Image.open('png/windowIcon_train.ico')
 
 imgPaysage = Image.open("png/landscape.png")
+imgPaysageSafeHeight = Image.open("png/landscapeSafeHeight.png")
 
 imgRight = Image.open('png/menuSpace_button_arrow_right.png')
 imgLeft = Image.open('png/menuSpace_button_arrow_left.png')
