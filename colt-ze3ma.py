@@ -509,6 +509,10 @@ class Game(Tk):
             
             self.action = Game.MAX_ACTIONS - len(Game.bandits[0].actions) + 1
 
+        # self.after(ms=10, func=lambda:menus.createLoadingScreen(self))
+        menus.createLoadingScreen(self)
+        
+
     """
     
     self.btnClose
@@ -904,6 +908,7 @@ class Game(Tk):
 
         # saveGestion.emptySave()
         menus.createEndGameMenu(self, indexWinners, playersNameAndResult)
+        menus.createLoadingScreen(self)
 
 
 

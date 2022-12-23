@@ -1,4 +1,5 @@
 from tkinter import *
+import random
 import modules.saveGestion as saveGestion
 import modules.images as images
 import modules.widgets as widgets
@@ -20,6 +21,61 @@ def returnToMainMenu(window, canvas:list[Canvas]):
 def resizeMenusBackground(window, canvas:Canvas):
     window.img = images.createLoadedImg(canvas.winfo_width(), canvas.winfo_height(), images.imgPaysage)
     canvas.create_image(0, 0, image=window.img, anchor='nw')
+
+
+def loadingBarProgess(loadingScreen, label, step=6):
+    if step == 6:
+        label.config(text='                                           ')
+        loadingScreen.after(ms=random.randint(300, 400), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    elif step == 5:
+        label.config(text='=======                                    ')
+        loadingScreen.after(ms=random.randint(300, 600), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    elif step == 4:
+        label.config(text='=============                              ')
+        loadingScreen.after(ms=random.randint(500, 550), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    elif step == 3:
+        label.config(text='=======================                    ')
+        loadingScreen.after(ms=random.randint(100, 150), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    elif step == 2:
+        label.config(text='================================           ')
+        loadingScreen.after(ms=random.randint(200, 300), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    elif step == 1:
+        label.config(text='===========================================')
+        loadingScreen.after(ms=500, func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+    else:
+        loadingScreen.destroy()
+
+
+def createLoadingScreen(window):
+
+    #menu Canvas
+    window.loadingCanvas = Canvas(window, bg=window.WIDGET_COLORS['sand'])
+    window.loadingCanvas.grid(row=0, column=0, columnspan=2, sticky='nsew')
+
+    #weight of empty rows/columns
+    for i in [0, 4]:
+        window.loadingCanvas.columnconfigure(i, weight=1)
+    for i in [1, 3]:
+        window.loadingCanvas.columnconfigure(i, weight=4)
+    for i in [0, 4]:
+        window.loadingCanvas.rowconfigure(i, weight=3)
+    window.loadingCanvas.rowconfigure(2, weight=1)
+
+    #widgets creation
+    loadingProgessText = '3'
+    window.title = Label(window.loadingCanvas, text='FAKE LOADING', font=60)
+    window.loadingProgress = Label(window.loadingCanvas, text=loadingProgessText, justify='center', font=("Consolas", 10))
+
+    #widgets default configuration
+    widgets.configWidgets(window, 'Label', [window.title, window.loadingProgress])
+    window.title.config(bg=window.WIDGET_COLORS['sand'])
+    window.loadingProgress.config(bg=window.WIDGET_COLORS['train'], fg=window.WIDGET_COLORS['sand'])
+
+    #widgets placement
+    window.title.grid(row=1, column=2)
+    window.loadingProgress.grid(row=3, column=1, columnspan=3)
+
+    loadingBarProgess(window.loadingCanvas, window.loadingProgress)
 
 
 
