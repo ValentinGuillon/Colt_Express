@@ -1,5 +1,5 @@
 import random
-
+import modules.tools as tools
 
 #create empty class just to be able to names variables type
 class Game:
@@ -14,6 +14,7 @@ class Bandit():
     def __init__(self, game:Game, name:str, color:str, position:tuple=None, actions:list=None, bullets:int=None):
         self.name = name
         self.color = color
+        self.colorHtml = tools.convertToHtml(game.COLORS[color])
         self.position = {'x':game.NB_WAGONS, 'y':0} #x => index du wagon dans Game.wagons, y => position dans le wagon(0=toit, 1=intérieur)
         self.actions = actions.copy() #action = 'right', 'left', 'up', 'down', 'shoot' or 'rob'
         self.game = game
@@ -88,7 +89,7 @@ class Bandit():
 
         if action == 'right':
             if xBanditPosition == self.game.NB_WAGONS:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.color)
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.colorHtml)
                 return
 
             #on retire le bandit du wagon actuel
@@ -105,7 +106,7 @@ class Bandit():
 
         if action == 'left':
             if xBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.color)
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.colorHtml)
                 return
 
             #on retire le bandit du wagon actuel
@@ -122,18 +123,18 @@ class Bandit():
 
         if action == 'up':
             if yBanditPosition == 0:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.color)
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.colorHtml)
                 return
             self.position['y'] = 0
 
         if action == 'down':
             if yBanditPosition == 1:
-                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.color)
+                self.game.insertTextInLog(f"{banditName} can't move {action}\n", self.colorHtml)
                 return
             self.position['y'] = 1
 
         
-        self.game.insertTextInLog(f'{self.name} moves {action}\n', self.color)
+        self.game.insertTextInLog(f'{self.name} moves {action}\n', self.colorHtml)
         self.checkForButin()
 
 
@@ -152,10 +153,10 @@ class Bandit():
 
     #tire sur un Bandit, aléatoirement, à la même position
     def shoot(self):
-        self.game.insertTextInLog(f'{self.name} shoot', self.color)
+        self.game.insertTextInLog(f'{self.name} shoot', self.colorHtml)
 
         if self.bullets == 0:
-            self.game.insertTextInLog(f', but has no more bullets\n', self.color)
+            self.game.insertTextInLog(f', but has no more bullets\n', self.colorHtml)
             return
 
         self.bullets -= 1
@@ -170,7 +171,7 @@ class Bandit():
                 nb_targets += 1
 
         if nb_targets == 0:
-            self.game.insertTextInLog(f' on the wind\n', self.color)
+            self.game.insertTextInLog(f' on the wind\n', self.colorHtml)
             return
 
 
@@ -191,14 +192,14 @@ class Bandit():
 
     #vole un butin, aléatoirement, sur sa position
     def rob(self):
-        self.game.insertTextInLog(f'{self.name} rob', self.color)
+        self.game.insertTextInLog(f'{self.name} rob', self.colorHtml)
 
         #le wagon à braquer
         wagon = self.game.wagons[self.position['x']]
 
         #si le wagon n'a pas de butins
         if len(wagon.butins) == 0:
-            self.game.insertTextInLog(f' nothing\n', self.color)
+            self.game.insertTextInLog(f' nothing\n', self.colorHtml)
             return
         
         #check if there is bracable butins
@@ -214,7 +215,7 @@ class Bandit():
                 butinAvailable = True
         
         if not butinAvailable:
-            self.game.insertTextInLog(f' nothing\n', self.color)
+            self.game.insertTextInLog(f' nothing\n', self.colorHtml)
             return
         
 
@@ -237,14 +238,14 @@ class Bandit():
         robbedButin.bracable = False
         robbedButin.position['y'] = self.name
         self.butins.append(robbedButin)
-        self.game.insertTextInLog(f' something\n', self.color)
+        self.game.insertTextInLog(f' something\n', self.colorHtml)
 
 
 
 
     #perd un butin, aléatoirement
     def getHitByBandit(self, ennemy:Bandit):
-        self.game.insertTextInLog(f' on {self.name}\n', self.color) #couleur de l'ennemy a ajouter 
+        self.game.insertTextInLog(f' on {self.name}\n', self.colorHtml) #couleur de l'ennemy a ajouter 
 
 
         if len(self.butins) == 0: #le bandit n'a pas de butins{self.name}
@@ -255,8 +256,8 @@ class Bandit():
 
         #ennemy récupère le butin s'il n'en a pas
         if not len(ennemy.butins):
-            self.game.insertTextInLog(f'{ennemy.name} steal a loot from', ennemy.color)
-            self.game.insertTextInLog(f' {self.name}\n', self.color)
+            self.game.insertTextInLog(f'{ennemy.name} steal a loot from', ennemy.colorHtml)
+            self.game.insertTextInLog(f' {self.name}\n', self.colorHtml)
 
             lostButin.position['y'] = ennemy.name
 
@@ -265,7 +266,7 @@ class Bandit():
 
         
         else:
-            self.game.insertTextInLog(f'{self.name} lost a loot\n', self.color)
+            self.game.insertTextInLog(f'{self.name} lost a loot\n', self.colorHtml)
 
             lostButin.position['x'] = self.position['x']
             if self.position['y'] == 0:
@@ -283,7 +284,7 @@ class Bandit():
 
     #perd un butin, aléatoirement, et monte sur le toit
     def getHitByMarshall(self):
-        self.game.insertTextInLog(f'{self.name} get shoot by the Marshall\n{self.name}', self.color)
+        self.game.insertTextInLog(f'{self.name} get shoot by the Marshall\n{self.name}', self.colorHtml)
 
 
         if len(self.butins):
@@ -301,12 +302,12 @@ class Bandit():
 
             #qu'on rajoute dans le wagon
             self.game.wagons[self.position['x']].butins.append(lostButin)
-            self.game.insertTextInLog(f' lost a loot and', self.color)
+            self.game.insertTextInLog(f' lost a loot and', self.colorHtml)
 
 
         #le bandit monte sur le toit
         self.position['y'] = 0
-        self.game.insertTextInLog(f' flee to the roof\n', self.color)
+        self.game.insertTextInLog(f' flee to the roof\n', self.colorHtml)
 
 
     #called after a movement, take a random Butin on the floor (bracable == False)
@@ -349,7 +350,7 @@ class Bandit():
 
         #and give it to the bandit
         self.butins.append(lootedButin)
-        self.game.insertTextInLog(f'{self.name} got a loot\n', self.color)
+        self.game.insertTextInLog(f'{self.name} got a loot\n', self.colorHtml)
 
 
 

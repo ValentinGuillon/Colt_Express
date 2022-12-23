@@ -2,6 +2,7 @@ from tkinter import *
 import modules.saveGestion as saveGestion
 import modules.images as images
 import modules.widgets as widgets
+import modules.tools as tools
 
 
 
@@ -192,7 +193,8 @@ def createLoadGameMenu(window):
 
         labelPlayer = Label(window.playersInfosSpace, text=text)
         widgets.configWidgets(window, 'Label', [labelPlayer])
-        labelPlayer.config(fg=banditElements[1])
+        color = tools.convertToHtml(window.COLORS[banditElements[1]])
+        labelPlayer.config(fg=color, bg=window.WIDGET_COLORS['sand'])
 
 
         window.loadGamePlayersLabels.append(labelPlayer)

@@ -5,6 +5,7 @@ import modules.saveGestion as saveGestion
 import modules.images as images
 import modules.menus as menus
 import modules.widgets as widgets
+import modules.tools as tools
 from modules.wagon import Wagon
 from modules.bandit import Bandit
 from modules.butin import Butin
@@ -27,11 +28,12 @@ class Game(Tk):
     LOAD_SAVE = FALSE
 
     COLORS:dict[tuple[int]] = {
-        'red':    (255, 0, 0),
-        'orange': (255, 128, 0),
-        'yellow': (255, 255, 0),
-        'green':  (0, 255, 0),
-        'blue':   (0, 0, 255)}
+        'Red':    (238, 4, 16),
+        'Green':  (15, 151, 3),
+        'Blue':   (10, 45, 221),
+        'Pink':   (252, 133, 239),
+        'Purple':   (99, 7, 87),
+        'Yellow':   (233, 255, 9)}
 
     WIDGET_COLORS:dict[str] = {
         'red':           '#b13001',
@@ -100,7 +102,7 @@ class Game(Tk):
     #the next two fonctions are used to force the Frame (self.color) to always expand on same width
     def fillColorSpace(self, colors):
         for i, color in enumerate(colors):
-            rb = Radiobutton(self.colorSpace, text=color, value=color, variable=self.selected_color, fg=color)
+            rb = Radiobutton(self.colorSpace, text=color, value=color, variable=self.selected_color, fg=tools.convertToHtml(Game.COLORS[color]))
             rb.config(bg='cadet blue', selectcolor='cadet blue', highlightthickness=0, activebackground=Game.WIDGET_COLORS['road'], activeforeground=Game.WIDGET_COLORS['train'])
             if i == len(colors)-1 and i%2 == 0:
                 rb.grid(row=i%2, column=i//2, rowspan=2, sticky='nsew')
@@ -200,7 +202,8 @@ class Game(Tk):
             self.labelName = Label(self.validationSpace, textvariable=self.banditNameForLabel, justify='center')
 
             #widgets configurations
-            self.labelName.config(justify='center', bg=Game.bandits[self.banditQuiChoisi].color, fg=Game.WIDGET_COLORS['train'])
+            color = Game.bandits[self.banditQuiChoisi].colorHtml
+            self.labelName.config(justify='center', bg=color, fg=Game.WIDGET_COLORS['train'])
 
             #widgets placements
             self.labelName.grid(row=2, rowspan=2, sticky='ew', pady=2)
@@ -615,6 +618,7 @@ class Game(Tk):
 
 
         self.updateActionsBar()
+        self.updateCanvasImgs()
         
 
 
@@ -729,8 +733,7 @@ class Game(Tk):
             self.createValidationSpace()
 
             if self.currentTurn > 1:
-                self.labelName.config(bg=Game.bandits[self.banditQuiChoisi].color)
-                # self.labelName.config(bg=Game.COLORS[Game.bandits[self.banditQuiChoisi].color]) #remettre après avoir fait une fonction qui converti un color tuple en color html:
+                self.labelName.config(bg=Game.bandits[self.banditQuiChoisi].colorHtml)
 
     
 
@@ -787,11 +790,11 @@ class Game(Tk):
 
 
 
-    def insertTextInLog(self, text:str, color='black'):
-        colorize = 'color-' + color
+    def insertTextInLog(self, text:str, color=WIDGET_COLORS['train']):
+        tagName = 'color-' + color
+        self.logText.tag_configure(tagName, foreground=color)
         self.logText.config(state='normal')
-        self.logText.tag_configure(colorize, foreground=color)
-        self.logText.insert(END, text, colorize)
+        self.logText.insert(END, text, tagName)
         self.logText.see(END)
         self.logText.config(state='disabled')
 
@@ -1031,7 +1034,7 @@ class Game(Tk):
         #MENU SPACE =========================================
         #resize du log
         if len(self.bandits) and len(self.bandits[0].actions):
-            self.logText.config(width=widthCanvas//20, height=int((heightCanvas//3)*0.08))
+            self.logText.config(width=widthCanvas//20, height=int((heightCanvas//2)*0.08))
 
         #images des boutons
         self.imgTest = images.createLoadedImg(sizeButton, sizeButton, images.imgWagon)
