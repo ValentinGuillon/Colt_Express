@@ -6,7 +6,41 @@ import modules.widgets as widgets
 import modules.tools as tools
 
 
+global RULES
+RULES = """
+Colt Zeʁma est un jeu de stratégie,\nsur plusieurs tours,\nde 2 à 6 joueurs
 
+Chaque joueur incarne un bandit,\nse déplaçant dans un train\nsurveillé par un Marshall,\nmais remplit de butins.
+
+Le but du jeu\nest d'avoir la plus grande fortune\nà la fin de la partie
+
+
+Chaque tour est divisé en 2 phases :\nPréparation et Action
+
+Pendant la phase de Préparation,\nun par un,\nchaque joueur choisit une suite d'actions (Se déplacer, Tirer, Voler)
+
+Pendant la phase d'Action,\nune action de chaque joueur est exécutée,\net le Marshall change de wagon.
+Et ce,\ntant que toutes les actions\nn'ont pas été exécutées
+
+
+!!!
+Si vous vous retrouvez dans le même wagon que le Marshall,\nvous vous ferez tirer dessus,\nperdant ainsi un butin,\net fuyant sur le toit du wagon
+
+
+LES ACTIONS
+-\nDroite ou Gauche\nChange de wagon
+-\nHaut ou Bas\nMonte sur le toit, ou rentre dans le wagon
+-\nTirer\nFaire perdre un butin à un bandit\ndans le même wagon, et au même étage 
+-\nVoler\nRécupère un butin dans le wagon
+
+
+TIPS
+-\nEn tirant sur un bandit,\nsi vous n'avez pas de butin,\nvous récupérerez le butin perdu par votre cible
+-\nSi un butin est tombé au sol,\nmarcher dessus suffit à le récupérer
+-\nPour récupérer le Magot,\nil faut TOUJOURS faire l'action Voler
+-\nLe Marshall avance toujours dans la même direction,\nmais attention,\nil peut parfois changer sa direction sans prévenir
+
+    """
 
 
 def returnToMainMenu(window, canvas:list[Canvas]):
@@ -91,24 +125,26 @@ def createMainMenu(window):
         window.canvasMainMenu.columnconfigure(i, weight = 1)
     for i in [1, 3]:
         window.canvasMainMenu.columnconfigure(i, weight = 1)
-    for i in [0, 9]:
+    for i in [0, 10]:
         window.canvasMainMenu.rowconfigure(i, weight = 3)
 
     window.canvasMainMenu.rowconfigure(2, weight = 2)
     window.canvasMainMenu.rowconfigure(5, weight = 1)
-    window.canvasMainMenu.rowconfigure(7, weight = 1)
+    window.canvasMainMenu.rowconfigure(8, weight = 1)
 
     #widgets creations
     window.title = Label(window.canvasMainMenu, text='COLT ZEʁMA', font=60)
     window.btnNew = Button(window.canvasMainMenu, text='New', command=lambda:createNewGameMenu(window))
     window.btnLoad = Button(window.canvasMainMenu, text='Load', command=lambda:createLoadGameMenu(window))
-    window.btncredits = Button(window.canvasMainMenu, text='Credits', command=lambda:createCreditsMenu(window))
+    window.btnRules = Button(window.canvasMainMenu, text='Rules', command=lambda:createRulesMenu(window))
+    window.btnCredits = Button(window.canvasMainMenu, text='Credits', command=lambda:createCreditsMenu(window))
     window.btnExit = Button(window.canvasMainMenu, text='Exit', command=window.destroy)
 
+    #createRulesMenu
 
     #widgets configuration
     widgets.configWidgets(window, 'Label', [window.title])
-    widgets.configWidgets(window, 'Button', [window.btnNew, window.btnLoad, window.btncredits, window.btnExit])
+    widgets.configWidgets(window, 'Button', [window.btnNew, window.btnLoad, window.btnRules, window.btnCredits, window.btnExit])
 
     if saveGestion.saveIsEmpty():
         window.btnLoad.config(state='disabled')
@@ -119,8 +155,9 @@ def createMainMenu(window):
     window.title.grid(column=1, row=1, columnspan=3, sticky='nsew', ipady=10)
     window.btnNew.grid(column=2, row=3, sticky='nsew')
     window.btnLoad.grid(column=2, row=4, sticky='nsew')
-    window.btncredits.grid(column=2, row=6, sticky='nsew')
-    window.btnExit.grid(column=2, row=8, sticky='nsew')
+    window.btnRules.grid(column=2, row=6, sticky='nsew')
+    window.btnCredits.grid(column=2, row=7, sticky='nsew')
+    window.btnExit.grid(column=2, row=9, sticky='nsew')
 
 
 
@@ -156,6 +193,71 @@ def createCreditsMenu(window):
     window.title.grid(column=1, row=1, sticky='nsew', ipady=10)
     window.labelCredits.grid(row=3, column=1, pady=15, ipadx=15, ipady=10)
     window.creditsBtnExit.grid(row=5, column=1, pady=15)
+
+
+
+
+
+
+def insertRules(space:Text):
+    space.insert(END, RULES, 'center')
+    space.config(state='disabled')
+
+
+
+
+def createRulesMenu(window):
+    window.canvasMainMenu.destroy()
+
+    #menu Canvas
+    window.rulesCanvas = Canvas(window)
+    window.rulesCanvas.grid(columnspan=2, sticky='nsew')
+    window.rulesCanvas.bind('<Configure>', lambda e: resizeMenusBackground(window, window.rulesCanvas))
+
+    #weight of empty rows/columns
+    for i in [0, 2]:
+        window.rulesCanvas.columnconfigure(i, weight=1)
+    for i in [0, 6]:
+        window.rulesCanvas.rowconfigure(i, weight=3)
+    window.rulesCanvas.rowconfigure(2, weight=2)
+    window.rulesCanvas.rowconfigure(4, weight=1)
+
+
+    #widgets creation
+    window.title = Label(window.rulesCanvas, text='RULES', font=60)
+    window.creditsBtnExit = Button(window.rulesCanvas, text='Main Menu', command=lambda:returnToMainMenu(window, [window.rulesCanvas]))
+
+    window.rulesFrame = Frame(window.rulesCanvas, bg=window.WIDGET_COLORS['road'])
+
+    width = window.winfo_width() //10
+    height = window.winfo_height() //30
+    window.rulesText = Text(window.rulesFrame, font=('Ariel', 10), width=width, height=height, wrap='word')
+    window.rulesText.tag_configure('center', justify='center')
+
+    rulesScrollbal = Scrollbar(window.rulesFrame, orient=VERTICAL)
+
+
+    #widgets configuration
+    rulesScrollbal.config(command=window.rulesText.yview)
+    window.rulesText.config(yscrollcommand=rulesScrollbal.set)
+
+    window.rulesText.config(highlightthickness=1, border=0, highlightbackground=window.WIDGET_COLORS['train'], bg=window.WIDGET_COLORS['road'])
+    rulesScrollbal.config(bg=window.WIDGET_COLORS['train'], highlightthickness=1, border=0, highlightbackground=window.WIDGET_COLORS['train'], activebackground=window.WIDGET_COLORS['red'], troughcolor=window.WIDGET_COLORS['road'], width=15)
+
+
+
+    #widgets default configuration
+    widgets.configWidgets(window, 'Label', [window.title])
+    widgets.configWidgets(window, 'Button', [window.creditsBtnExit])
+    insertRules(window.rulesText)
+
+    #widgets placement
+    window.title.grid(row=1, column=1, sticky='nsew', ipady=10)
+    window.rulesFrame.grid(row=3, column=1)
+    window.creditsBtnExit.grid(row=5, column=1, pady=15)
+
+    window.rulesText.grid(row=0, column=0)
+    rulesScrollbal.grid(row=0, column=1, sticky='ns')
 
 
 
