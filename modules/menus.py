@@ -4,6 +4,8 @@ import modules.saveGestion as saveGestion
 import modules.images as images
 import modules.widgets as widgets
 import modules.tools as tools
+import modules.audios as audios
+from typing import Literal
 
 
 global RULES
@@ -38,16 +40,24 @@ TIPS
 -\nEn tirant sur un bandit,\nsi vous n'avez pas de butin,\nvous récupérerez le butin perdu par votre cible
 -\nSi un butin est tombé au sol,\nmarcher dessus suffit à le récupérer
 -\nPour récupérer le Magot,\nil faut TOUJOURS faire l'action Voler
--\nLe Marshall avance toujours dans la même direction,\nmais attention,\nil peut parfois changer sa direction sans prévenir
+-\nLe Marshall avance toujours dans la même direction,\nmais attention,\nil peut parfois en changer sans prévenir
+-\nL'arme du Marshall indique dans quelle direction il avance
 
     """
 
 
-def returnToMainMenu(window, canvas:list[Canvas]):
+def returnToMainMenu(window, canvas:list[Canvas], fromGame = False):
+    audios.resetMusicVolume(window.VOLUME_MUSIC)
+
     for cnv in canvas:
         cnv.destroy()
     createMainMenu(window)
 
+
+    if fromGame:
+        audios.playMusic('main')
+    else:
+        audios.playSound('returnMainMenu')
 
 
 
@@ -57,30 +67,40 @@ def resizeMenusBackground(window, canvas:Canvas):
     canvas.create_image(0, 0, image=window.img, anchor='nw')
 
 
-def loadingBarProgess(loadingScreen, label, step=6):
-    if step == 6:
+def loadingBarProgess(loadingScreen, label, music, step=9):
+    if step == 9:
         label.config(text='                                           ')
-        loadingScreen.after(ms=random.randint(300, 400), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
-    elif step == 5:
+        loadingScreen.after(ms=random.randint(300, 400), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
+    elif step == 8:
         label.config(text='=======                                    ')
-        loadingScreen.after(ms=random.randint(300, 600), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
-    elif step == 4:
+        loadingScreen.after(ms=random.randint(500, 600), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
+    elif step == 7:
         label.config(text='=============                              ')
-        loadingScreen.after(ms=random.randint(500, 550), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+        loadingScreen.after(ms=random.randint(400, 550), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
+    elif step == 6:
+        label.config(text='==================                         ')
+        loadingScreen.after(ms=random.randint(300, 350), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
+    elif step == 5:
+        label.config(text='=========================                  ')
+        loadingScreen.after(ms=random.randint(400, 410), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
+    elif step == 4:
+        label.config(text='===============================            ')
+        loadingScreen.after(ms=random.randint(350, 375), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
     elif step == 3:
-        label.config(text='=======================                    ')
-        loadingScreen.after(ms=random.randint(100, 150), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+        label.config(text='===================================        ')
+        loadingScreen.after(ms=random.randint(200, 220), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
     elif step == 2:
-        label.config(text='================================           ')
-        loadingScreen.after(ms=random.randint(200, 300), func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+        label.config(text='=======================================    ')
+        loadingScreen.after(ms=random.randint(100, 150), func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
     elif step == 1:
         label.config(text='===========================================')
-        loadingScreen.after(ms=500, func=lambda:loadingBarProgess(loadingScreen, label, step=step-1))
+        loadingScreen.after(ms=500, func=lambda:loadingBarProgess(loadingScreen, label, music, step=step-1))
     else:
         loadingScreen.destroy()
+        audios.playMusic(music)
 
 
-def createLoadingScreen(window):
+def createLoadingScreen(window, music:Literal['main', 'maria']):
 
     #menu Canvas
     window.loadingCanvas = Canvas(window, bg=window.WIDGET_COLORS['sand'])
@@ -109,7 +129,7 @@ def createLoadingScreen(window):
     window.title.grid(row=1, column=2)
     window.loadingProgress.grid(row=3, column=1, columnspan=3)
 
-    loadingBarProgess(window.loadingCanvas, window.loadingProgress)
+    loadingBarProgess(window.loadingCanvas, window.loadingProgress, music)
 
 
 
@@ -268,6 +288,7 @@ def createRulesMenu(window):
 def createLoadGameMenu(window):
     #afficher un aperçu de ce que contient la sauvegarde
     window.canvasMainMenu.destroy()
+    audios.playSound('loadGame')
 
     #menuCanvas
     window.loadGameCanvas = Canvas(window)
@@ -398,6 +419,7 @@ def createLoadGameMenu(window):
 
 def createNewGameMenu(window):
     window.canvasMainMenu.destroy()
+    audios.playSound('newGame')
 
     #menuCanvas
     window.newGameCanvas = Canvas(window)
@@ -503,6 +525,8 @@ def createNewGameMenu(window):
 def createEndGameMenu(window, indexWinners:list[int], playersNameAndResult:list[list[str]]):
     window.playSpace.destroy()
     window.menuSpace.destroy()
+    audios.stopMusic(1500)
+    audios.playSound('loading')
 
     #menu Canvas
     window.endGameMenuCanvas = Canvas(window, bg='red')
@@ -586,7 +610,6 @@ def createEndGameMenu(window, indexWinners:list[int], playersNameAndResult:list[
 
     window.btnExitToMainMenu.grid(column=2, row=3, sticky='nsew')
     window.btnExit.grid(column=2, row=5, sticky='nsew')
-
 
 
 

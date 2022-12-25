@@ -6,6 +6,8 @@ import modules.images as images
 import modules.menus as menus
 import modules.widgets as widgets
 import modules.tools as tools
+import modules.audios as audios
+
 from modules.wagon import Wagon
 from modules.bandit import Bandit
 from modules.butin import Butin
@@ -42,6 +44,10 @@ class Game(Tk):
         'train':         '#723f02',
         'road':          '#e5b13f',
         'moutainShadow': '#976700'}
+
+    VOLUME_GLOBAL = 20
+    VOLUME_MUSIC = VOLUME_GLOBAL
+    VOLUME_SOUNDS = VOLUME_GLOBAL
 
 
 
@@ -87,6 +93,8 @@ class Game(Tk):
 
         # createMainMenu
         menus.createMainMenu(self)
+        audios.setAudioVolume(Game.VOLUME_GLOBAL)
+        audios.playMusic('main')
 
 
 
@@ -245,8 +253,14 @@ class Game(Tk):
 
 
 
+    def destroyCanvasOptions(self):
+        widgets.destroyWidgets([self.optionsSpace, self.labelPause])
+        audios.resetMusicVolume(Game.VOLUME_MUSIC)
+        
+
 
     def createCanvasOptions(self):
+        audios.reduceMusicVolume(Game.VOLUME_MUSIC)
         self.optionsSpace = Canvas(self, bg=Game.WIDGET_COLORS['redLight'], highlightthickness=2, border=0, highlightbackground=Game.WIDGET_COLORS['red'])
         self.optionsSpace.grid(row=0, column=1, sticky='news')
 
@@ -259,7 +273,7 @@ class Game(Tk):
 
         #widgets creations
         self.labelPause = Label(self.playSpace, text="PAUSE", font=40)
-        self.btnClose = Button(self.optionsSpace, text='Return to Game', command=lambda:widgets.destroyWidgets([self.optionsSpace, self.labelPause]))
+        self.btnClose = Button(self.optionsSpace, text='Return to Game', command=self.destroyCanvasOptions)
         self.btnSave = Button(self.optionsSpace, text='Save', command=self.confirmSaveGame)
         self.btnReturnToMainMenu = Button(self.optionsSpace, text='Main Menu', command=self.confirmReturnToMainMenu)
         self.btnExit = Button(self.optionsSpace, text='Exit', command=self.confirmExitGame)
@@ -293,6 +307,8 @@ class Game(Tk):
     #mise à jour des variables globales (avant de continuer à process)
     def startGame(self, canvasToDestroy:Canvas, nbPlayers=4, nbWagons=4, nbTurns=3, nbActions=6, minButins=1, maxButins=4, nbBullets=12, loadSave=False):
         canvasToDestroy.destroy()
+        audios.stopMusic(3000)
+        audios.playSound('startGame')
 
         #reset variables
         self.wagons.clear()
@@ -509,8 +525,7 @@ class Game(Tk):
             
             self.action = Game.MAX_ACTIONS - len(Game.bandits[0].actions) + 1
 
-        # self.after(ms=10, func=lambda:menus.createLoadingScreen(self))
-        menus.createLoadingScreen(self)
+        menus.createLoadingScreen(self, 'maria')
         
 
     """
@@ -529,7 +544,7 @@ class Game(Tk):
 
         saveGestion.save(Game.NB_JOUEURS, Game.NB_TOURS, self.currentTurn, Game.NB_WAGONS, Game.MAX_ACTIONS, self.marshallDirection, preparation, self.wagons, self.bandits, self.butins)
 
-        widgets.destroyWidgets([self.optionsSpace, self.labelPause])
+        self.destroyCanvasOptions()
 
         self.insertTextInLog('\n\nGame succesfully saved\n')
 
@@ -537,6 +552,7 @@ class Game(Tk):
 
     def confirmSaveGame(self):
         self.btnSave.grid_forget()
+        audios.playSound('confirm')
         
         self.btnClose.config(state='disabled')
         self.btnReturnToMainMenu.config(state='disabled')
@@ -554,12 +570,13 @@ class Game(Tk):
 
     def confirmReturnToMainMenu(self):
         self.btnReturnToMainMenu.grid_forget()
+        audios.playSound('confirm')
         
         self.btnClose.config(state='disabled')
         self.btnSave.config(state='disabled')
         self.btnExit.config(state='disabled')
 
-        self.btnYes = Button(self.optionsSpace, text='Yes', command=lambda:menus.returnToMainMenu(self, [self.playSpace, self.menuSpace, self.optionsSpace, self.labelPause]))
+        self.btnYes = Button(self.optionsSpace, text='Yes', command=lambda:menus.returnToMainMenu(self, [self.playSpace, self.menuSpace, self.optionsSpace, self.labelPause], fromGame=True))
         self.btnNo = Button(self.optionsSpace, text='No', command=lambda:self.cancelConfirmation(self.btnReturnToMainMenu, 5))
 
         widgets.configWidgets(self, 'Button', [self.btnYes, self.btnNo])
@@ -571,6 +588,7 @@ class Game(Tk):
 
     def confirmExitGame(self):
         self.btnExit.grid_forget()
+        audios.playSound('confirm')
         
         self.btnClose.config(state='disabled')
         self.btnSave.config(state='disabled')
@@ -908,7 +926,7 @@ class Game(Tk):
 
         # saveGestion.emptySave()
         menus.createEndGameMenu(self, indexWinners, playersNameAndResult)
-        menus.createLoadingScreen(self)
+        menus.createLoadingScreen(self, 'main')
 
 
 
