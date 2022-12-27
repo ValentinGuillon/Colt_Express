@@ -45,7 +45,7 @@ class Game(Tk):
         'road':          '#e5b13f',
         'moutainShadow': '#976700'}
 
-    VOLUME_GLOBAL = 20
+    VOLUME_GLOBAL = 75
     VOLUME_MUSIC = VOLUME_GLOBAL
     VOLUME_SOUNDS = VOLUME_GLOBAL
 
@@ -88,12 +88,13 @@ class Game(Tk):
         self.currentTurn = 1
         self.action = 1 #only used to insert in Log while Actions phase
         self.banditQuiChoisi = 0
+
         self.marshallDirection = 'right'
 
 
         # createMainMenu
         menus.createMainMenu(self)
-        audios.setAudioVolume(Game.VOLUME_GLOBAL)
+        audios.setGlobalVolume(Game.VOLUME_GLOBAL)
         audios.playMusic('main')
 
 
@@ -307,7 +308,7 @@ class Game(Tk):
     #mise à jour des variables globales (avant de continuer à process)
     def startGame(self, canvasToDestroy:Canvas, nbPlayers=4, nbWagons=4, nbTurns=3, nbActions=6, minButins=1, maxButins=4, nbBullets=12, loadSave=False):
         canvasToDestroy.destroy()
-        audios.stopMusic(3000)
+        audios.fadeOutMusic(3000)
         audios.playSound('startGame')
 
         #reset variables
@@ -605,6 +606,7 @@ class Game(Tk):
 
 
     def cancelConfirmation(self, btn:Button, row:int):
+        audios.playSound('cancel')
         widgets.destroyWidgets([self.btnYes, self.btnNo])
         
         self.btnClose.config(state='normal')

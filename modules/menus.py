@@ -185,6 +185,7 @@ def createMainMenu(window):
 
 def createCreditsMenu(window):
     window.canvasMainMenu.destroy()
+    audios.playSound('rules')
 
     #menu Canvas
     window.creditsCanvas = Canvas(window)
@@ -228,6 +229,7 @@ def insertRules(space:Text):
 
 def createRulesMenu(window):
     window.canvasMainMenu.destroy()
+    audios.playSound('rules')
 
     #menu Canvas
     window.rulesCanvas = Canvas(window)
@@ -525,7 +527,7 @@ def createNewGameMenu(window):
 def createEndGameMenu(window, indexWinners:list[int], playersNameAndResult:list[list[str]]):
     window.playSpace.destroy()
     window.menuSpace.destroy()
-    audios.stopMusic(1500)
+    audios.fadeOutMusic(1500)
     audios.playSound('loading')
 
     #menu Canvas
