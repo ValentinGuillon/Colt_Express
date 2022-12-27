@@ -145,17 +145,19 @@ def createMainMenu(window):
         window.canvasMainMenu.columnconfigure(i, weight = 1)
     for i in [1, 3]:
         window.canvasMainMenu.columnconfigure(i, weight = 1)
-    for i in [0, 10]:
+    for i in [0, 12]:
         window.canvasMainMenu.rowconfigure(i, weight = 3)
 
     window.canvasMainMenu.rowconfigure(2, weight = 2)
     window.canvasMainMenu.rowconfigure(5, weight = 1)
-    window.canvasMainMenu.rowconfigure(8, weight = 1)
+    window.canvasMainMenu.rowconfigure(7, weight = 1)
+    window.canvasMainMenu.rowconfigure(10, weight = 1)
 
     #widgets creations
     window.title = Label(window.canvasMainMenu, text='COLT ZEʁMA', font=60)
     window.btnNew = Button(window.canvasMainMenu, text='New', command=lambda:createNewGameMenu(window))
     window.btnLoad = Button(window.canvasMainMenu, text='Load', command=lambda:createLoadGameMenu(window))
+    window.btnSettings = Button(window.canvasMainMenu, text='Settings', command=lambda:createSettingsMenu(window))
     window.btnRules = Button(window.canvasMainMenu, text='Rules', command=lambda:createRulesMenu(window))
     window.btnCredits = Button(window.canvasMainMenu, text='Credits', command=lambda:createCreditsMenu(window))
     window.btnExit = Button(window.canvasMainMenu, text='Exit', command=window.destroy)
@@ -164,7 +166,7 @@ def createMainMenu(window):
 
     #widgets configuration
     widgets.configWidgets(window, 'Label', [window.title])
-    widgets.configWidgets(window, 'Button', [window.btnNew, window.btnLoad, window.btnRules, window.btnCredits, window.btnExit])
+    widgets.configWidgets(window, 'Button', [window.btnNew, window.btnLoad, window.btnSettings, window.btnRules, window.btnCredits, window.btnExit])
 
     if saveGestion.saveIsEmpty():
         window.btnLoad.config(state='disabled')
@@ -175,9 +177,94 @@ def createMainMenu(window):
     window.title.grid(column=1, row=1, columnspan=3, sticky='nsew', ipady=10)
     window.btnNew.grid(column=2, row=3, sticky='nsew')
     window.btnLoad.grid(column=2, row=4, sticky='nsew')
-    window.btnRules.grid(column=2, row=6, sticky='nsew')
-    window.btnCredits.grid(column=2, row=7, sticky='nsew')
-    window.btnExit.grid(column=2, row=9, sticky='nsew')
+    window.btnSettings.grid(column=2, row=6, sticky='nsew')
+    window.btnRules.grid(column=2, row=8, sticky='nsew')
+    window.btnCredits.grid(column=2, row=9, sticky='nsew')
+    window.btnExit.grid(column=2, row=11, sticky='nsew')
+
+
+
+
+
+# def updateMusicVolume(value, window):
+#     print(type(window))
+#     audios.setVolume('music', int(value))
+
+
+
+
+def createSettingsMenu(window):
+    window.canvasMainMenu.destroy()
+    audios.playSound('rules')
+
+    #menu Canvas
+    window.settingsCanvas = Canvas(window)
+    window.settingsCanvas.grid(columnspan=2, sticky='nsew')
+    window.settingsCanvas.bind('<Configure>', lambda e: resizeMenusBackground(window, window.settingsCanvas))
+
+    #weight of empty rows/columns
+    for i in [0, 2]:
+        window.settingsCanvas.columnconfigure(i, weight=1)
+    for i in [0, 6]:
+        window.settingsCanvas.rowconfigure(i, weight=3)
+    window.settingsCanvas.rowconfigure(2, weight=2)
+    window.settingsCanvas.rowconfigure(4, weight=1)
+
+
+
+
+    window.volumeSpace = Frame(window.settingsCanvas, bg=window.WIDGET_COLORS['road'])
+    #row/column configure
+    for i in [0, 2]:
+        window.volumeSpace.columnconfigure(i, weight=1)
+    for i in [0, 7]:
+        window.volumeSpace.rowconfigure(i, weight=1)
+    window.volumeSpace.rowconfigure(3, weight=3)
+
+
+
+    #widgets creation
+    window.title = Label(window.settingsCanvas, text='SETTINGS', font=60)
+    window.creditsBtnExit = Button(window.settingsCanvas, text='Main Menu', command=lambda:returnToMainMenu(window, [window.settingsCanvas]))
+
+    window.labelMusic = Label(window.volumeSpace, text='Music', justify='center')
+    window.musicBar = Scale(window.volumeSpace, command=window.updateMusicVolume, orient='horizontal', showvalue=False)
+
+    window.labelSounds = Label(window.volumeSpace, text='Sounds', justify='center')
+    window.soundsBar = Scale(window.volumeSpace, command=window.updateSoundsVolume, orient='horizontal', showvalue=False)
+    window.testSounds = Button(window.volumeSpace, text='Try sound', command=audios.playRandomSound)
+
+
+
+
+
+
+    #widgets default configuration
+    window.musicBar.set(window.VOLUME_MUSIC)
+    window.soundsBar.set(window.VOLUME_SOUNDS)
+
+    widgets.configWidgets(window, 'Label', [window.title, window.labelMusic, window.labelSounds])
+    widgets.configWidgets(window, 'Button', [window.creditsBtnExit, window.testSounds])
+
+    widthBar = window.winfo_width() // 2
+    window.musicBar.config(bg=window.WIDGET_COLORS['road'], fg=window.WIDGET_COLORS['train'], highlightthickness=0, troughcolor=window.WIDGET_COLORS['road'], activebackground=window.WIDGET_COLORS['sand'], sliderrelief=GROOVE, length=widthBar, borderwidth=3, width=20)
+    window.soundsBar.config(bg=window.WIDGET_COLORS['road'], fg=window.WIDGET_COLORS['train'], highlightthickness=0, troughcolor=window.WIDGET_COLORS['road'], activebackground=window.WIDGET_COLORS['sand'], sliderrelief=GROOVE, length=widthBar, borderwidth=3, width=20)
+
+
+    #widgets placement
+    window.title.grid(row=1, column=1, sticky='nsew', ipady=10)
+    window.volumeSpace.grid(row=3, column=1, sticky='nsew', ipadx=10, ipady=5)
+    window.creditsBtnExit.grid(row=5, column=1)
+
+    window.labelMusic.grid(row=1, column=1)
+    window.musicBar.grid(row=2, column=1)
+    window.labelSounds.grid(row=4, column=1)
+    window.soundsBar.grid(row=5, column=1)
+    window.testSounds.grid(row=6, column=1)
+
+
+
+
 
 
 

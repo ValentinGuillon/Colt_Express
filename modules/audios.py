@@ -143,18 +143,16 @@ def setVolume(type:Literal['music', 'sounds'], value:int):
     if type == 'music':
         mix.music.set_volume(value/100)
     elif type == 'sounds':
-        resetVolumeSounds()
+        resetSoundsVolume()
         for sound in sounds:
             newVolume = sound.get_volume() * value
-
             sound.set_volume(newVolume/100)
-            print(sound.get_volume())
 
 
 
 
 #default audios volume
-def resetVolumeSounds():
+def resetSoundsVolume():
     soundShoot1.set_volume(1)
     soundShoot2.set_volume(1)
     soundShoot3.set_volume(1)
@@ -216,6 +214,16 @@ def resetMusicVolume(volume):
 
 
 #sounds
+def playRandomSound():
+    sound = random.choice(sounds)
+    if sound == soundLoading:
+        playRandomSound()
+        return
+    sound.play()
+
+
+
+
 def playSound(name:Literal['shoot', 'marshallShoot', 'shootEmpty', 'confirm', 'cancel', 'newGame', 'loadGame', 'startGame', 'returnMainMenu', 'loading', 'rules', 'butin', 'magot', 'stepSide']):
     if not name in ['shoot', 'marshallShoot', 'shootEmpty', 'confirm', 'cancel', 'newGame', 'loadGame', 'startGame', 'returnMainMenu', 'loading', 'rules', 'butin', 'magot', 'stepSide']:
         print(f'ERROR: in audios.py, in playSound:\n    "{name}" doesn\'t exist \n    (expected: shoot, marshallShoot, shootEmpty, confirm, cancel, newGame, loadGame, startGame, returnMainMenu, loading, rules, butin, magot, stepSide)')
@@ -284,7 +292,7 @@ def playSound(name:Literal['shoot', 'marshallShoot', 'shootEmpty', 'confirm', 'c
 
 
 
-resetVolumeSounds()
+resetSoundsVolume()
 
 #test
 while 0:

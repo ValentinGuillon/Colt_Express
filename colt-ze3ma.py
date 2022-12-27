@@ -99,6 +99,19 @@ class Game(Tk):
 
 
 
+    #called by the command of a Scale
+    def updateMusicVolume(self, value):
+        value = int(value)
+        Game.VOLUME_MUSIC = value
+        audios.setVolume('music', value)
+
+    #called by the command of a Scale
+    def updateSoundsVolume(self, value):
+        value = int(value)
+        Game.VOLUME_SOUNDS = value
+        audios.setVolume('sounds', value)
+
+
 
 
     #VALIDATION/LOG/OTIONS CANVAS CREATION =======================================
