@@ -350,7 +350,7 @@ def createRulesMenu(window):
     rulesScrollbal.config(command=window.rulesText.yview)
     window.rulesText.config(yscrollcommand=rulesScrollbal.set)
 
-    window.rulesText.config(highlightthickness=1, border=0, highlightbackground=window.WIDGET_COLORS['train'], bg=window.WIDGET_COLORS['road'])
+    window.rulesText.config(highlightthickness=1, border=0, highlightbackground=window.WIDGET_COLORS['train'], bg=window.WIDGET_COLORS['road'], fg=window.WIDGET_COLORS['train'])
     rulesScrollbal.config(bg=window.WIDGET_COLORS['train'], highlightthickness=1, border=0, highlightbackground=window.WIDGET_COLORS['train'], activebackground=window.WIDGET_COLORS['red'], troughcolor=window.WIDGET_COLORS['road'], width=15)
 
 
