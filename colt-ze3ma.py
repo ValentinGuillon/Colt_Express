@@ -534,6 +534,8 @@ class Game(Tk):
             else:
                 self.btnAction.config(text='Action !')
                 widgets.configActionButton(self, 'action')
+                for btn in self.menuSpaceBtns:
+                    btn.config(state='disabled')
 
                 self.insertTextInLog('\n\nGame succesfully loaded\n')
                 self.insertTextInLog(f'\n\n\n=== Turn {self.currentTurn}/{Game.NB_TOURS}===\n')
