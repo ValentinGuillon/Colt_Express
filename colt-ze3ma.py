@@ -673,7 +673,7 @@ class Game(Tk):
                 founded = True
 
         if not founded:
-            print('ERROR: in removeAction:\n  action not found')
+            print('ERROR: in colt-ze3ma.py in removeAction:\n  action not found')
             exit()
 
         Game.tempActions.remove(actionToRemove)
@@ -865,52 +865,43 @@ class Game(Tk):
 
     #play Sounds for step (on 4) of a turn, then continu to executeTurn
     def playSounds(self, executeTurnStep):
-        print(self.soundsToPlay)
         # audios.playSound('returnMainMenu')
         if 'shoot' in self.soundsToPlay:
-            print('shoot')
             self.soundsToPlay.remove('shoot')
             audios.playSound('shoot')
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'shootMissed' in self.soundsToPlay:
-            print('shootMissed')
             self.soundsToPlay.remove('shootMissed')
             audios.playSound('returnMainMenu')
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'magEmpty' in self.soundsToPlay:
-            print('magEmpty')
             self.soundsToPlay.remove('magEmpty')
             audios.playSound('shootEmpty')
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'marshallShoot' in self.soundsToPlay:
-            print('marshallShoot')
             self.soundsToPlay.remove('marshallShoot')
             audios.playSound('marshallShoot')
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'walk' in self.soundsToPlay:
-            print('walk')
             self.soundsToPlay.remove('walk')
             self.playSoundWalk()
             self.after(ms=600, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'walkMarshall' in self.soundsToPlay:
-            print('walkMarshall')
             self.soundsToPlay.remove('walkMarshall')
             self.playSoundWalkMarshall()
             self.after(ms=600, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'lootButin' in self.soundsToPlay:
-            print('lootButin')
             self.soundsToPlay.remove('lootButin')
             audios.playSound('butin')
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
             return
         if 'lootMagot' in self.soundsToPlay:
-            print('lootMagot')
             self.soundsToPlay.remove('lootMagot')
             audios.playSound('magot') 
             self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
@@ -1252,7 +1243,7 @@ class Game(Tk):
                 elif yButinPosition == 'out':
                     yImgPosition = yOffsetButin + (heightWagon * 0.40)
                 else:
-                    print('ERROR: in updateCanvasImgs (butin, loop for magot):\n  the butin is in a wagon\'s list, but is own by a bandit')
+                    print('ERROR: in colt-ze3ma.py in updateCanvasImgs (butin, loop for magot):\n  the butin is in a wagon\'s list, but is own by a bandit')
                     exit()
 
 
@@ -1311,7 +1302,7 @@ class Game(Tk):
                     elif yButinPosition == 'out':
                         yImgPosition = yOffsetButin + (heightWagon * 0.38)
                     else:
-                        print('ERROR: in updateCanvasImgs: (butin, loop for other then magot, bijoux)\n  the butin is in a wagon\'s list, but is own by a bandit')
+                        print('ERROR: in colt-ze3ma.py in updateCanvasImgs: (butin, loop for other then magot, bijoux)\n  the butin is in a wagon\'s list, but is own by a bandit')
                         exit()
 
                     
@@ -1354,7 +1345,7 @@ class Game(Tk):
                     elif yButinPosition == 'out':
                         yImgPosition = yOffsetButin + (heightWagon * 0.38)
                     else:
-                        print('ERROR: in updateCanvasImgs: (butin, loop for other then magot, bourse)\n  the butin is in a wagon\'s list, but is own by a bandit')
+                        print('ERROR: in colt-ze3ma.py in updateCanvasImgs: (butin, loop for other then magot, bourse)\n  the butin is in a wagon\'s list, but is own by a bandit')
                         exit()
                 
 

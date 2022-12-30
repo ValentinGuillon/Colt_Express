@@ -35,7 +35,7 @@ def configWidgets(window, widgetType:Literal['Button', 'Label', 'Entry'], widget
             entry.config(border=1, highlightthickness=0, justify='right', width=5, bg=window.WIDGET_COLORS['road'], fg=window.WIDGET_COLORS['train'])
     
     else:
-        print(f'ERROR: in configWidgets:\n    "{widgetType}" doesnt exist (allowed: "Button", "Label", "Entry")')
+        print(f'ERROR: in widgets.py in configWidgets:\n    "{widgetType}" doesnt exist (allowed: "Button", "Label", "Entry")')
         exit()
 
 
@@ -50,7 +50,7 @@ def configActionButton(window, phase:Literal['preparation', 'action']):
     elif phase == 'action':
         window.btnAction.config(state='normal', border=2, bg=window.WIDGET_COLORS['train'], disabledforeground=window.WIDGET_COLORS['moutainShadow'], fg=window.WIDGET_COLORS['road'], activebackground=window.WIDGET_COLORS['road'], activeforeground=window.WIDGET_COLORS['train'])
     else:
-        print(f'ERROR: in configActionButton:\n   "{phase}" doesnt exist (allowed: "preparation", "action")')
+        print(f'ERROR: in widgets.py in configActionButton:\n   "{phase}" doesnt exist (allowed: "preparation", "action")')
         exit()
 
 

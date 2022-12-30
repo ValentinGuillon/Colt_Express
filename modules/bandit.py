@@ -68,7 +68,7 @@ class Bandit():
     #execute the action at index 0 in self.actions
     def executeAction(self):
         if not len(self.actions):
-            print("ERROR: in executeAction\n\tBandir has no actions")
+            print("ERROR: in bandit.py in executeAction\n\tBandir has no actions")
             exit()
 
         if self.actions[0] in ['right', 'left', 'up', 'down']:
