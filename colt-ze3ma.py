@@ -11,7 +11,6 @@ import modules.audios as audios
 from modules.wagon import Wagon
 from modules.bandit import Bandit
 from modules.butin import Butin
-from modules.action import Action
 
 
 
@@ -58,7 +57,7 @@ class Game(Tk):
     #lists used during preparation phase
     tempName:str = ""
     tempColor:list[str] = []
-    tempActions:list[Action] = [] #liste de classe Action (qui permet de reconfigurer l'ordre des actions d'un bandit)
+    tempActions:list[widgets.TripleButton] = [] #liste de classe Action (qui permet de reconfigurer l'ordre des actions d'un bandit)
 
 
     #liste "stockant" ce qui est dessiné sur un Canvas (afin de les pouvoir les supprimer par la suite)
@@ -642,7 +641,7 @@ class Game(Tk):
 
 
     def addActionToTempActions(self, action:str):
-        actionbtn = Action(self, self.actionsSpace, action, len(Game.tempActions))
+        actionbtn = widgets.TripleButton(self, self.actionsSpace, action, len(Game.tempActions))
         Game.tempActions.append(actionbtn)
 
         #si toutes les actions ont été données
@@ -662,7 +661,7 @@ class Game(Tk):
 
 
 
-    def removeAction(self, actionToRemove:Action):
+    def removeAction(self, actionToRemove:widgets.TripleButton):
         founded = False
         for action in Game.tempActions:
             if founded:
