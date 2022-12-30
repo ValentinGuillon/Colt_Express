@@ -1,6 +1,8 @@
 #this module manage musics and sounds relative to the game
 #...using pygame (pygame.mixer)
 
+#each sounds are append in a list (exept music) to manage their volume
+
 import pygame
 from pygame import mixer as mix
 
