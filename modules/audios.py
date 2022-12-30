@@ -274,6 +274,9 @@ def playSound(name:Literal['shoot', 'marshallShoot', 'shootEmpty', 'confirm', 'c
         
     elif name == 'butin':
         soundLootButin.play()
+    elif name == 'magot':
+        soundLootMagot.play()
+
     elif name == 'stepSide':
         choice = random.randint(1, 4)
         if choice == 1:
