@@ -136,6 +136,7 @@ class Bandit():
         
         self.game.insertTextInLog(f'{self.name} moves {action}\n', self.colorHtml)
         self.checkForButin()
+        self.game.soundsToPlay.append('walk')
 
 
 
@@ -157,6 +158,7 @@ class Bandit():
 
         if self.bullets == 0:
             self.game.insertTextInLog(f', but has no more bullets\n', self.colorHtml)
+            self.game.soundsToPlay.append('magEmpty')
             return
 
         self.bullets -= 1
@@ -172,6 +174,7 @@ class Bandit():
 
         if nb_targets == 0:
             self.game.insertTextInLog(f' on the wind\n', self.colorHtml)
+            self.game.soundsToPlay.append('shootMissed')
             return
 
 
@@ -187,6 +190,7 @@ class Bandit():
 
 
         target.getHitByBandit(self)
+        self.game.soundsToPlay.append('shoot')
 
 
 
@@ -240,6 +244,11 @@ class Bandit():
         self.butins.append(robbedButin)
         self.game.insertTextInLog(f' something\n', self.colorHtml)
 
+        if robbedButin.type == 'magot':
+            self.game.soundsToPlay.append('lootMagot')
+        else:
+            self.game.soundsToPlay.append('lootButin')
+
 
 
 
@@ -285,6 +294,7 @@ class Bandit():
     #perd un butin, aléatoirement, et monte sur le toit
     def getHitByMarshall(self):
         self.game.insertTextInLog(f'{self.name} get shoot by the Marshall\n{self.name}', self.colorHtml)
+        self.game.soundsToPlay.append('marshallShoot')
 
 
         if len(self.butins):
@@ -351,6 +361,8 @@ class Bandit():
         #and give it to the bandit
         self.butins.append(lootedButin)
         self.game.insertTextInLog(f'{self.name} got a loot\n', self.colorHtml)
+
+        self.game.soundsToPlay.append('lootButin')
 
 
 

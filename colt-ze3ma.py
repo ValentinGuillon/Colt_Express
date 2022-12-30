@@ -46,7 +46,7 @@ class Game(Tk):
         'moutainShadow': '#976700'}
 
     VOLUME_GLOBAL = 75
-    VOLUME_MUSIC = VOLUME_GLOBAL
+    VOLUME_MUSIC = 25
     VOLUME_SOUNDS = VOLUME_GLOBAL
 
 
@@ -88,6 +88,7 @@ class Game(Tk):
         self.currentTurn = 1
         self.action = 1 #only used to insert in Log while Actions phase
         self.banditQuiChoisi = 0
+        self.soundsToPlay:str = [] #shoot, shootMissed, magEmpty, marshallShoot, walk, lootButin, lootMagot
 
         self.marshallDirection = 'right'
 
@@ -95,6 +96,7 @@ class Game(Tk):
         # createMainMenu
         menus.createMainMenu(self)
         audios.setGlobalVolume(Game.VOLUME_GLOBAL)
+        audios.setVolume('music', Game.VOLUME_MUSIC)
         audios.playMusic('main')
 
 
@@ -838,6 +840,90 @@ class Game(Tk):
 
 
 
+    def defineSoundsToPlay(self):
+        self.soundsToPlay = list(set(self.soundsToPlay))
+
+
+
+    def playSoundWalk(self, step=3):
+        if step == 0:
+            return
+
+        audios.playSound('stepSide')
+        self.after(ms=200, func=lambda:self.playSoundWalk(step=step-1))
+
+
+    def playSoundWalkMarshall(self, step=2):
+        if step == 0:
+            return
+
+        audios.playSound('stepSide')
+        self.after(ms=375, func=lambda:self.playSoundWalk(step=step-1))
+
+
+
+    #play Sounds for step (on 4) of a turn, then continu to executeTurn
+    def playSounds(self, executeTurnStep):
+        print(self.soundsToPlay)
+        # audios.playSound('returnMainMenu')
+        if 'shoot' in self.soundsToPlay:
+            print('shoot')
+            self.soundsToPlay.remove('shoot')
+            audios.playSound('shoot')
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'shootMissed' in self.soundsToPlay:
+            print('shootMissed')
+            self.soundsToPlay.remove('shootMissed')
+            audios.playSound('returnMainMenu')
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'magEmpty' in self.soundsToPlay:
+            print('magEmpty')
+            self.soundsToPlay.remove('magEmpty')
+            audios.playSound('shootEmpty')
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'marshallShoot' in self.soundsToPlay:
+            print('marshallShoot')
+            self.soundsToPlay.remove('marshallShoot')
+            audios.playSound('marshallShoot')
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'walk' in self.soundsToPlay:
+            print('walk')
+            self.soundsToPlay.remove('walk')
+            self.playSoundWalk()
+            self.after(ms=600, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'walkMarshall' in self.soundsToPlay:
+            print('walkMarshall')
+            self.soundsToPlay.remove('walkMarshall')
+            self.playSoundWalkMarshall()
+            self.after(ms=600, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'lootButin' in self.soundsToPlay:
+            print('lootButin')
+            self.soundsToPlay.remove('lootButin')
+            audios.playSound('butin')
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        if 'lootMagot' in self.soundsToPlay:
+            print('lootMagot')
+            self.soundsToPlay.remove('lootMagot')
+            audios.playSound('magot') 
+            self.after(ms=400, func=lambda:self.playSounds(executeTurnStep))
+            return
+        
+        # self.executeTurn(executeTurnStep)
+        if executeTurnStep == 2:
+            self.after(ms=100, func=lambda:self.executeTurn(executeTurnStep))
+        elif executeTurnStep == 3:
+            self.after(ms=500, func=lambda:self.executeTurn(executeTurnStep))
+        elif executeTurnStep == 4:
+            self.after(ms=100, func=lambda:self.executeTurn(executeTurnStep))
+
+
     def executeTurn(self, step=1):
         if step == 1:
             #check if its the end of the turn/game
@@ -872,8 +958,9 @@ class Game(Tk):
                 bandit.executeAction()
 
             self.updateCanvasImgs()
-
-            self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
+            self.defineSoundsToPlay()
+            self.playSounds(step+1)
+            # self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
         
 
         elif step == 2:
@@ -883,18 +970,21 @@ class Game(Tk):
 
             #update du Canvas
             self.updateCanvasImgs()
-
-            self.after(ms=500, func=lambda:self.executeTurn(step=step+1))
+            self.defineSoundsToPlay()
+            self.playSounds(step+1)
+            # self.after(ms=500, func=lambda:self.executeTurn(step=step+1))
 
 
         elif step == 3:
             #déplace le marshall
             self.moveMarshall()
+            self.soundsToPlay.append('walkMarshall')
 
             #update du Canvas
             self.updateCanvasImgs()
-
-            self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
+            self.defineSoundsToPlay()
+            self.playSounds(step+1)
+            # self.after(ms=100, func=lambda:self.executeTurn(step=step+1))
 
 
         elif step == 4:
@@ -904,6 +994,9 @@ class Game(Tk):
 
             #update du Canvas
             self.updateCanvasImgs()
+            self.defineSoundsToPlay()
+            self.playSounds(step+1)
+
             self.btnAction.config(state='normal', text='Action !')
 
             #check if its the end of the turn/game
