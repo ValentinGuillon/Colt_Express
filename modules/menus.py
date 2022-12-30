@@ -372,6 +372,11 @@ def createRulesMenu(window):
 
 
 
+def eraseSave(window):
+    saveGestion.emptySave()
+    returnToMainMenu(window, [window.loadGameCanvas])
+
+
 
 
 def createLoadGameMenu(window):
@@ -393,11 +398,12 @@ def createLoadGameMenu(window):
         window.loadGameCanvas.columnconfigure(i, weight = 1)
     window.loadGameCanvas.columnconfigure(3, weight = 1)
 
-    for i in [0, 8]:
+    for i in [0, 10]:
         window.loadGameCanvas.rowconfigure(i, weight = 4)
     window.loadGameCanvas.rowconfigure(2, weight = 3)
     window.loadGameCanvas.rowconfigure(4, weight = 1)
     window.loadGameCanvas.rowconfigure(6, weight = 2)
+    window.loadGameCanvas.rowconfigure(8, weight = 1)
 
 
     #Canvas for Label(s) and Entry(s)
@@ -439,6 +445,7 @@ def createLoadGameMenu(window):
     #widgets creation
     window.title = Label(window.loadGameCanvas, text='LOAD GAME', font=60)
     window.launchLoadedGame = Button(window.loadGameCanvas, text='Load', command=lambda:window.startGame(window.loadGameCanvas, loadSave=True))
+    window.btnEraseSave = Button(window.loadGameCanvas, text='Erase', command=lambda:eraseSave(window))
     window.btnExitNewGameMenu = Button(window.loadGameCanvas, text='Main Menu', command=lambda:returnToMainMenu(window, [window.loadGameCanvas]))
 
         #game's datas Space
@@ -475,13 +482,14 @@ def createLoadGameMenu(window):
         window.labelPhase.config(text='Phase: Action')
 
     widgets.configWidgets(window, 'Label', [window.title, window.titleGameDatas, window.labelNbTurns, window.labelPhase, window.labelNbWagons, window.labelNbActions, window.titlePlayersInfos])
-    widgets.configWidgets(window, 'Button', [window.launchLoadedGame, window.btnExitNewGameMenu])
+    widgets.configWidgets(window, 'Button', [window.launchLoadedGame, window.btnEraseSave, window.btnExitNewGameMenu])
 
 
     #widgets placement
     window.title.grid(row=1, column=1, columnspan=5, sticky='nsew', ipady=10)
     window.launchLoadedGame.grid(row=5, column=2, columnspan=3, sticky='ew')
-    window.btnExitNewGameMenu.grid(row=7, column=2, columnspan=3, sticky='ew')
+    window.btnEraseSave.grid(row=7, column=2, columnspan=3, sticky='ew')
+    window.btnExitNewGameMenu.grid(row=9, column=2, columnspan=3, sticky='ew')
 
         #game's datas Space
     window.titleGameDatas.grid(row=1, column=1, columnspan=3, sticky='news')
